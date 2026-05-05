@@ -1,6 +1,3 @@
-<!doctype html>
-<html lang="en">
-<head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>FLOAT KNIGHTS</title>
@@ -3564,10 +3561,12 @@ function startMatch() {
     biome: pickBiomeForMatch(),  // visual variety per match
     scatter: [],                 // populated below
     clouds: generateCloudShadows(),
+    ambient: [],                 // populated below
     winnerId: null,
   };
-  // Scatter has to be generated AFTER biome is set
+  // Scatter + ambient have to be generated AFTER biome is set
   LEAGUE.match.scatter = generateBiomeScatter(LEAGUE.match.biome);
+  LEAGUE.match.ambient = generateAmbientParticles(LEAGUE.match.biome);
 
   feed("match", phrasePick(PHRASE_MATCH_START, {
     a: TEAM_BY_ID[b.teamA].emoji + " " + TEAM_BY_ID[b.teamA].short,
@@ -3857,7 +3856,7 @@ const BIOMES = [
     },
     accents: { lineColor: "rgba(255,255,255,0.28)", brandColor: "rgba(255,255,255,0.16)" },
     skyTint: "rgba(180,80,30,0.32)",
-    ambient: "ember",
+    ambient: "shimmer",
   },
   {
     id: "ice", name: "Frozen Rink", emoji: "❄️",
@@ -3983,6 +3982,134 @@ function tickCloudShadows(m) {
   }
 }
 
+/* ============================================================
+   AMBIENT PARTICLES — biome-driven atmospheric effect.
+
+   Snow falls in the Frozen Rink, embers rise in Volcanic Lot,
+   petals drift in Cherry Blossom Garden, heat shimmer wavers in
+   the Desert Pit. Stadium Pitch has no ambient (clear day).
+
+   Particles are tracked in `m.ambient[]` with {x, y, vx, vy, life,
+   r, type}. They are recycled when life expires or they exit the
+   arena bounds. Cap at ~80 particles total to keep the cost
+   bounded. Particles use BIOME_RNG since they're cosmetic-only.
+   ============================================================ */
+const AMBIENT_CAP = 80;
+
+function generateAmbientParticles(biome) {
+  if (!biome || !biome.ambient) return [];
+  const particles = [];
+  const initialCount = biome.ambient === "shimmer" ? 30 : 60;
+  for (let i = 0; i < initialCount; i++) {
+    particles.push(_spawnAmbientParticle(biome.ambient, true));
+  }
+  return particles;
+}
+
+/* Spawn a single particle. If `existing` is true, it spawns anywhere on the
+   arena (so the field starts already populated). Otherwise it spawns at the
+   recycle origin (top for snow/petal, bottom for ember). */
+function _spawnAmbientParticle(kind, existing) {
+  const W = COMBAT.arenaW, H = COMBAT.arenaH;
+  if (kind === "snow") {
+    return {
+      type: "snow",
+      x: BIOME_RNG.next() * W,
+      y: existing ? BIOME_RNG.next() * H : -10,
+      vx: -0.15 + BIOME_RNG.next() * 0.30,    // slow horizontal drift
+      vy: 0.45 + BIOME_RNG.next() * 0.50,     // gentle fall
+      r: 0.8 + BIOME_RNG.next() * 1.4,
+      life: 9999,                              // recycled by bounds, not life
+      phase: BIOME_RNG.next() * Math.PI * 2,  // for sway
+    };
+  }
+  if (kind === "ember") {
+    return {
+      type: "ember",
+      x: BIOME_RNG.next() * W,
+      y: existing ? BIOME_RNG.next() * H : H + 10,
+      vx: -0.25 + BIOME_RNG.next() * 0.50,
+      vy: -0.40 - BIOME_RNG.next() * 0.45,    // float up
+      r: 1.0 + BIOME_RNG.next() * 1.5,
+      life: 80 + Math.floor(BIOME_RNG.next() * 60),
+      maxLife: 0,  // set below
+      phase: BIOME_RNG.next() * Math.PI * 2,
+    };
+  }
+  if (kind === "petal") {
+    return {
+      type: "petal",
+      x: BIOME_RNG.next() * W,
+      y: existing ? BIOME_RNG.next() * H : -10,
+      vx: 0.20 + BIOME_RNG.next() * 0.45,     // drift right with breeze
+      vy: 0.30 + BIOME_RNG.next() * 0.45,
+      r: 1.5 + BIOME_RNG.next() * 1.5,
+      life: 9999,
+      phase: BIOME_RNG.next() * Math.PI * 2,
+      rotSpeed: -0.04 + BIOME_RNG.next() * 0.08,
+      rot: BIOME_RNG.next() * Math.PI * 2,
+    };
+  }
+  if (kind === "shimmer") {
+    // Heat-shimmer dot — short-lived, just a brief vertical wobble
+    return {
+      type: "shimmer",
+      x: BIOME_RNG.next() * W,
+      y: 80 + BIOME_RNG.next() * (H - 100),
+      vx: 0,
+      vy: -0.08 - BIOME_RNG.next() * 0.10,
+      r: 0.6,
+      life: 30 + Math.floor(BIOME_RNG.next() * 30),
+      maxLife: 0,
+      phase: BIOME_RNG.next() * Math.PI * 2,
+    };
+  }
+  return null;
+}
+
+function tickAmbientParticles(m) {
+  if (!m.biome || !m.biome.ambient) return;
+  if (!m.ambient) m.ambient = generateAmbientParticles(m.biome);
+  const W = COMBAT.arenaW, H = COMBAT.arenaH;
+  const kind = m.biome.ambient;
+
+  // Iterate backwards so we can splice safely
+  for (let i = m.ambient.length - 1; i >= 0; i--) {
+    const p = m.ambient[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.phase += 0.04;
+    if (p.rotSpeed) p.rot += p.rotSpeed;
+
+    // Sway for snow + petal
+    if (p.type === "snow" || p.type === "petal") {
+      p.x += Math.sin(p.phase) * 0.18;
+    }
+
+    let recycle = false;
+    if (p.life !== undefined) p.life--;
+
+    // Bounds-based recycle
+    if (p.type === "snow" || p.type === "petal") {
+      if (p.y > H + 8 || p.x < -8 || p.x > W + 8) recycle = true;
+    } else if (p.type === "ember") {
+      if (p.y < -8 || p.life <= 0) recycle = true;
+    } else if (p.type === "shimmer") {
+      if (p.life <= 0 || p.y < 60) recycle = true;
+    }
+
+    if (recycle) {
+      // Replace with a fresh particle at the spawn edge
+      const replacement = _spawnAmbientParticle(kind, false);
+      if (replacement) m.ambient[i] = replacement;
+      else m.ambient.splice(i, 1);
+    }
+  }
+
+  // Cap (defensive — shouldn't grow but just in case)
+  if (m.ambient.length > AMBIENT_CAP) m.ambient.length = AMBIENT_CAP;
+}
+
 function layoutTeam(players, side) {
   const cx = COMBAT.arenaW / 2;
   const cy = COMBAT.arenaH / 2;
@@ -4101,11 +4228,19 @@ function tickMatch() {
   m.frame++;
   m.roundFrame++;
 
+  // Slow-mo countdown — if we've triggered it, count it down per tick so
+  // the loop's effective speed multiplier knows when to release back to
+  // normal. The actual speed reduction lives in the main loop.
+  if (m.slowMoFrames > 0) m.slowMoFrames--;
+
   // POWER CORE — periodic objective spawned at arena center.
   tickPowerCore(m);
 
   // Cloud shadows drift across the field
   tickCloudShadows(m);
+
+  // Ambient particles (snow, embers, petals, shimmer per biome)
+  tickAmbientParticles(m);
 
   // RESUPPLY — periodic Health Pack drops to keep long matches sustainable
   maybeResupplyHealth(m);
@@ -5262,6 +5397,21 @@ function handleKO(attacker, defender, m) {
       tm: tm.short,
     }), { flavor: "hype", aiContext: { type: "lastKnight", knight: lone, team: tm } });
   }
+
+  // === SLOW-MO ON MATCH-DECIDING KO ===
+  // If this KO leaves the defender's team with 0 alive AND the attacker
+  // already had `roundsToWin - 1` round wins, this round will end the match.
+  // Trigger a brief slow-mo period so the broadcast lingers on the moment.
+  if (stillAlive.length === 0 && !m.slowMoTriggered) {
+    const attackerScore = attacker.teamId === m.teamAId ? m.roundsWonA : m.roundsWonB;
+    const roundsToWin = Math.floor(m.bestOf / 2) + 1;
+    if (attackerScore === roundsToWin - 1) {
+      m.slowMoFrames = 30;          // ~1.5 sec at 20fps
+      m.slowMoTriggered = true;     // once per match
+      // Big shake to punctuate
+      if (typeof triggerShake === "function") triggerShake(9);
+    }
+  }
 }
 
 /* Melee instant-hit path — kept for backwards-compat with applyItemTrigger
@@ -6177,6 +6327,102 @@ function drawCloudShadows(clouds) {
   }
 }
 
+/* ============================================================
+   STADIUM PITCH LIGHTS — soft warm flares in the four corners.
+   Sells the broadcast-stadium fiction. Drawn AFTER the vignette
+   so the lights cut through the dark corners. Each flare is a
+   radial gradient from warm white at the corner edge to fully
+   transparent at ~25% of the diagonal. Subtle but present.
+   ============================================================ */
+function drawPitchLights(W, H) {
+  const flareR = Math.min(W, H) * 0.42;
+  const corners = [
+    [0,     0    ],   // top-left
+    [W,     0    ],   // top-right
+    [0,     H    ],   // bottom-left
+    [W,     H    ],   // bottom-right
+  ];
+  for (const [cx, cy] of corners) {
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, flareR);
+    g.addColorStop(0,   "rgba(255,240,210,0.18)");
+    g.addColorStop(0.4, "rgba(255,235,200,0.06)");
+    g.addColorStop(1,   "rgba(255,235,200,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+  // Tiny "lamp" pips in each corner so the lights have a visible source
+  for (const [cx, cy] of corners) {
+    const px = cx === 0 ? 8 : W - 8;
+    const py = cy === 0 ? 8 : H - 8;
+    ctx.fillStyle = "rgba(255,250,230,0.6)";
+    ctx.beginPath();
+    ctx.arc(px, py, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,1)";
+    ctx.beginPath();
+    ctx.arc(px, py, 1.0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/* ============================================================
+   AMBIENT PARTICLES — biome-driven atmospheric layer drawn
+   between cloud shadows and the vignette so they read as airborne
+   particles in front of the field but behind the broadcast lighting.
+
+   - snow: tiny white dot with soft halo
+   - ember: glowing orange pip with halo + life-fade
+   - petal: rotated soft pink ellipse (with highlight)
+   - shimmer: vertical wobble line, very faint (heat distortion)
+   ============================================================ */
+function drawAmbientParticles(particles) {
+  for (const p of particles) {
+    if (p.type === "snow") {
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 1.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (p.type === "ember") {
+      // Life-fade — particle dims as it rises
+      const a = clamp(p.life / 80, 0.05, 0.85);
+      ctx.fillStyle = `rgba(255,140,40,${a * 0.30})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgba(255,200,80,${a})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (p.type === "petal") {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = "rgba(255,176,200,0.85)";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.r * 1.6, p.r * 0.7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,210,225,0.95)";
+      ctx.beginPath();
+      ctx.ellipse(-p.r * 0.3, -p.r * 0.2, p.r * 0.7, p.r * 0.3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (p.type === "shimmer") {
+      // Heat shimmer — short vertical wobble line, very faint
+      const sway = Math.sin(p.phase) * 1.5;
+      ctx.strokeStyle = "rgba(255,220,180,0.10)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(p.x + sway, p.y);
+      ctx.lineTo(p.x - sway, p.y + 5);
+      ctx.stroke();
+    }
+  }
+}
+
 function drawScenery() {
   for (const s of SCENERY) {
     if (s.type === "pillar") {
@@ -6491,6 +6737,13 @@ function drawArena() {
     drawCloudShadows(m.clouds);
   }
 
+  // === AMBIENT PARTICLES === biome-specific airborne effect (snow, embers,
+  // petals, shimmer). Drawn after clouds so they appear in front of the
+  // shadows, before the vignette so the broadcast lighting still rims them.
+  if (m && m.ambient && m.ambient.length) {
+    drawAmbientParticles(m.ambient);
+  }
+
   // Sky tint vignette around edges (broadcast lighting). Biome controls
   // the warmth of the corners — orange for desert, blue for ice, etc.
   const vignetteColor = biome ? biome.skyTint : "rgba(0,0,0,0.4)";
@@ -6499,6 +6752,12 @@ function drawArena() {
   vg.addColorStop(1, vignetteColor);
   ctx.fillStyle = vg;
   ctx.fillRect(0, 0, W, H);
+
+  // === STADIUM PITCH LIGHTS ===
+  // Soft warm flares in each corner — sells the broadcast-stadium fiction.
+  // Drawn AFTER the vignette so the lights cut through the dark corners.
+  // Each is a radial gradient from warm white at the corner to transparent.
+  drawPitchLights(W, H);
 
   drawScenery();
 
@@ -8741,7 +9000,11 @@ function loop(ts) {
   tickAutoplay(cappedDt);
 
   if (SPEED > 0 && LEAGUE.match && LEAGUE.match.phase === "round") {
-    pendingTickAcc += cappedDt * SPEED;
+    // Slow-mo: when slowMoFrames > 0 (set on the match-deciding KO), the
+    // sim runs at 35% speed so the broadcast lingers on the moment.
+    let effSpeed = SPEED;
+    if (LEAGUE.match.slowMoFrames > 0) effSpeed *= 0.35;
+    pendingTickAcc += cappedDt * effSpeed;
     while (pendingTickAcc >= COMBAT.frameMs) {
       tickMatch();
       pendingTickAcc -= COMBAT.frameMs;
@@ -8875,5 +9138,3 @@ document.addEventListener("DOMContentLoaded", boot);
 if (document.readyState !== "loading") boot();
 
 </script>
-</body>
-</html>
