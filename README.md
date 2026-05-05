@@ -1,5 +1,7 @@
 # FLOAT KNIGHTS
 
+![Logo](/title-card-small.jpg)
+
 🌐 Live: <https://perchance.org/float-knights>
 
 A bracketed tournament sim where cute animal mascots in medieval armor fight
