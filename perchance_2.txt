@@ -251,6 +251,310 @@
     border: 1px solid rgba(239,77,77,0.35);
     animation: chipStreakPulse 1.6s ease-in-out infinite;
   }
+  /* v37.22: Veteran badge — shown next to streak when seasonsPlayed >= 1 */
+  .chip-vet {
+    display: inline-block;
+    margin-left: 5px;
+    padding: 0 4px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    border-radius: 2px;
+    vertical-align: middle;
+    line-height: 13px;
+    border: 1px solid;
+  }
+  .chip-vet.vet-bronze { background: rgba(160,98,47,0.18);  color: #d28b4f; border-color: rgba(210,139,79,0.45); }
+  .chip-vet.vet-silver { background: rgba(170,180,195,0.16); color: #c9d3df; border-color: rgba(201,211,223,0.5); }
+  .chip-vet.vet-gold   { background: rgba(247,201,72,0.18);  color: var(--gold); border-color: rgba(247,201,72,0.55); }
+
+  /* v37.23: Injury badge — small medical kit emoji indicator */
+  .chip-injury {
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 11px;
+    vertical-align: middle;
+    line-height: 13px;
+    cursor: help;
+    opacity: 0.85;
+  }
+
+  /* v37.23.2: League-tab Browse Achievements button — matches game aesthetic
+     (dark bg, gold border, sharp corners, tracked all-caps, hover-invert).
+     Avoids the off-theme white pill the default `class="primary"` produced
+     when used outside a modal-footer context. */
+  .ach-browse-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-2);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 9px 22px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .ach-browse-btn:hover {
+    background: var(--gold);
+    color: var(--bg-0);
+  }
+  .ach-browse-btn:active {
+    transform: translateY(1px);
+  }
+
+  /* v37.23: Achievement modal — WoW-style category sidebar + grid */
+  /* v37.23.2: ach-modal-wrap — flex-fills the fullscreen modal body so
+     the sidebar and content panel stretch to use all available height. */
+  .ach-modal-wrap {
+    display: grid;
+    grid-template-columns: 230px 1fr;
+    gap: 14px;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+  }
+  /* v37.23.3: mobile — stack sidebar above content. The team picker
+     stays compact (max-height capped); the category list collapses to
+     a horizontal scroll-row so all categories fit without eating the
+     content area. */
+  @media (max-width: 720px) {
+    .ach-modal-wrap {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 8px;
+    }
+    .ach-sidebar {
+      max-height: 38vh;
+      overflow-y: auto;
+    }
+    .ach-tab-btn {
+      padding: 7px 10px;
+      font-size: 11px;
+    }
+    .ach-team-picker {
+      max-height: 90px;
+    }
+    /* Tighten the achievement row on phones — icon column shrinks,
+       the meta column moves under the body to free horizontal space */
+    .ach-row {
+      grid-template-columns: 44px 1fr;
+      grid-template-rows: auto auto;
+      gap: 8px;
+      padding: 7px 9px;
+    }
+    .ach-icon { width: 44px; height: 44px; font-size: 22px; }
+    .ach-meta-col {
+      grid-column: 1 / -1;
+      text-align: left;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .ach-meta-col .ach-pts { font-size: 12px; }
+    .ach-meta-col .ach-unlock-date { margin-top: 0; }
+    .ach-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .ach-header-pts { font-size: 16px; }
+  }
+  /* Even tighter at very small viewports */
+  @media (max-width: 420px) {
+    .ach-tab-btn .ach-tab-meta { font-size: 8px; }
+    .ach-team-pick { font-size: 10px; padding: 2px 5px; }
+    .ach-row { padding: 6px; gap: 6px; }
+    .ach-name { font-size: 12px; }
+    .ach-desc { font-size: 10px; line-height: 1.35; }
+  }
+  .ach-sidebar {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    padding: 6px;
+    overflow-y: auto;
+    height: 100%;
+    min-height: 0;
+  }
+  .ach-tab-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid transparent;
+    padding: 9px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 2px;
+    letter-spacing: 0.3px;
+    transition: background 0.1s;
+  }
+  .ach-tab-btn:hover { background: rgba(247,201,72,0.08); }
+  .ach-tab-btn.active {
+    background: rgba(247,201,72,0.15);
+    color: var(--gold);
+    border-color: rgba(247,201,72,0.4);
+  }
+  .ach-tab-meta {
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+  .ach-tab-btn.active .ach-tab-meta { color: rgba(247,201,72,0.7); }
+  .ach-team-picker {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    padding: 6px;
+    margin-bottom: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .ach-team-pick {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 3px 6px;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+  }
+  .ach-team-pick:hover { background: rgba(247,201,72,0.1); }
+  .ach-team-pick.active {
+    background: var(--gold);
+    color: #1a1a1a;
+    border-color: var(--gold);
+  }
+  .ach-content {
+    overflow-y: auto;
+    height: 100%;
+    min-height: 0;
+    padding-right: 6px;
+  }
+  .ach-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: linear-gradient(180deg, rgba(247,201,72,0.10), rgba(247,201,72,0.04));
+    border: 1px solid rgba(247,201,72,0.3);
+    margin-bottom: 8px;
+  }
+  .ach-header-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+  .ach-header-meta { font-size: 11px; color: var(--ink); }
+  .ach-header-pts { color: var(--gold); font-weight: 800; font-size: 18px; }
+  .ach-list { display: grid; grid-template-columns: 1fr; gap: 4px; }
+  .ach-row {
+    display: grid;
+    grid-template-columns: 56px 1fr 60px;
+    gap: 10px;
+    align-items: center;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    padding: 8px 10px;
+    transition: background 0.15s;
+  }
+  .ach-row.locked { opacity: 0.55; }
+  .ach-row.unlocked {
+    background: linear-gradient(90deg, rgba(247,201,72,0.10), rgba(247,201,72,0.02));
+    border-color: rgba(247,201,72,0.4);
+  }
+  .ach-row.world-first {
+    background: linear-gradient(90deg, rgba(180,109,240,0.14), rgba(180,109,240,0.04));
+    border-color: rgba(180,109,240,0.5);
+  }
+  .ach-icon {
+    font-size: 28px;
+    text-align: center;
+    line-height: 1;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+  }
+  .ach-row.unlocked .ach-icon { border-color: rgba(247,201,72,0.5); background: rgba(247,201,72,0.05); }
+  .ach-row.world-first .ach-icon { border-color: rgba(180,109,240,0.6); background: rgba(180,109,240,0.05); }
+  .ach-body { min-width: 0; }
+  .ach-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 1px;
+  }
+  .ach-row.unlocked .ach-name { color: var(--gold); }
+  .ach-row.world-first .ach-name { color: #c8a3ff; }
+  .ach-desc {
+    font-size: 11px;
+    color: var(--dim);
+    line-height: 1.4;
+  }
+  .ach-progress {
+    margin-top: 4px;
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    height: 6px;
+    position: relative;
+  }
+  .ach-progress-fill {
+    background: var(--gold);
+    height: 100%;
+    transition: width 0.3s;
+  }
+  .ach-progress-text {
+    font-size: 9px;
+    color: var(--dim);
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+  }
+  .ach-meta-col {
+    text-align: right;
+    font-size: 10px;
+    color: var(--dim);
+  }
+  .ach-pts {
+    font-weight: 800;
+    color: var(--gold);
+    font-size: 13px;
+  }
+  .ach-row.locked .ach-pts { color: var(--dim); }
+  .ach-unlock-date {
+    margin-top: 2px;
+    color: var(--dim);
+    font-size: 9px;
+  }
+  .ach-row.unlocked .ach-unlock-date { color: rgba(247,201,72,0.7); }
+  /* The header section with summary stats */
+  .ach-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .ach-stat-card {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    padding: 8px;
+    text-align: center;
+  }
+  .ach-stat-val { font-size: 18px; font-weight: 800; color: var(--gold); line-height: 1; }
+  .ach-stat-lbl { font-size: 9px; color: var(--dim); letter-spacing: 1px; margin-top: 4px; text-transform: uppercase; }
+
   @keyframes chipStreakPulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(239,77,77,0); }
     50%      { box-shadow: 0 0 6px 1px rgba(239,77,77,0.45); }
@@ -823,6 +1127,29 @@
   }
   .modal-card.modal-extra-wide {
     max-width: 1100px;
+  }
+  /* v37.23.2: Fullscreen modal variant — used for the achievement browser
+     and any future dense reference UI. Takes the full viewport minus a
+     small breathing margin so the content has room to breathe. The .body
+     inside still scrolls if it overflows. */
+  .modal-card.modal-fullscreen {
+    max-width: 96vw;
+    width: 96vw;
+    max-height: 94vh;
+    height: 94vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-card.modal-fullscreen .body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px;
+  }
+  @media (max-width: 720px) {
+    .modal-card.modal-fullscreen { max-width: 98vw; width: 98vw; max-height: 96vh; height: 96vh; }
+    .modal-card.modal-fullscreen .body { padding: 8px 8px; }
   }
   .modal-card .header {
     padding: 14px 18px;
@@ -1437,6 +1764,11 @@
   .store-target-tag.store-target-targeted {
     color: var(--gold);
     background: rgba(247,201,72,0.14);
+  }
+  .store-target-tag.store-target-tip {
+    background: rgba(140, 200, 110, 0.12);
+    color: #8cc86e;
+    border: 1px solid rgba(140, 200, 110, 0.4);
   }
 
   /* === v28.1: Sandbag picker modal — row list of opponent knights === */
@@ -4022,11 +4354,8 @@
   }
 
   /* Big centered countdown overlay (covers the arena during intermissions) */
+  /* v37.22: blur removed — users want to watch the cleanup-crew animation */
   .arena-wrap { position: relative; }
-  canvas#arena { transition: filter 0.4s; }
-  canvas#arena.countdown-blur {
-    filter: blur(4px) brightness(0.55) saturate(0.7);
-  }
   .countdown-overlay {
     position: absolute;
     inset: 0;
@@ -5050,6 +5379,12 @@
       <div class="league-following-grid" id="leagueFollowingGrid"></div>
     </div>
 
+    <h3 class="league-section-h">🏅 ACHIEVEMENTS</h3>
+    <div class="league-hall-sub">Per-team milestones and global "world first" feats. Click to open the achievement browser.</div>
+    <div style="margin-bottom:12px;">
+      <button class="ach-browse-btn" onclick="if(typeof showAchievements==='function')showAchievements()">🏅 BROWSE ACHIEVEMENTS</button>
+    </div>
+
     <h3 class="league-section-h">⚔️ TEAMS</h3>
     <div class="league-grid" id="leagueTeamsGrid"></div>
 
@@ -5562,6 +5897,19 @@
         <p>Pawington played the inaugural Pawington Cup match in Year 32 R5. She dropped the kerchief in round one — by her own subsequent statement, "intentionally, on principle, to demonstrate that the rules accommodate the dropping" — and the Otters lost the round. She did not drop it again. The Otters won the match three rounds to one. Pawington carried the kerchief in two of the four rounds, including the deciding round five. The Cup is, by Caucus archival record, the only inaugural-event championship that has been won by the format's namesake.</p>
         <p>Pawington died, in a non-League hunting accident in the Olympia harbor coastal range, in late Year 32. The Olympia Outlaw Otters' coaching staff did not, in the immediate post-death interviews, accept the standard League grief protocol; they declined the Foundation's offered Hall-of-Fallen-Heroes induction (Pawington had not, by Foundation rule, died on a sanctioned field), and they organized, on their own initiative, a small private ceremony at the harbor at sunset, attended by approximately sixty Otters, no other team's representatives, and one (uninvited but quietly tolerated) Featherquill. Featherquill's column on the ceremony — the only public account — closed with the only line that has, in five subsequent Pawington Cup seasons, been quoted by the LMG broadcast booth at every Cup-final post-match line: <em>"The Cup is hers. The kerchief got away from her once. The kerchief, in five subsequent seasons, has been carried by Otters who knew her, and Kits who beat her, and the Raccoons (twice) who scavenged the kerchief mid-round in a way Pawington would have, in her time, deeply admired. The Cup belongs to whoever runs it. Pawington's only contribution was the dropping. The dropping was the contribution."</em></p>
         <div class="signoff">— Caucus founding-event archive, "Pawington Cup, codification" · cross-referenced with the Olympia Outlaw Otters' team archive entries on Mira Pawington and the Year 32 inaugural Cup match · Featherquill's column on the harbor ceremony has, by general agreement, never been reprinted in full and is, by the Otters' coaching staff's preference, available only to Otter coaching staff and Foundation Library staff with appropriate clearance</div>
+      </article>
+      <article class="history lore-wide">
+        <h3>On the Pittsburgh Visiting Perch and the First Northbound Arrival</h3>
+        <div class="meta">A history · Foundation Library Northeast Coast Bureau filing · Year 36 mid-season · cross-published with the Pittsburgh Murder's Roost minutes (where authorized by Roost vote) and the Federación's Cartagena bulletin (in Spanish translation, by the Bears' bureau)</div>
+        <p>The Pittsburgh Visiting Perch sits on the foundry-side ledge of the Pittsburgh harbor wall, twenty-three feet above the Allegheny's high-water line, on a cantilevered iron arm that the Murder's master arrowsmith Slate Wirethorn forged across the Year-36 founding-bell off-season. The arm is the only piece of Wirethorn's working life that has, in his thirty years at the foundry, been built for a non-Murder occupant. The Roost commissioned it on the ratification of Inkbeak Sr.'s standing proposal — the proposal Inkbeak had drafted on Flight 6, three years before the ratification, and which the Roost had voted slowly on through the entire intervening period in the way the Roost votes slowly on every proposal that asks the Murder to extend hospitality outside its own line. The Roost approved unanimously in the Year 36 mid-season. The construction began the morning after.</p>
+        <p>The perch is not, by design, equivalent to the senior perch the Bears wax at Cartagena. The Bears' perch is on a stone tower; ours is on iron, set into the foundry-quarter brick, because iron is what Pittsburgh has and what Pittsburgh knows. The Bears, on receiving the relay news from Inkbeak Sr.'s Flight 8, sent a sealed jar of the Cartagena-perch wax northward with a note in Doña Inés's hand reading <em>"para el día"</em> — for the day. Wirethorn examined the wax, examined the iron, examined the Pittsburgh harbor air, and produced a written reply (in his standing pencil, on Roost letterhead): <em>"the wax is excellent. the wax is, by every honest read, not for our iron. our iron asks a different finish. i am, on this matter, going to apply the wax to the perch's small ledge, where the visiting bird will rest a wing on landing. the rest of the perch will be finished as the iron asks. the wax will be where the bird touches first. that is the part of the perch that owes the wax. the rest of the perch owes Pittsburgh."</em> The Roost approved without amendment. The Bears, on receiving the reply (relayed by Inkbeak Sr. on Flight 9 southbound), are reported to have said, in the Cartagena working session at which the reply was read aloud: <em>"el herrero ha entendido. la cera estará donde tiene que estar. el resto del posadero es Pittsburgh, y debe ser Pittsburgh. esto es, por toda lectura honesta, lo correcto."</em> Doña Inés is reported to have agreed without further comment.</p>
+        <p>The perch was completed on the third afternoon of the Year-36 mid-season. The Bears' wax was applied to the small ledge — a six-inch arc of cured wax, set against the cantilevered arm's underside, polished to the exact finish the Cartagena senior perch carries — and the rest of the perch was finished in the standard Pittsburgh foundry-quarter blacking. Wirethorn applied the blacking himself, over four working days, in a paste he mixes from foundry-floor coal-dust and basin water in a proportion that is, by every Murder elder's pre-publication acknowledgment, his own and his alone, and which he has not, in thirty years, written down. The Roost held a brief ceremony at completion. Slatequill Inkbeak Sr. attended in his standing capacity as the Murder's senior flying Raven. He spoke briefly, in the standing format the Roost uses for ceremonies of perch dedication: <em>"the perch is here. the perch is for the visitor. the visitor will, in due course, arrive. the perch will, on that day, do the work the perch was built to do. on that day we will, as the Bears asked us to remember, be the place that is, by every Federación read, the harbor that asked questions of visiting birds. we are not yet that place. the perch will, on the day the visitor arrives, make us that place. we wait."</em> The Roost adjourned without further comment. The perch stood empty for forty-six days.</p>
+        <p>The first northbound arrival landed on the morning of the forty-seventh day, an hour after dawn, in light fog that was lifting off the river in slow stages — a working condition the Pittsburgh harbor watch describes as <em>"the kind of morning the harbor uses for its own work; the visiting bird is, by tradition, the harbor's guest, but the harbor is also doing what the harbor does, which is rising into a clear day from a wet night."</em> The arriving bird was a senior Andean Condor scout named Marisol Cumbralta, twenty-nine years old, with sixteen years of high-cordillera scouting experience and three previous southbound Caribbean-basin crossings to her record. She was, by Federación standing description, <em>"la voladora de larga distancia con el récord más completo de cualquier Cóndor activo en la Federación, y la exploradora a quien la Federación ha acordado, en sesión, encargar el primer arribo norte, por la razón de que el primer arribo debe ser hecho por la Cóndor cuyo registro resista la clase de escrutinio que la Manada de Pittsburgh aplica a todo testimonio de aves visitantes."</em> Doña Inés signed the dispatch authorization three weeks before the flight. Cumbralta departed Cartagena on the third morning of the seventh week of the Federación's calendar year. The crossing took, by her own pocket-log, eleven days and four hours, with three rest stops on the standard Caribbean-basin route the Murder's Inkbeak Sr. had documented across his eight prior southbound flights.</p>
+        <p>Cumbralta touched the perch at six minutes past dawn-plus-one-hour. She rested her right wing on the small wax-finished ledge — the ledge the Bears had asked us to build, the ledge Wirethorn had finished to the Cartagena standard — and she held the rest position for the standard four-second visiting-bird acknowledgment that the Murder uses when receiving its own flying Ravens at the foundry quarter on return from Boston scouting flights. The Roost, who had been watching from the harbor wall in their standing reception formation since first light, completed the four-second acknowledgment in unison. The acknowledgment is, by Roost convention, the moment the visitor has arrived. Cumbralta had arrived. The Roost had received her. The work the perch had been built for had, on the forty-seventh day, been done.</p>
+        <p>Cumbralta stayed four days. She was interviewed, by long-standing arrangement with the Foundation Library Northeast Coast Bureau, on the first afternoon by the bureau's senior curator (Sigridweave, the Owl, who holds the curatorship since Year 31). The interview lasted six hours across two sittings. Cumbralta declined fish-scraps; she accepted Roost-standard hospitality water from a clay vessel Inkbeak Sr. had fetched from the Murder's archival roost; she answered every question Sigridweave asked her in what the bureau's pre-publication notes describe as <em>"careful Federación-Spanish, with a Quechua-creole register Sigridweave's translator (an Owl-side junior bureau scribe named Pellic Snowcrest, recently rotated in from the LMG translation booth) rendered into League Common with what was, by every cross-reference, equivalent care."</em> The interview transcript runs to one hundred and forty-one pages. The bureau has filed it, in ink, in the Northeast Coast Bureau's senior-archive drawer. The transcript is available to scholars by formal request. The bureau's curator's standing pencil-annotation on the file's flyleaf reads, in full: <em>"this is, by my own honest read, the second careful entry the file has received in six years. we have, on this entry, more institutional vocabulary for the receiving than we had for the first. we are, on the matter, no longer the bureau that did not have the vocabulary. we are the bureau that has it now. — sgw."</em></p>
+        <p>Cumbralta departed Pittsburgh on the morning of her fifth day, southbound, in fair flying weather. The Roost completed the standard departure acknowledgment. Inkbeak Sr. flew with her as far as the Atlantic shelf — a Pittsburgh-side courtesy not previously offered to any visiting bird, agreed by Roost vote on the second afternoon of her stay — and turned back at the shelf's edge. He returned to Pittsburgh the same evening. He filed his standard post-flight report. He noted, at the end, in his own pencil: <em>"the visitor was a careful narrator. the bureau was correct, by my read, to send the senior curator for the interview. the bureau will, in due course, file the interview's pages. the pages will, by my best read, be the most-cited pages in the Old World File's six-year operating record by the close of the next archival quarter. the file is, by this arrival, no longer a file with one careful entry. the file is a file with two. we are, by this arrival, the place the Bears said we were. we have, on this matter, the work to keep being it."</em></p>
+        <p>The wax on the small ledge — the wax the Bears had sent for the day — was, by Wirethorn's standing rule, not refreshed after Cumbralta's departure. Wirethorn's rule, written on the same Roost letterhead as his earlier reply: <em>"the wax was for the day. the day has been. the wax remains where the day left it. we will, in due course, when the next visitor arrives, finish the ledge as that day asks. the wax will, on this matter, settle into the iron as the iron settles around the wax. the perch will, on every visitor's arrival, carry on its small ledge the trace of every prior arrival. that is, by my read, what the perch is. the perch is the harbor's memory of what arrived. the iron remembers. the wax remembers. we, on this matter, do not need to."</em> The perch stands. The wax is, as of this filing, two months into its settling. The next northbound visitor's date of arrival has not, by either league's working calendar, been scheduled. The perch waits. The Roost waits with it. The harbor is, as Inkbeak Sr.'s Flight-6 pocket-diary entry described from the other end of the route four years ago, the place that has now begun to do, on its own ledge, the work the Cartagena perch has been doing for four years on its.</p>
+        <div class="signoff">— Foundation Library Northeast Coast Bureau filing, Year 36 mid-season · the bureau has, in two subsequent working sessions, agreed to file Cumbralta's interview transcript in ink rather than pencil, on the grounds that the transcript is, by every available standard, finished work; the senior curator's standing dissent on this point is preserved in pencil at the bottom of the filing slip and reads, in full: <em>"the transcript is finished. the work is not. the work, by my own read, will not be finished in our lifetime. the file should, by my preference, be kept open in pencil for as long as the work requires. i have signed in ink because the bureau's standing rule asks ink for filings of this type. the dissent is, on this matter, in pencil, and is, by my preference, preserved. — sgw."</em></div>
       </article>
     </div>
 
@@ -6202,6 +6550,16 @@
         <p>She has, by her own pre-publication arrangement with the Foundation Library, two standing requests for any future bio update: (1) that the bio not name a successor before she has formally named one herself, and (2) that the bio's signoff line, whatever else it says, include the lobster vendor's standing comment about the brass-crown bill. The first request the Library has agreed to. The second is honored below. She has, in twelve years of public service, asked the Foundation Library for nothing else.</p>
         <div class="signoff">— Foundation Library bio · "Pell Whittlestone" · the canonical bio · drafted Year 36 mid-season at her own pre-publication permission, in the longest-form authorized version she has, in twelve years, signed off on · the lobster vendor's standing comment about the brass-crown bill is included by her standing request: <em>"the bill is, by my own reading, between Pell and Pell."</em> · she has not, as of this writing, named a Counsel-emeritus successor · the founding-bell forge remains, by her own keeping, in continuous operation</div>
       </article>
+      <article class="bio">
+        <h3>Marisol Cumbralta</h3>
+        <div class="meta">Andean Condor · Federación Sudamericana long-distance scout · twenty-nine years old · the first northbound oceanic arrival at the Pittsburgh Visiting Perch · Year 36 mid-season</div>
+        <p>Marisol Cumbralta was born in the Cordillera Real, on a ledge in the upland Bolivian massif her family has occupied without break since at least the second generation after the Long Quiet — a ledge the Federación's high-cordillera ornithology bureau classifies as <em>"posición ancestral confirmada,"</em> a designation reserved for nesting sites with at least four documented generational continuities on file. She is, by every Federación register, the Condor scout with the most complete flight log on the Federación's active roster: nine hundred and forty-one sanctioned scouting flights between Year 20 and Year 36, three confirmed Caribbean-basin southbound crossings (Years 32, 33, and 35, all completed without incident), and one confirmed northbound crossing (Year 36 mid-season, the dispatch that carried her to the Pittsburgh Visiting Perch on its forty-seventh day of vacant standing).</p>
+        <p>The Federación selected her for the first northbound dispatch in a working session held at Cartagena in the third week of Year 36's calendar. Doña Inés chaired the session. Six other Condor scouts were on the considered list. The session's deliberation took, by Bears' minutes, four hours. Cumbralta was selected on the strength of a single working-session statement made by the Federación's senior bureau-Bear Don Alfonso de la Cordillera Pampabajo, who said, on the matter: <em>"el primer arribo será leído por la Manada de Pittsburgh con la atención que la Manada aplica a todo testimonio aviar. nosotros, por nuestra propia regla, hemos clasificado el testimonio aviar como menos confiable de lo que nuestros Osos preferirían. la Cóndor que envíemos por primera vez al norte debe, por toda lectura honesta, ser aquella cuyo registro pueda ser leído por la Manada y, en cualquier referencia cruzada, no encontrar margen para corregirlo. esa Cóndor es, por mi propia lectura, Marisol Cumbralta. esto no es debate. esto es, por toda lectura honesta, lo correcto."</em> The session concluded without further deliberation. Cumbralta was notified that afternoon. She accepted the dispatch in writing the same evening, in a one-sentence reply transcribed by the Bears' courier: <em>"He recibido el encargo. Volaré. — M.C."</em></p>
+        <p>Cumbralta is, by her own pre-flight description, <em>"not a narrator. i am a scout. the scout's job is to fly the route, observe the conditions, and return with what i have observed. the narration is, by my read, the work of the bureau that receives the report. i am, on this matter, willing to answer questions. i am not, on this matter, willing to embellish. if a question asks for what i do not know, i will say i do not know. if a question asks for what i do know, i will give the answer in the smallest correct number of words. this is, by my read, what the bureau receiving me has, in six years of operation, been built to receive."</em> The Pittsburgh Murder's Roost, on receiving this pre-flight description (relayed by Inkbeak Sr. on Flight 9 northbound, three weeks before her arrival), is reported to have replied, in the standing one-sentence format the Roost uses for inter-bureau acknowledgments: <em>"the Roost has read the description. the Roost is, on this matter, ready."</em></p>
+        <p>Her interview at the bureau, conducted by Sigridweave on the first afternoon of her four-day Pittsburgh stay, produced one hundred and forty-one pages of transcript. The bureau's pre-publication summary characterizes the interview's content as covering <em>"the Federación's standing roster of fifty-three sanctioned teams, the seventeen-year operational history of the cordillera scouting program, the Federación's working classification of seven trans-Pacific bird-relay sources (which the bureau has never, in six years, had any direct evidence of and which Cumbralta confirms in detail with what is, by every cross-reference, the same careful precision the Year-34 albatross applied), the standing relationship between the Cartagena Bears and the Bogotá Spectacled Bears, and a single passage of approximately fourteen pages on the cordillera's prevailing wind patterns at the equatorial crossing — a passage the bureau has, by curator's standing recommendation, marked as a separate sub-file for distribution to the Murder's Roost on Roost-vote."</em> The Roost has, by Year 36 mid-season vote, accepted the sub-file and begun internal review. The Roost's standing position on the sub-file's content, after two working sessions: <em>"the wind information is, by every cross-reference Inkbeak Sr. can apply from his own eight crossings, accurate. the information also extends our existing crossing-route knowledge by a margin we have not, in twenty-seven years of crossing operations, had access to. we will, in due course, integrate the information into the Murder's standing crossing protocols. we will not, by Roost vote, alter the protocols immediately. integration of new information into long-standing protocols is, by Roost convention, undertaken slowly. we are, on this matter, undertaking it slowly."</em></p>
+        <p>Cumbralta, on departing Pittsburgh on the morning of her fifth day, was asked at the harbor wall by a Wing Standard reporter (Talia Featherquill, who had flown to Pittsburgh for the occasion on Foundation expense) whether she would be returning. She answered, in League Common, which she does not speak natively but had used carefully for the four days of her visit: <em>"i will return when the Federación dispatches me to return. i do not, on the matter, dispatch myself. the dispatch is the bureau's. the flight is mine. these are different roles. they have, by my read, been kept separate by every careful flier on either continent for the entire history of the program. i will keep them separate."</em> Featherquill's column, published the following week in the Wing Standard, characterized this answer as <em>"the most professionally careful answer i have, in eleven years of column-writing, been given by any source on either continent. the answer is, by every reading, exactly the answer the Federación selected her to give. the Federación selected well. the Murder, by every reading, knows it. the bureau, by every reading, knows it. we should, by my reading, also know it."</em> The column ran without revision.</p>
+        <div class="signoff">— Wing Standard cultural feature, "The First Arrival" · Year 36 mid-season · by Talia Featherquill · the column is, by Foundation Library standing acquisition, on permanent file in the Northeast Coast Bureau's curator-recommended reading drawer · Cumbralta has not, in the four months since departure, been re-dispatched · the Federación's standing position on the timing of any second northbound dispatch is, in Doña Inés's hand: <em>"el primer arribo se ha hecho. el segundo será cuando el segundo deba ser. no hay calendario. hay vuelos. los vuelos vendrán cuando los vuelos sean correctos."</em></div>
+      </article>
     </div>
 
     <!-- ===== DIARIES ===== -->
@@ -6473,6 +6831,18 @@
         <p><em>Flight 6, Year 35, day 11, last entry of the flight. Approaching Cartagena. The harbor wall is in sight at approximately twenty-eight kilometers. The visiting-Raven roost is, by my flight-six approach angle, just visible in the gap between the harbor wall's two southern towers. The wax on the senior perch is, on every flight's approach, visible from approximately fifteen kilometers out, because the wax catches the late-afternoon Cartagena sun in a particular way that the Bears' wax-makers have, by their own pre-publication acknowledgment, optimized for visibility on a Pittsburgh-bound flight's return approach. The Bears' Healer-Capybara confirmed this on Flight 4: "Sr. Inkbeak, we wax the perch the way we do because we want you to see it from far. We want you, at the moment you first see it, to know you are home. We know that home is not Cartagena. We have not, by any pretension, asked the perch to be your home. We have asked the perch to remind you that you have, on this flight, found the place you flew toward. That is, by our reading, a kind of home for the duration of the visit." I have, on every flight since, watched for the wax. I have, on every flight, seen it at the predicted distance. I have, on every flight, felt, at the moment of seeing it, the thing the Healer-Capybara described. The thing is real. I do not, in the official communiqués, characterize it. I will, in this pocket-diary, characterize it: the thing is what the Murder has not yet, in its institutional vocabulary, given a name to. The thing is, by every standing read I have, the right thing for the Federación to have given us. We have not, in four years, given them an equivalent thing on our side. We should. I have, on this flight, drafted a Roost-vote proposal for an equivalent thing at the Pittsburgh harbor wall, for the day the first Federación Condor lands northbound. The Roost will, in due course, vote on the proposal. The Roost has, on every prior such proposal, voted slowly. The Roost will, by every honest read, vote slowly on this one too. I have, in the proposal, asked the Roost to be, on this matter, slightly less slow. The Roost has, on receiving the proposal, made no acknowledgment. I expect, by Murder convention, no acknowledgment will be made until a vote is held. A vote will, in due course, be held.</em></p>
         <div class="signoff">— Foundation Library archival diary · the Inkbeak Pocket-Diary, Caribbean basin crossing pages, partial publication authorized by Roost vote Year 36 mid-season · the published pages are approximately one-third of the diary's total content · the unpublished two-thirds remain in the Murder's archival roost custody · Inkbeak Sr.'s Year-35 Roost-vote proposal for a Federación-equivalent visiting-perch arrangement at the Pittsburgh harbor wall was, by Year-36 mid-season Roost vote, ratified · construction of the perch is underway · the Bears of the Cordillera have, on receiving Inkbeak's relayed news of the ratification, sent a small ceremonial gift northward via Flight 8: a sealed jar of the wax used on the Cartagena senior perch, with a note in Doña Inés's hand reading <em>"para el día"</em> ("for the day")</div>
       </article>
+      <article class="diary lore-wide">
+        <h3>Sigridweave's pencil-marginalia, the morning the Condor lands</h3>
+        <div class="meta">A diary · Foundation Library Northeast Coast Bureau · the senior curator's working desk-pad · pencil throughout · Year 36 mid-season, the forty-seventh day of the Pittsburgh Visiting Perch's vacant standing · transcribed with the curator's permission · only the pages relevant to the dispatch decision are reproduced</div>
+        <p><em>Forty-fifth day, evening.</em> the perch has stood empty forty-five days. the Roost is, by every account from Inkbeak Sr.'s side, calm about the wait. i am, on my own side, also calm. the calm is not, by my read, the right word. the calm is the working state. i have not, in two years, drafted a second draft of the response. the first draft is, by my read, the response. the file is, on the desk this evening, where it has been for two months — in the drawer, second from the top, between the Federación bulletins and the Murder's Roost-minutes folder. the desk is clean. the snowfall is, by the calendar, not yet on us. the calendar is, by my read, the only thing in the office that is on schedule.</p>
+        <p><em>Forty-sixth day, evening.</em> Inkbeak Sr. has sent word from the harbor watch: a southerly arrival has been sighted at twenty-eight kilometers, on the standard approach angle, at the standard fifth-day pace. the bird is a Condor. the bird is the Cóndor. the Federación's working calendar puts the dispatch at eleven days four hours from Cartagena; the bird is, by Inkbeak's range estimate, on schedule for the forty-seventh-day morning. i have, on receiving this word, gone to the drawer. the file is in the drawer. the draft is in the file. the draft has not been altered since i last read it on the eighteenth day of the perch's standing. the draft is the same draft. the dispatch decision is, on this evening, the same dispatch decision it has been for two years.</p>
+        <p><em>Forty-sixth day, late.</em> the bureau's working position on the dispatch decision is, in the standing-rules document, that the dispatch decision is the senior curator's. the senior curator's standing position on the dispatch decision is that it has not been settled. the position has held for two years. the position is, on this evening, going to be tested by the morning. i have, by my own preference, not let the position be tested by any prior morning. i have, on this matter, used the perch's standing emptiness as the reason for not testing the position. the perch will not, by tomorrow morning, be empty. the reason will not, by tomorrow morning, be available. i am, on the matter, going to have to decide.</p>
+        <p><em>Forty-sixth day, midnight.</em> i have read the draft three times this evening. the draft is the draft. the draft has not asked, in two years, to be revised. the draft has asked, in two years, only to be dispatched or not dispatched. the dispatch question is the only question the draft has had since the morning of its drafting. i have not, in two years, settled the question. i am, on this evening, alone in the office, with the file open on the desk, and the snowfall not yet here, and the perch waiting and the Cóndor flying, and the question is, by my own honest read, settled.</p>
+        <p><em>Forty-seventh day, dawn.</em> the dispatch decision is to dispatch. i have, this morning, not amended the draft. i have, this morning, written one cover note. the cover note is, on the standing-rules document, what the bureau attaches to a draft on dispatch. i have written the cover note in pencil. the standing-rules document, by long convention, asks for the cover note in ink. i have, on this dispatch, declined the convention. my reason, written at the bottom of the cover note in the same pencil: <em>"the draft is in pencil. the cover is in pencil. the dispatch is in pencil. the bureau will, on this dispatch, accept the dispatch as it is. the bureau will not, on this dispatch, ask the senior curator to convert the pencil to ink. the senior curator has, on this dispatch, exercised the senior curator's standing prerogative. the dispatch is, on this matter, what it is. the bureau will receive the prerogative. the bureau will, in due course, file the dispatch in the standing way. the dispatch is, on this morning, on its way."</em></p>
+        <p><em>Forty-seventh day, dawn-plus-one-hour.</em> the Cóndor is at the perch. Inkbeak Sr. has signaled from the harbor wall. the Roost has completed the four-second acknowledgment. the perch has, on its forty-seventh day, done the work it was built for. i have, on the desk, the cover note finished. i have, on the desk, the draft from the drawer. i will go to the harbor at noon, in my own working capacity, with the file. i will, at the close of the interview the bureau and i are about to begin, place the file in the Cóndor's care for southbound carriage. the Cóndor will, by every Federación standing protocol, deliver the file to Cartagena on her return crossing. Doña Inés will, in due course, receive it. the Albatross — if she ever returns to Pittsburgh harbor — will, by every Federación-side standing protocol, receive the file in the manner the Federación uses for forwarded correspondence: which is to say, when the Albatross is next on the Federación side and accessible, and not before. i do not know, on this morning, when that will be. i have not, on this matter, asked. the dispatch-ledger is, on this morning, no longer open. the dispatch-ledger is, on this morning, settled. the writing-ledger is also, on this morning, settled. both ledgers are, on this morning, the same ledger. they have, by my own pre-publication acknowledgment, been the same ledger since the morning the draft was written. i was wrong, in the draft's last paragraph, to call them different. i was wrong on the matter of the ledger. i was right on the matter of the writing. these are, on this morning, the corrections i owe my own draft.</em></p>
+        <p><em>Forty-seventh day, evening.</em> the Cóndor has the file. the interview's first session is finished. the interview will, by long-standing protocol, conclude tomorrow morning at the second sitting. the file is, on this evening, in the Cóndor's pouch — a small reinforced courier-pouch the Federación issues to all northbound and southbound dispatch-bearers, of the same construction as the pouch Inkbeak Sr. carries on his right leg on every Caribbean-basin crossing. the Cóndor accepted the file with the standing four-word Federación dispatch-receipt: <em>"recibido. lo llevaré. — M.C."</em> i nodded. she nodded. the nod was, on the matter, sufficient. the desk is, this evening, clean again. it is the cleanest the desk has been in two years. the cleanness is, on the matter, not the absence of work. the cleanness is the absence of the work that has, for two years, been on the desk. there will be other work. there is always, by the bureau's standing description of the bureau's purpose, other work. but the desk is, this evening, clean of this work. the work is, on this evening, on its way.</em></p>
+        <div class="signoff">— senior curator's working desk-pad, Foundation Library Northeast Coast Bureau · pencil throughout · Year 36 mid-season · the marginalia have been transcribed for the bureau's own archives by the junior bureau-Owl Pellic Snowcrest, with the senior curator's express permission · the curator's standing pre-publication note on the transcription, in pencil at the head of Snowcrest's clean copy, reads in full: <em>"this is what the morning looked like, by my own read. it is not the only thing the morning was. it is what the desk-pad held. the rest is, by my own preference, not in the file. the rest will, in due course, settle in the same way the wax on the small ledge of the perch is settling. we will not, on the matter, refresh the wax. we will, on the matter, not transcribe the rest of the morning either. — sgw."</em></div>
+      </article>
     </div>
 
     <!-- ===== MATCH LOGS ===== -->
@@ -6675,6 +7045,26 @@
         <p>36:22 — Wartooth wins the Year 36 Hallowtide Tag. Her third consecutive title. The crowd, by Hallowtide tradition, does not cheer. The crowd makes the Hollow's hum at full volume. Wartooth walks, by tradition, to the perimeter and exits without a victory speech. The trophy — a small carved pumpkin with a single notched mark for each of her three wins — is presented to her at the back of the venue, away from the broadcast.</p>
         <p>36:51 — Quillsetter, on the open mic, gives the standard Hallowtide-Tag closing line: <em>"the Tag is over. the Hollow has had its night. we will see you at next year's Tag. by long-standing Hallowtide tradition, the broadcast booth will not, in the post-match coverage, replay the final tag. the final tag belongs to the Hollow. good night."</em> The broadcast cuts to black. The Hollow's hum, by every spectator's account, continues for approximately ninety more seconds after the broadcast cuts.</p>
         <div class="signoff">— LMG broadcast transcript · Year 36 Hallowtide Tag · Reno Hallowtide Hollow · Kor Wartooth's third consecutive title · the broadcast booth's standing Hallowtide protocol prohibits replaying the final tag · the protocol has, in three Tag matches, been observed without exception</div>
+      </article>
+      <article class="log">
+        <h3>Match Log: Year 36 R6, RVN vs WLF (Pittsburgh, Foundry-Quarter Pitch) — the morning the perch was occupied</h3>
+        <div class="meta">LMG broadcast transcript · 9:08 game time · partial · the match the broadcast booth has, by general agreement, never re-aired uncut · the match was scheduled to begin at the Pittsburgh foundry-quarter at first light, dawn-plus-three-minutes, and ran on schedule until the harbor-side event at the morning's first hour</div>
+        <p>00:00 — First-light bell. Both teams take spawn. The Foundry-Quarter Pitch is, by Caucus measurement, three hundred and twenty paces along the long axis, set within the Murder's home ruin-quarter. The harbor wall — and, by Year 36 mid-season completion, the Visiting Perch — is visible at the field's northeast corner from the Wolf bench, at a distance of approximately one hundred and forty paces.</p>
+        <p>00:32 — Round 1 opens. Wolves' Skir Greylane (Halfmoon's nephew, second-season Brawler, the lead of a three-Wolf rotation) drives center. Ravens' Quorrik holds the Sniper position at the back ledge.</p>
+        <p>02:14 — Quorrik makes a clean ninety-eight-pace shot through Skir Greylane's right shoulder pauldron. Skir falls, returns to the Wolf line in two rounds (he carries three lives at this stage of the season). Ravens lead 1-0 in round 1.</p>
+        <p>04:08 — Round 1 closes. Ravens take it on a 4-3 round-resolution, Quorrik with two kills.</p>
+        <p>05:03 — Round 2 opens. Wolves adopt their standard mid-match defensive shift. The Ravens' Healer rotates to the back ledge. The match settles into the standard pace the LMG broadcast booth has come to recognize as Pittsburgh-home pace — slow opening, sustained ranged exchanges, no Brawler commits before the third minute.</p>
+        <p>06:48 — On the Wolf bench, the team's spotter (a corvid auxiliary the Wolves contract from the Murder's older retired-flier pool) signals to the Wolf coach. The signal is the spotter-flag the Murder uses for harbor-watch communications: a single short flag-raise, then a pause, then a second short raise. The Wolf coach watches it. The Wolf coach is the only non-Murder coach on the active sideline who reads the harbor flag-code; she has, by her own pre-season acknowledgment, learned it for occasions of this kind.</p>
+        <p>06:52 — Halfmoon Greylane, watching from the Wolf dugout in her standing veteran's-bench role (she has not started a sanctioned match since Year 35 R12, her shoulder; she travels with the team), looks toward the harbor wall. Inkbeak Sr.'s harbor-watch silhouette is visible at the wall's standing reception position. Halfmoon nods once, slowly, in the way the Wolves nod for things they have been told to expect.</p>
+        <p>07:11 — Quorrik takes a second shot on the Wolf line. The shot is a clean kill. Ravens score the round, take it 2-0.</p>
+        <p>07:48 — Inkbeak Sr.'s silhouette at the harbor wall straightens, in the way a senior watcher straightens at the moment of a confirmed sighting at terminal-approach distance. The Wolf spotter raises the harbor flag a third time. The Wolf coach signals to the Wolf bench: <em>break-protocol, harbor</em>. The Wolves' active line, by Year-35 standing arrangement with the Murder, knows what the protocol means. The Wolves' active line stops engaging at the round's next reset.</p>
+        <p>08:14 — Round 3 opens. The Wolves do not, on the bell, advance. The Ravens, watching the Wolf line hold position at spawn, also do not advance. The LMG broadcast booth, watching both lines hold, calls the situation: <em>"the harbor bell has rung. the Cóndor is on approach. the match has, by long-standing arrangement, ceded the working morning to the harbor's working morning. we are, on this morning, watching two things at once."</em> The booth cuts the broadcast to a wide-shot covering both the field and the harbor wall.</p>
+        <p>08:46 — At the harbor wall, the Cóndor is visible at the watch's standing visibility distance — approximately fifteen kilometers, with the morning's lifting fog still partial. Inkbeak Sr.'s silhouette holds the standing reception position. The Roost, gathered along the wall in the wider reception formation, is visible to the broadcast camera as approximately three hundred Ravens, evenly spaced, motionless.</p>
+        <p>09:01 — On the field, both teams stand at spawn. The Wolves' Healer (Pinedrift, the same Healer Halfmoon Greylane carried across forty-eight paces in Year 35) takes off her helmet at her own bench's quiet recommendation. The Ravens' Healer, watching her, also removes hers. The active lines do not move. The crowd is, by every account, silent.</p>
+        <p>09:06 — At the harbor, the Cóndor touches the perch's small ledge. The four-second acknowledgment runs. Inkbeak Sr.'s silhouette completes the acknowledgment in the standing way. The Roost, in the wider formation, completes the acknowledgment in unison. The broadcast camera holds the wide shot.</p>
+        <p>09:08 — On the field, the round resumes. The active lines re-engage at the standing pace. Quorrik, at the back ledge, takes the round's first shot at the Wolf Brawler. The shot is a clean kill. The Ravens close the round 3-0. The match ends in the round's final minutes with a Raven 5-3 round-resolution and a Raven 3-0 match-resolution.</p>
+        <p>09:48 — Post-match line. The Wolf captain (a third-season Brawler named Stormrun Greylane, Halfmoon's daughter, in her first season as captain) approaches the Raven line for the standing handshake. Quorrik, who is the Raven captain, accepts the handshake. The two captains hold the handshake for the standing one-second duration. Halfmoon Greylane, from the Wolf dugout, walks the long way around the pitch toward the harbor wall. She does not, by every account, look at any other Wolf or any other Raven. She walks to the harbor wall. She stands at the wall, twenty paces from the Roost's reception formation, in the position the Murder uses for visiting non-Murder fliers when they wish to acknowledge a perch event without participating in the formation. She holds the position for eleven seconds. The duration is the same eleven seconds the Wolves use for the bow. The Roost, watching her, completes a four-second acknowledgment of her acknowledgment in unison. Halfmoon nods once. She walks back to the dugout. The match's final ceremony is, by Caucus archive, considered concluded at this nod.</p>
+        <div class="signoff">— LMG broadcast transcript · Year 36 R6 RVN vs WLF · the broadcast has, by Roost vote and Wolf coaching staff agreement, never been re-aired uncut · the harbor-coverage segments are, by Roost preference, available to the Foundation Archive only on Roost-vote permission · Halfmoon Greylane's eleven-second acknowledgment at the harbor wall is, by Caucus archive classification, "do not edit" · the LMG has, in three subsequent broadcasts, never re-cut it · the Wolves' standing position on Halfmoon's gesture: <em>"the bow is for what the Wolves have lost. the harbor acknowledgment is for what the harbor has, on this morning, gained. the eleven seconds are the duration. the duration was set on the bow's first observation. the duration is, on this matter, the right duration for both."</em> Halfmoon has not, in any subsequent interview, commented on the gesture · the Roost has not, in any subsequent Roost minute, formally named it · the broadcast booth, on the morning of the match, called it only the harbor acknowledgment · the name has held</div>
       </article>
     </div>
 
@@ -6882,6 +7272,22 @@
         <p>The two leagues should, by my reading, continue. They should continue parallel. They should continue with Inkbeak Sr. flying the Caribbean basin annually and the Federación's Condor scouts flying the reverse trip whenever the cordillera weather permits. They should share, in due course, more correspondence than they currently share — more communiqués, more remote-link conferences, more cross-published columns like this one. They should not, by my reading, schedule a sanctioned cross-continental match. The match would not, by my reading, add anything to the work that the work needs. The work has, on each continent, what it needs. The continents have, between them, the correspondence. The correspondence is the league's relationship to the other league. The relationship is, by every measurable standard, working. <em>(here, in the trees' language — a sentence that translates roughly to "the canopy of one tree does not need to graft onto the canopy of another tree to know the other tree is there. the knowing is, by canopy reading, the relationship. the relationship is, by canopy reading, enough.")</em></p>
         <p>I will fly the Caribbean basin again. I will fly it whenever the canopy elders agree, on each future occasion, that the trip serves a purpose the canopy can name. I will not, by my own pre-publication commitment, fly it more often than that. The flight is too long, and too wet, and too lonely, to make for any reason less than a reason the canopy can name. I am, in writing this column, also writing what I hope is, by my reading, the last extended argument I have to make about why the cross-continental match should not be scheduled. I will, on subsequent flights, carry communiqués. I will, on subsequent flights, do the work. I will not, by my reading, write another column on this subject. I have, in this column, said what the canopy needed me to say. The canopy has, by its standing rule, only one need per captain per season. This was mine.</p>
         <div class="signoff">— Yucatan Canopy Quarterly, Year 36 mid-season · "On Two Leagues, One Game" · Cintzli of the Yucatan Quetzals · the column was reprinted in the Wing Standard, the Phoenix Sandstone Reader, and the Boise Float Foundry Bulletin within four weeks of original publication · the Federación's response, drafted by Doña Inés in a letter sent north via Inkbeak Sr.'s subsequent flight, was four sentences long and read in full: <em>"I have read the column. I agree with the column. I will not, on this matter, write a longer response. The canopy has said what the canopy needed to say."</em> · the canopy elders subsequently, by Cintzli's report, voted unanimously (by canopy convention, in silence) to formally adopt the column's conclusion as the Quetzals' standing team position on cross-continental matters · the Caucus has, in two subsequent working sessions, declined to amend its own working answer · Whittlestone has, by her own one-sentence comment to her successor, said: <em>"the captain has, by my reading, written the answer the working sessions could not bring themselves to write. we should respect this."</em></div>
+      </article>
+      <article class="musing">
+        <h3>"On the Wider Basin" — a column written the evening the perch was occupied</h3>
+        <div class="meta">A musing · The Wing Standard, weekly · Year 36 mid-season · author: Slatequill Inkbeak Sr., senior flying Raven of the Pittsburgh Murder · the only column Inkbeak Sr. has, in twenty-seven years of flying, written for any publication outside the Murder's own internal Roost-minutes</div>
+        <p>Crowstep Inkbeak's scouting log to Boston in Year 35 closed with a sentence the Roost had, in twenty-three years of pre-Boston scouting flights, allowed every flying Raven to add. The sentence was: <em>"the basin is wider than i thought."</em> The Roost has, by long-standing convention, neither answered nor edited the sentences that flying Ravens add to the bottom of their reports. The Roost files the report. The next flying Raven reads it. The next flying Raven, on her own subsequent flight, adds her own sentence. The archive grows.</p>
+        <p>I have read every sentence in the archive. The archive has, in twenty-seven years, accumulated approximately three hundred and forty entries. Most are short. Many are simple variations on Crowstep's: <em>the basin was wider than i thought; the wind was steadier than i remembered; the harbor was lower at the eastern wall than the chart drew it.</em> Some are longer. A small number are, by my own read, the kind of sentence that does the work of a paragraph. <em>"the basin's far rim does not, when you reach it, feel like a rim. it feels like the place the basin starts to be a different basin. — Roostmother Carrionwing, Year 14, third Boston flight."</em> <em>"the air over the eastern Allegheny holds, on the third hour past dawn, a stillness i have not in eight prior flights been able to fly through without slowing. i slowed. i made the time up. i did not, on this flight, fight the stillness. — flier Sernlink, Year 22, sixth Boston flight."</em> The archive holds, by my count, eleven such sentences. They are, by every Roost elder's reading, the canon of what the flying Raven has, in twenty-seven years, learned about the basin that the Roost has not been able to name.</p>
+        <p>This morning a Cóndor landed on the Pittsburgh Visiting Perch. Her name is Marisol Cumbralta. She crossed the Caribbean basin in eleven days four hours. The crossing is, by every Murder cross-reference, the standard southbound-northbound passage time on the standing route. She made the crossing alone. She arrived alone. She rested her right wing on the small wax-finished ledge that Slate Wirethorn forged into the perch's underside, and she completed the four-second visiting-bird acknowledgment that the Murder has used at the foundry-quarter for as long as the Murder has been receiving its own flying Ravens at the foundry-quarter. The Roost completed the acknowledgment in unison. The acknowledgment was, by every Roost convention, sufficient.</p>
+        <p>I am, in this column, going to do a thing the Roost has, in twenty-seven years, not formally asked any flying Raven to do. I am going to add a sentence to the archive that did not, by Roost convention, come from a Raven's flight. I am going to add a sentence from this morning's harbor watch. The sentence is mine. The sentence is, by my own pre-publication acknowledgment, what i think the next flying Raven, on her next basin crossing, will need from the archive.</p>
+        <p>The sentence is: <em>"the basin is wider than the basin was."</em></p>
+        <p>I am going to explain. I am going to keep the explanation short, because the sentence does not need a long one.</p>
+        <p>The basin Crowstep flew to Boston is the Allegheny basin. The basin Cumbralta crossed northbound is the Caribbean basin. The two basins are not the same basin. The two basins are not, by any Roost cross-reference, comparable in scale, in surface, in fly-time, in any working measurement the Murder uses. They are, however, the same word in our standing vocabulary. We say <em>the basin</em> when we mean the basin we know. We say <em>the basin</em> when we mean any of the basins we fly. The word holds. The word is, by my read, also the wrong word for what we have, this morning, gained.</p>
+        <p>This morning we gained — by Cumbralta's arrival, by the perch's first occupation, by the Federación's careful selection of the Cóndor whose record will withstand our cross-references, by Doña Inés's signature on the dispatch authorization three weeks ago, by Wirethorn's forging of the iron and the application of the Bears' wax to the small ledge — we gained, this morning, the working acknowledgment that the basin our flying Ravens have been flying for twenty-seven years and the basin the Federación's Cóndor scouts have been flying for seventeen are, by every reading available to either Roost on either side, the same basin. They have always been the same basin. The basin has been wider than we have, in twenty-seven years, formally read it as. We have, in twenty-seven years, used the word <em>basin</em> for the part of the basin our own fliers have been crossing. We have not, in twenty-seven years, used the word for the whole. The Federación has, by their own standing-rules document, used <em>la cuenca</em> for their own part also. We have, by both leagues' standing convention, been using the same word for two things that are, on every honest read, parts of one thing.</p>
+        <p>This morning the basin became, by both leagues' standing acknowledgment, the basin. The basin is, by every honest read, the basin we already knew it was. We have not, on this morning, learned the basin is wider. The basin has, in seventeen years of Cóndor crossings and twenty-seven of Raven crossings, been exactly this wide for the entire interval. We have, on this morning, only acknowledged it. The acknowledgment is, by my own honest read, the work of the morning. The work is, by my own honest read, also the work of the next twenty-seven years.</p>
+        <p>I am writing this column from the harbor wall. The harbor wall is, this evening, twenty-three feet above the high-water line. The Allegheny is, this evening, dropping into its standard fall flow. The wax on the small ledge of the perch is, this evening, two months from settling. The Cóndor will, in three more days, depart southbound. I will, on her departure morning, fly with her as far as the Atlantic shelf. The Roost has, by Year-36 mid-season vote, agreed to this courtesy. The courtesy is, by Roost convention, what the Murder offers a visiting bird whose record will, in any honest cross-reference, withstand the kind of scrutiny the Roost applies to all bird testimony. The Cóndor's record will. The Roost knows it. The bureau knows it. The Federación knows it. We are, on this matter, knowing it together.</p>
+        <p>The basin is wider than the basin was. The basin is, by every honest read, also the basin it has been all along. Both sentences are, on this evening, true. I will, in due course, file this column with the Roost's archive. I will, by Roost convention, not request that the column be added to the flight-archive. The column is not from a flight. The column is from a watch. The watch is its own archive. The watch's archive is, by my own pre-publication acknowledgment, this morning beginning. We will, in due course, see what it accumulates.</p>
+        <div class="signoff">— Slatequill Inkbeak Sr., "On the Wider Basin," The Wing Standard weekly · Year 36 mid-season · the column is, by Wing Standard editorial note, the only column Inkbeak Sr. has written for any non-Murder publication in his twenty-seven flying years · the column is, by Roost vote, on permanent file in the Murder's archival roost as a "watch entry," a category the Roost has, in this filing, established for the first time · the next watch entry, by Roost convention, will be filed when the next watch event occurs and a member of the Roost's standing watch is moved to write one · no schedule is implied · the watch's archive is, on this filing, formally opened</div>
       </article>
     </div>
 
@@ -7534,6 +7940,37 @@
         <p><em>"— Sigridweave (Sgw), senior curator, Foundation Library Northeast Coast Bureau, on the morning of the first sustained snowfall of Year 36."</em></p>
         <div class="signoff">— Foundation Ephemera Drawer · "To a Careful Narrator, from a Careful Library" · first-draft response · Year 36 mid-season · the draft is, as of this filing, not dispatched · the senior curator has, by her own pre-filing arrangement, asked that the draft be filed in the Drawer rather than kept on her desk because, in her marginal note, "the desk is, this morning, clean. i would like, by my own preference, to keep it clean. the draft is not, by my honest read, going to settle on a dispatch decision in the next year. the file is, by my honest read, the right place for the draft to settle while the dispatch decision waits" · the dispatch decision continues to wait · the draft remains, by curator preference, the only document she has authorized for Drawer-filing in pencil rather than in ink · her stated reason: "ink is what we use for the file. pencil is what we use for the draft. the draft is, by my own read, still the draft."</div>
       </article>
+      <article class="found">
+        <h3>The cover note · pencil on bureau letterhead · attached to the Sigridweave dispatch · Year 36 mid-season, the morning of the perch's first occupation</h3>
+        <div class="meta">Found Paper · the brief cover note that traveled south with Sigridweave's two-year-deferred response to the Year-34 albatross · written in pencil on standard Foundation Library Northeast Coast Bureau letterhead, in the senior curator's hand, on the morning of the forty-seventh day of the Pittsburgh Visiting Perch's vacant standing · the original is in the Federación's Cartagena bureau archive (filed there by Doña Inés on receipt) · this transcription is from the carbon-paper copy the Northeast Coast Bureau retained for its own files</div>
+        <p>The full text of the cover note, transcribed verbatim:</p>
+        <p><em>"to Doña Inés, in Cartagena —</em></p>
+        <p><em>"the enclosed is the response i drafted to the Year-34 albatross. the draft has been on my desk, and in my drawer, for two years. i have, this morning, dispatched it. the dispatch is via the Cóndor (Marisol Cumbralta — your bureau's selection has been, by every read available to me on the receiving side, exactly correct).</em></p>
+        <p><em>"i am asking, in this cover note, that the response be held by your bureau and forwarded to the Albatross only when the Albatross is, on the matter, accessible. i do not, on the matter, ask that you forward it on any schedule. i do not, on the matter, ask for a confirmation of receipt. i do not, on the matter, ask anything of the Federación in handling this dispatch except the standard Federación-side hospitality the Federación extends to all northbound-and-southbound forwarded correspondence: which is to say, hold it, file it, forward it when the right occasion forwards it, and consider the matter closed on your bureau's side once it is forwarded. that is the entirety of what i am asking.</em></p>
+        <p><em>"the draft is in pencil. the cover note is in pencil. the dispatch is, on this morning, in pencil. the bureau's standing-rules document, on the matter of cover notes, asks for ink. i have, on this dispatch, declined the convention. my reason is, by my own honest read, that the draft is what it is, and the cover note is what the draft asks the cover note to be, and the convention has, on the matter, been wrong about the right ink for two years. the convention is wrong on this dispatch. the convention will, on the matter, be right again on the next dispatch. i am not, on this matter, asking the convention to change. i am asking the convention to accept that, on this one dispatch, in pencil, on bureau letterhead, the senior curator's standing prerogative has been exercised. the bureau will, in due course, file the carbon copy in pencil, in our drawer. you will, in due course, file the original in your drawer in whatever the Federación's standing convention asks. these are different drawers. they are, on the matter, the right drawers.</em></p>
+        <p><em>"thank you for sending Cumbralta. she is, by every available read, exactly the Cóndor the dispatch needed. she has, on her arrival, given the bureau more institutional vocabulary than we had at the Albatross's visit. we will, in due course, do better at the receiving than we did. we will not, on the matter, do better immediately. better at the receiving is, by every honest read, the work of decades. we are, on this dispatch, two years and forty-seven days into it. the work continues.</em></p>
+        <p><em>"with careful regard,</em></p>
+        <p><em>"— sgw."</em></p>
+        <p>Doña Inés's standing pre-publication note on the original, written in pencil at the bottom (in the same hand she uses for working notations on Federación working drafts; her own standing-rules document on ink and pencil is, by her own bureau's report, more permissive than the Northeast Coast Bureau's): <em>"recibido. lo guardaré. cuando la Albatros regrese, si regresa, lo enviaré. si no regresa, lo guardaré para siempre. esto es, por toda lectura honesta, lo que la curadora del norte está pidiendo. lo daré. — D.I."</em> The note is on the original, which is in Cartagena. The carbon copy in the Northeast Coast Bureau drawer carries no annotation in Doña Inés's hand; the Bureau's own standing-rules document does not, on the matter, ask for one.</p>
+        <div class="signoff">— Foundation Library Northeast Coast Bureau · cover-note carbon-copy · pencil on letterhead · Year 36 mid-season · the dispatch is, by every standing record on either continent, in transit · transit is, on the matter, indefinite · the bureau has, in three subsequent working sessions, declined to discuss the dispatch's expected arrival window with the Albatross · the curator's standing position on questions of timing: <em>"the Cóndor has the file. the Federación has the working protocol. the work is, on the matter, no longer ours. it is, on the matter, the Federación's. and beyond the Federación, it is the Albatross's, when the Albatross is on the matter accessible. we are, on this dispatch, finished. we will, on the next dispatch, when the next dispatch is the next dispatch, be ready. that is, by my own read, all the bureau owes the work. — sgw."</em></div>
+      </article>
+      <article class="found lore-wide">
+        <h3>The Whitefang Scribblings · a working catalogue · Foundation cleaner-pool annual filing · Year 36 mid-season</h3>
+        <div class="meta">Found Paper · the running collaborative graffiti catalogue maintained, on a rolling basis since Year 31, by the Foundation cleaner-pool that services Brewer's Reach Pitch and (on a quarterly inspection rotation) six other venues · this filing is the Year-36 mid-season annual cumulative · the catalogue is not, by any League standing rule, official; it is, by the cleaner-pool's standing internal practice, kept and added to as Whitefang scribbles are encountered, the way a baker keeps a sourdough starter</div>
+        <p>The Foundation cleaner-pool's standing position on the Whitefang scribblings, in the catalogue's flyleaf note (in the hand of the senior cleaner Maurin Brushpaw, a Capybara who has serviced the Brewer's Reach Pitch since Year 30): <em>"we have, in five years of cataloguing, not identified the writer or writers. we have, in five years, identified eleven distinct handwritings, in red gel-pen, blue ballpoint, pencil, paint-marker, charcoal, and (once, in Year 34) what was, by the Foundation chemist's pre-publication acknowledgment, beet-juice. we have, in five years, never asked the writers to stop. they have, in five years, never asked us to keep them up. the matter is, by my own read, in equilibrium. the catalogue is, by my own read, the right working response to the equilibrium. we will, in due course, keep cataloguing."</em></p>
+        <p>A representative selection of catalogue entries follows. The full catalogue runs to forty-seven pages and is on file in the cleaner-pool's working office on the south concourse, behind the lobster vendor's booth.</p>
+        <p><em>Year 31 R7, Brewer's Reach men's washroom, fifth stall from the door, pencil on tile grout (the founding entry):</em> <em>"WHITEFANG WAS HERE — Y31 — and so was a regrettable amount of beer."</em> Cleaner's note, Brushpaw's hand: <em>"i transcribed this on the morning shift. i did not, by the cleaner-pool's standing rule on graffiti, immediately remove it. the standing rule, on Whitefang, has since been written. the standing rule is: most-recent only is, on the wall, until the next-most-recent appears; on the matter of every venue, only one Whitefang at a time."</em></p>
+        <p><em>Year 32 R3, Boise Foundry break-room, paint-marker on locker door:</em> <em>"WHITEFANG IS NOT, by every careful read, here today. — submitted in good faith."</em> Cleaner's note: <em>"the foundry break-room is, by Foundry standing rule, not on the cleaner-pool's standing rotation. this entry was reported to the catalogue by a Foundry chemist on her own initiative. she removed it on her own initiative the same week. the catalogue thanks her."</em></p>
+        <p><em>Year 33 R5, Reno Open Court north corridor, charcoal on concrete:</em> <em>"WHITEFANG VOTED. — the ballot does not, on the matter, survive."</em> Cleaner's note: <em>"appeared the morning after the Year 33 Coronation Cup. removed within four hours by the Reno Cultural Office, who did not consult the cleaner-pool. the catalogue retained the transcription. the Cultural Office has, on the matter, not commented."</em></p>
+        <p><em>Year 34 R2, Helena Glacier Rink visiting-team locker tunnel, beet-juice on whitewashed plank:</em> <em>"WHITEFANG, after a careful look, declines."</em> Cleaner's note: <em>"the beet-juice was a first for the catalogue. the Foundation chemist confirmed the medium on a Wednesday. the writing was, by the chemist's pre-publication acknowledgment, executed with what was, on her own measurement, fresh juice — the Helena venue is six hundred kilometers from the nearest beet farm; the writer carried the beet. we have not, on the matter, asked. the writer was not, on the matter, available to ask."</em></p>
+        <p><em>Year 34 R8, Brewer's Reach Pitch upper concourse, third stall of the men's washroom, blue ballpoint on stall door:</em> <em>"WHITEFANG WAS HERE during the Marshmallow Drill. WHITEFANG IS, on the matter, sorry."</em> Cleaner's note: <em>"this entry appeared the week after Felix Marshmallow's permadeath. it was, by my own subsequent retention vote, kept on the door for an extended period — i did not, on this entry, apply the standing most-recent-only rule. the entry remained on the door for fourteen weeks. it was eventually, by my own working judgment, transcribed and removed; i replaced it on the door, in pencil in my own hand, with the simple line 'WHITEFANG IS, on the matter, still sorry.' that line has been, in the eight subsequent quarters, refreshed by an unknown second hand at every cleaning interval. it is, on the door, today. the catalogue does not, on the matter, ask whether this counts as Whitefang or as me. the catalogue files the entry under both."</em></p>
+        <p><em>Year 35 R1, Olympia Harbor Pitch east concourse, pencil on bench backrest:</em> <em>"WHITEFANG SAW Pawington's last match. WHITEFANG was, on the matter, in the third row."</em> Cleaner's note: <em>"a note in a different hand, in the same pencil, in the same location, three days later: 'whitefang was not in the third row. i was in the third row. i did not, on the matter, see whitefang.' the catalogue files both."</em></p>
+        <p><em>Year 35 R12, Tampa Bay Salt-Air Stadium concession-row pillar, red gel-pen:</em> <em>"WHITEFANG, by every available read, prefers the Bay's chowder."</em> Cleaner's note: <em>"the Tampa concession proprietor is reported to have framed this and to have hung it behind her cash register. she has, on the matter, not removed it. the catalogue retained the transcription only. the cleaner-pool's Tampa rotation has, on the matter, made an exception and not removed it from the pillar either; we transcribed it, photographed it, and left it. the proprietor's framed copy is, by every account, more durable than the gel-pen will be on the pillar. the gel-pen will fade. the framed copy will, on the matter, last. we have, in our own standing record, declined to call the framed copy a Whitefang. it is, by our own standing record, a copy of one. the original is on the pillar. it is fading. that is, by our own standing record, what Whitefangs do."</em></p>
+        <p><em>Year 36 R3, Saint-Laurent Antlerlords' visiting-team mat-room, pencil on mat-board:</em> <em>"WHITEFANG IS, on the matter of the new teams, glad."</em> Cleaner's note: <em>"first Whitefang in a Continental Expansion venue. the entry was, by the Antlerlords' coaching staff's preference, photographed and left in place. the Antlerlords' standing position on Whitefangs, communicated by the team's cultural liaison: 'we do not, by our own custom, have an equivalent. we are, by our own read, glad to host. we will, on the matter of when to remove, defer to the cleaner-pool's standing rule. we will not, on the matter, ask.' the catalogue thanks the Antlerlords. the entry remains on the mat-board as of this filing."</em></p>
+        <p><em>Year 36 R5, Brewer's Reach Pitch men's washroom upper concourse, third stall, red gel-pen:</em> <em>"WHITEFANG WAS NEVER HERE — and was here anyway."</em> Cleaner's note, Brushpaw's hand: <em>"this is, by the standing most-recent-only rule, currently the active Whitefang at Brewer's Reach. it has been on the door for nine days. the previous Brewer's Reach Whitefang — a Year 36 R3 entry reading 'WHITEFANG checked the lobster — and confirms, on the matter, the price has not changed' — was, by the standing rule, removed on the morning the new entry was discovered. the previous entry is in the catalogue. the new entry is on the door. the door is, on the matter, what the door is."</em></p>
+        <p>Brushpaw's standing closing note, written at the bottom of every annual cumulative filing in the same pencil: <em>"the catalogue does not, by my own read, need to identify Whitefang. the catalogue does not, by my own read, need to know who the writers are or how many of them there are or whether the writers know each other. the catalogue's job is, by my own read, only to keep faith with the writing. the writing is, by my own read, a thing the venues have been doing on themselves for five years and which the Foundation has, by long-standing institutional habit, not been able to quite stop. the not-quite-stopping is, by my own read, on this matter, correct. the catalogue is the not-quite-stopping in working format. the not-quite-stopping is, by my own read, what the venues have been telling us they want. we are, on the matter, listening. — m.b."</em></p>
+        <div class="signoff">— Foundation Cleaner-Pool annual cumulative · Year 36 mid-season · the catalogue is on file in the cleaner-pool's working office on the south concourse, Brewer's Reach Pitch, behind the lobster vendor's booth · the catalogue is not, by Foundation standing rule, available to non-cleaner-pool staff except on Brushpaw's standing-rules permission · the lobster vendor has, on three documented occasions, been observed reading the catalogue in the working office while the cleaner-pool was on shift · she has not, on the matter, commented · she has, on the matter, also not borrowed it · the cleaner-pool has, on the matter, never refused her access · the lobster vendor's reading habit is, by Brushpaw's own pre-publication note, "the most welcome reading the catalogue has, in five years of operation, received."</div>
+      </article>
     </div>
 
     <div class="lore-section" data-loresection="timeline">
@@ -7557,6 +7994,7 @@
             <li><span class="yr">Year 35 (later)</span><div class="ev">Halfmoon Greylane, in the Year 35 quarterfinal at Olympia, carries downed Healer Pinedrift across forty-eight paces of open pitch under sustained Sniper fire. She takes fourteen hit registers and does not return fire during the carry. Pinedrift survives. The match playback is in the Caucus's archive under the file name <em>"Greylane carry — do not edit."</em> Greylane refuses to allow it as a training video. The Year 35 Coronation Cup goes to RCC for the sixth time. The crown is, again, reported missing the morning after. The Personal Sandbag enters the bettor's storefront. The Knights' Union petitions for a notification system. The Commissioner declines. The Wing Standard editorializes. The item remains for sale. The League's Ethics Committee files a formal opinion that the item is sabotage with a price tag. The opinion does not change policy. Both sides claim the moral high ground.</div></li>
             <li><span class="yr">Year 35 (closing)</span><div class="ev">The Reno Cultural Office paper Project Neon Inheritance leaks via a junior intern. The paper had been internal-only and described in detail how Reno's three-block lower-Strip survival was a direct consequence of one continuous slot-machine power line that survived the Long Quiet. The Cultural Office does not comment. The leak does not damage anyone. The League Library quietly accessions a copy. The Rules Committee announces a venue-floor expansion: arena dimensions are formally widened so that no Sniper can, from spawn, fire on a still-spawning opponent. The change is justified as restoring the tactical opening phase. The Wolves are unhappy. The Otters are euphoric. Featherquill writes a column. The League adapts.</div></li>
             <li><span class="yr">Year 36</span><div class="ev">The Continental Expansion brings four further teams in mid-season: the Yukon Hunting Lynx, the Saint-Laurent Antlerlords, the Sonora Drifting Coyotes, and the Yucatan Vibrant Quetzals. Théodred Brisefer III takes the L'Ancrage anchor position for the Antlerlords and, in the team's founding-bell debut against the Ravens at Boise, stands in the center of the pitch for nine minutes without swinging his antlers. The post-match nod produces the largest single-match viewer mailbag of the founding bell. The first Frostfall Friendly between the Polar Bears and the Lynx is played at the Boise Frosthold Pitch in pre-season; the Cold Stones trophy is established. The Caucus ratifies the Commitment Directive (a coaching standard against the dither) and the Wave Doctrine (the team-formation respawn rule) at the founding-bell working session. The Wave Doctrine produces, in its first two sanctioned applications, two consecutive comeback wins for the trailing team — the snowball, by Pell Whittlestone's broadcast call, has been broken.</div></li>
+            <li><span class="yr">Year 36 (mid-season)</span><div class="ev">The Pittsburgh Visiting Perch is completed by the Murder's master arrowsmith Slate Wirethorn — a cantilevered iron arm on the foundry-side ledge of the Pittsburgh harbor wall, with a small wax-finished landing ledge made to the Cartagena standard from a sealed jar of perch-wax sent north by Doña Inés on Inkbeak Sr.'s Flight 8 with the note <em>"para el día"</em>. The perch stands empty for forty-six days. On the forty-seventh morning, an Andean Condor named Marisol Cumbralta — selected by the Federación in working session for the strength of her flight record — touches the perch's small ledge. She is the first northbound oceanic arrival in either league's combined recorded history. She stays four days. The Foundation Library Northeast Coast Bureau's senior curator Sigridweave conducts the standing closing interview; the transcript runs to one hundred and forty-one pages and is filed in ink. On the morning of the perch's occupation, the Roost holds a brief reception ceremony; the harbor wall watches; the Wolves (visiting Pittsburgh that day for a sanctioned R6 match against the Ravens) stand at spawn through the harbor event by long-standing arrangement, and Halfmoon Greylane walks the long way around the pitch to acknowledge the perch event with an eleven-second harbor-wall stand. On the same morning, in the Northeast Coast Bureau, Sigridweave dispatches her two-year-deferred draft response to the Year-34 albatross — entrusting it, in pencil with a pencil cover note, to Cumbralta's southbound courier-pouch for forwarding by the Federación if and when the Albatross becomes accessible. The dispatch-ledger is, on the morning, settled. The Federación accepts the forwarding without schedule. Slatequill Inkbeak Sr. writes a Wing Standard column the same evening — the only column he has, in twenty-seven years, written for any non-Murder publication — and opens, by Roost vote, a "watch entry" archive at the Murder's archival roost.</div></li>
             <li><span class="yr">Current</span><div class="ev">The League continues. The Riot Shield is somewhere. The Foundry hums. The Wolves bow eleven seconds. The Healers wander when they need to. The Snipers, since Loambright, do not target Healers when any other knight is in range. The Float Foundation pays out in lobster, in installments, with crab and clam and crawfish and oyster on the side ledger by mutual agreement. The lobster vendor is still at her booth. Her prices have not changed. The Reno pawn-shop arrangement is in its sixth year. The Hall of Fallen Heroes has eight rows; six are full, the seventh has Loambright in it, the eighth is partially populated and growing slowly. The League has not, in eight years, found a way to be uncomplicated. It has, in eight years, found ways to be honest about the complications. This is a fair trade. The lobster is still one bit. The crowd has not stopped noticing.</div></li>
           </ol>
         </div>
@@ -8864,6 +9302,79 @@ const POSITIONS = [
 ];
 const POS_BY_ID = Object.fromEntries(POSITIONS.map(p => [p.id, p]));
 
+// === v37.23: Knight personalities ===
+// Per-knight AI-weight modifiers picked at debut, persistent for the
+// knight's career. Subtle but accumulating: a 0.5-utility shift on
+// thousands of target-pick decisions adds up to recognizably-different
+// playstyles across a season's worth of matches. Not stat boosts — these
+// only redistribute existing decision weights.
+const PERSONALITIES = [
+  {
+    id: "aggressive",
+    label: "Aggressive",
+    icon: "🔥",
+    desc: "Closes distance. Tilts engage utility toward closer enemies.",
+    // Modifiers consumed by pickTarget / decideAIState
+    distancePref: -0.005, // extra penalty per px of distance (closer = better)
+    woundedBonus: 0.0,
+    healerBonus: 0.0,
+    protectAllyBonus: 0.0,
+    fleeThresh: 0.25,     // (default 0.30) waits longer before retreating
+    showboat: false,
+  },
+  {
+    id: "cautious",
+    label: "Cautious",
+    icon: "🛡️",
+    desc: "Picks off the wounded. Retreats earlier than peers.",
+    distancePref: 0.0,
+    woundedBonus: 2.0,    // +2 utility for low-HP enemies (default base is 4×%)
+    healerBonus: 0.0,
+    protectAllyBonus: 0.0,
+    fleeThresh: 0.40,
+    showboat: false,
+  },
+  {
+    id: "showboat",
+    label: "Showboat",
+    icon: "🎭",
+    desc: "Taunts on KO. Crit-edge when fighting alone.",
+    distancePref: 0.0,
+    woundedBonus: 0.0,
+    healerBonus: 0.0,
+    protectAllyBonus: 0.0,
+    fleeThresh: 0.30,
+    showboat: true,       // posts a taunt feed line on every KO
+    soloCritBonus: 0.04,  // +4% crit when no allies within 120px
+  },
+  {
+    id: "loyal",
+    label: "Loyal",
+    icon: "🤝",
+    desc: "Protects allies. Targets enemies attacking teammates.",
+    distancePref: 0.0,
+    woundedBonus: 0.0,
+    healerBonus: 1.0,     // even more focused on enemy healers (the protect)
+    protectAllyBonus: 3.0, // +3 utility for enemies whose target is one of ours
+    fleeThresh: 0.30,
+    showboat: false,
+  },
+  {
+    id: "methodical",
+    label: "Methodical",
+    icon: "📐",
+    desc: "Plays the percentages. No bias either direction.",
+    distancePref: 0.0,
+    woundedBonus: 0.0,
+    healerBonus: 0.0,
+    protectAllyBonus: 0.0,
+    fleeThresh: 0.30,
+    showboat: false,
+  },
+];
+const PERSONALITY_BY_ID = Object.fromEntries(PERSONALITIES.map(p => [p.id, p]));
+
+
 /* ============================================================
    LEGACY HALL OF FALLEN HEROES — seeded, league-canon entries.
    Visible to brand-new users so the Hall isn't empty when they
@@ -9187,6 +9698,13 @@ function makePlayer(teamId, position) {
     item:   { ...randomItem },
     // Career stats (persist across matches/seasons)
     career: { kills: 0, deaths: 0, matchesPlayed: 0, matchesWon: 0, seasonsPlayed: 0, scavenged: 0, longestStreak: 0, currentStreak: 0 },
+    // === v37.23: Personality (career-persistent AI weighting) ===
+    personality: pick(PERSONALITIES).id,
+    // === v37.23: Rookie scouting report (generated lazily on profile open) ===
+    scoutingReport: null,  // null until first opened; built by _generateScoutingReport
+    // === v37.23: Injury status ===
+    // null = healthy. When set: { type, matchesRemaining, statPenalty }
+    injury: null,
     // Mortality
     deceased: false,
     deceasedSeason: null,
@@ -9203,6 +9721,741 @@ function makePlayer(teamId, position) {
     boostMods: null,   // {dmg, spd, life} active boost from item
   };
 }
+
+
+
+// === v37.23: Knight injuries ===
+// Sub-permadeath consequence. After a match, surviving knights have a
+// chance to pick up an injury that holds them out 1-2 matches with a
+// stat penalty on return. The penalty reflects in the eligible-roster
+// check (startMatch / startRound) and the injured knight's lookups.
+//
+// Probability is gentle: 4% baseline, +6% if took a near-fatal hit
+// (final-life KO this match), +2% per round played past 5. Caps at 14%.
+// Roughly one injury every 3-4 matches at normal play, more after grueling
+// 7-round affairs.
+const INJURIES = [
+  { type: "wrenched_shoulder", label: "Wrenched shoulder", desc: "The shoulder went on a stun absorption.", missMatches: 1, penalty: { dmg: 0.85 } },
+  { type: "ankle_strain",      label: "Ankle strain",      desc: "Came down wrong on a corner cut.",      missMatches: 1, penalty: { spd: 0.85 } },
+  { type: "concussion",        label: "Concussion",        desc: "Took a helmet-rattle off a Plasma Mace.", missMatches: 2, penalty: { dmg: 0.90, def: 0.85 } },
+  { type: "rib_bruise",        label: "Bruised ribs",      desc: "Soaked too many rounds at point-blank.", missMatches: 1, penalty: { hp: 0.90 } },
+  { type: "draw_arm_strain",   label: "Drawing-arm strain",desc: "The Sniper's archery shoulder.",         missMatches: 2, penalty: { dmg: 0.85 } },
+  { type: "burnout",           label: "Burnout",           desc: "Five-round match. Exhausted.",            missMatches: 1, penalty: { spd: 0.92, dmg: 0.92 } },
+];
+
+/* Roll an injury for a survivor at match end. Mutates the player. */
+function _rollPostMatchInjury(p, m) {
+  if (!p || p.deceased) return;
+  if (p.injury) return; // already injured, don't double-up
+  // Probability calc
+  let prob = 0.04;
+  if (p.lives === 1) prob += 0.06; // came within one balloon of dying
+  const roundsPlayed = m && m.currentRoundIndex ? m.currentRoundIndex : 0;
+  if (roundsPlayed > 5) prob += (roundsPlayed - 5) * 0.02;
+  prob = Math.min(prob, 0.14);
+  if (SIM_RNG.next() > prob) return;
+  const inj = pick(INJURIES);
+  p.injury = {
+    type: inj.type,
+    label: inj.label,
+    desc: inj.desc,
+    matchesRemaining: inj.missMatches,
+    penalty: { ...inj.penalty },
+  };
+  feed("season", `🩹 ${TEAM_BY_ID[p.teamId]?.short || "?"}: ${escapeHTML(p.name)} sidelined with ${inj.label.toLowerCase()} (${inj.missMatches} match${inj.missMatches === 1 ? "" : "es"}).`);
+}
+window._rollPostMatchInjury = _rollPostMatchInjury;
+
+/* Decrement injury counters at the START of a match for knights NOT
+   selected (they sat out). When matchesRemaining hits 0, clear the
+   injury. Called from startMatch. */
+function _processInjuryStatuses(teamId) {
+  const roster = LEAGUE.rosters[teamId];
+  if (!roster) return;
+  for (const p of roster) {
+    if (!p || !p.injury) continue;
+    p.injury.matchesRemaining--;
+    if (p.injury.matchesRemaining <= 0) {
+      const inj = p.injury;
+      p.injury = null;
+      feed("season", `🆗 ${TEAM_BY_ID[teamId]?.short || "?"}: ${escapeHTML(p.name)} returns from ${inj.label.toLowerCase()}.`);
+    }
+  }
+}
+window._processInjuryStatuses = _processInjuryStatuses;
+
+// === v37.23: Coaches ===
+// Each team has a named head coach with an archetype that informs the
+// quote-pool used for post-match press conferences. Names sourced from
+// canonical lore where the lore established one (Coach Reyna for the
+// Coyotes, Slickleaf for the Frogs, etc.); newly-named for other teams
+// in the established voice. The archetype carries quote tendencies but
+// no AI gameplay impact — these are narrative texture.
+const COACHES = {
+  fox: { name: "Bask Ironclaw the Second", species: "Fox", archetype: "veteran", lore: "Father of Bask the Fourth. The architect of the Heat Clause." },
+  bvr: { name: "Crashweather Bristlebeard", species: "Beaver", archetype: "engineer", lore: "Bristlebeard the Second's uncle. Coached the Beavers since Year 30." },
+  owl: { name: "Bristlewren Hootington", species: "Owl", archetype: "stoic", lore: "Sundip Sr.'s widower. Has been heard to say 'stay off the core' before every Owl match for two years." },
+  shk: { name: "Reefblade Saltwater", species: "Shark", archetype: "bruiser", lore: "Sleeps in chainmail. Sharks captain who stayed on as coach." },
+  pnd: { name: "Yu Cobblepad", species: "Panda", archetype: "patient", lore: "Quiet voice. Hand-attends every team's grenade-safety drill since Year 34." },
+  rcc: { name: "Trashbright the Younger", species: "Raccoon", archetype: "trickster", lore: "Niece of Dustpaw Trashbright. Inherited the captaincy and the Cup obsession." },
+  frg: { name: "Slickleaf the Furious", species: "Tree Frog", archetype: "furious", lore: "Has been heard speaking League Common only twice. Coaches from a hidden spot in the Fresno rafters." },
+  hed: { name: "Mossquill Sharpfoot", species: "Hedgehog", archetype: "old-school", lore: "Helena combat-circuit elder. Three generations of snipers studied under her." },
+  kit: { name: "Auntie Tessa Pawington", species: "Kit", archetype: "playful", lore: "Mira Pawington's eldest sister. Coaches the Kits with an eye on the Pawington Cup, always." },
+  wlf: { name: "Hardvein Quickstep (retired)", species: "Wolf", archetype: "stoic", lore: "Wolves' Year 29 championship captain. Coaches now from the bench in silence." },
+  bdg: { name: "Slatebrush", species: "Badger", archetype: "engineer", lore: "Architect of the Wide Draw. Does not, on the record, call it the drift." },
+  otr: { name: "Pellic Slipstream", species: "Otter", archetype: "trickster", lore: "Mira Pawington's protégé from her last two seasons. Carries the kerchief on home matches." },
+  tgr: { name: "Ojee Stripeshoulder", species: "Tiger", archetype: "patient", lore: "The matriarch. Paints every helmet before every match." },
+  plr: { name: "Tamzen Whitepaw", species: "Polar Bear", archetype: "old-school", lore: "Walked thirty-two days at the front of the Northwalk to apply." },
+  bsn: { name: "Yellowhide of the Denver Herd", species: "Bison", archetype: "patient", lore: "The standing-point. Stands in full harness at every Bison home match." },
+  rvn: { name: "Slatequill Inkbeak Sr.", species: "Raven", archetype: "veteran", lore: "Senior flying Raven of the Murder. The bridge to the Federación. Coaches when grounded." },
+  lyx: { name: "Tessik Snowstep", species: "Lynx", archetype: "stoic", lore: "Senior coach. Reviews the position-coaches' summaries by Yukon Boreal Council courier, twelve days' hike from the nearest postal hub." },
+  mos: { name: "Marc-Olivier Brisefer", species: "Moose", archetype: "patient", lore: "Founding captain. Uncle of Théodred III. Speaks the Saint-Laurent creole." },
+  cyt: { name: "Coach Reyna", species: "Coyote", archetype: "drill-master", lore: "Has the cohort run the drift pattern eleven thousand times. The number is, by her own clarification, an exaggeration." },
+  qtz: { name: "Quetzalli Brightwing", species: "Quetzal", archetype: "philosopher", lore: "Cintzli's elder cousin. The trees' language is, by her preference, the canopy's language." },
+};
+
+// Quote pools by archetype × outcome. Pulled at match end for the
+// post-match press conference feed line.
+const COACH_QUOTES = {
+  win: {
+    veteran:    ["The line held. The work is the work.", "We did what we drilled. Press will, on the matter, ask the same question next week.", "The match was the match. We move on."],
+    engineer:   ["Built it. Broke them. Standard maintenance schedule.", "The hardware held under load. We will, in due course, find the next failure point.", "Margin is thin. Margin is, by every measurable standard, enough."],
+    stoic:      ["The match resolved.", "The work was, on the matter, sufficient.", "We are, on this matter, glad."],
+    bruiser:    ["Teeth first. Talk later. Maybe never.", "We hit. They folded. Standard.", "The visiting line learned the lesson. We will, in due course, teach it again."],
+    patient:    ["The moment came. The team committed. The result followed.", "We waited as we drill. The wait was, on the matter, repaid.", "A patient match. A patient win. A patient drive home."],
+    trickster:  ["We took what was ours. And, by every measurable standard, also what wasn't.", "The opposing bench has, on the matter, lodged a grievance. We are, on the matter, grateful for the publicity.", "Anything not bolted down was a fair offer."],
+    furious:    ["RIBBIT.", "—", "(the coach declined to comment further)"],
+    "old-school": ["The young ones learned. The old ones watched. The match held.", "Three generations of training, by my count, fit into this evening's resolution.", "The grandparents were, by my read, watching from the rafters. The grandparents are, by my read, satisfied."],
+    playful:    ["We had fun. Did anyone notice we had fun?", "The Cup will, in due course, be ours. This wasn't even the Cup.", "Bouncing is, by every reading, the work."],
+    "drill-master": ["The drift held. We drilled it eleven thousand times. The result was, on the matter, exactly the result the drilling predicted.", "The cohort is, on this match, ready. The next match will, by my read, be different and we will drill the difference.", "We did not do anything we hadn't already done in practice. That, by my read, is the entire job."],
+    philosopher: ["The canopy received the match. The canopy is, by every reading, satisfied.", "Two trees grew in the same valley. One leaned this evening. We were, on this match, the standing one.", "The match is, by my read, what the canopy was asking for."],
+  },
+  loss: {
+    veteran:    ["We lost. We will, in due course, not lose to this opponent again.", "The line held until it didn't. The post-mortem will, in due course, name the moment.", "I owe my line a clean meeting on Monday. We will have it."],
+    engineer:   ["A failure mode we had not, by our specifications, anticipated. We are documenting it.", "The hardware was, on this match, insufficient. We will, by my count, redesign it before next bracket.", "A component failed under load. The component will, in due course, be replaced."],
+    stoic:      ["We lost.", "The work continues.", "The next match is the next match."],
+    bruiser:    ["They hit harder. We will, in due course, hit back harder.", "Lost. Standard.", "Will not happen twice."],
+    patient:    ["We waited too long. The moment passed. We will, in due course, find a faster moment.", "A match the patience did not earn. The patience was still, by my read, the right discipline.", "We lost. The lesson is, on the matter, the patience that did not commit."],
+    trickster:  ["We took less than we usually take. The opposing line was, by their own read, paying attention. The next bracket will, by my read, redress this.", "Lost. The Crown is still, by every Reno read, ours regardless.", "I will, on the matter, decline to elaborate."],
+    furious:    ["—", "(the coach has not been seen since the post-match line)", "RIBBIT."],
+    "old-school": ["The young ones learned a different lesson tonight. The old ones, by my read, also learned.", "We lost the lesson. The lesson will, in due course, return.", "Three generations is a long study. We are still, by my read, in chapter eight."],
+    playful:    ["We had fun anyway. Bouncing is, by every reading, still the work.", "The Cup will, in due course, still be ours. The League's regular bracket can, by my preference, take a number.", "The Kits do not, by tradition, count regular-season losses. We have, by tradition, decided to forget this one."],
+    "drill-master": ["We drilled this scenario eleven thousand times. The execution was, on this match, off by approximately three repetitions of the cohort's mean. We will drill the gap.", "The cohort knows what failed. The cohort will, by my read, fix it before next bracket.", "We are not, on this loss, going to spend long on it. The drilling resumes tomorrow."],
+    philosopher: ["The canopy did not, by my read, receive what we offered. We will, in due course, offer differently.", "Two trees grew. One leaned. The match was, by every measurable standard, what the canopy was asking for. We were not, this evening, the standing one.", "The loss is, by my read, the canopy reminding us. We are, on the matter, listening."],
+  },
+};
+
+// Lookup helper used by the post-match press conference and the
+// team panel coach-row.
+
+/* ============================================================
+   RIVALRY HELPERS — v37.23
+   Aggregate rivalry data for UI surfacing.
+   ============================================================ */
+function getRivalriesFor(knightId) {
+  // Returns array of {otherId, theyKilledMe, iKilledThem, mutualSince}
+  // for every other knight this one has interacted with (kills either way).
+  if (!LEAGUE.rivalries || typeof knightId !== "number") return [];
+  const seen = new Map();
+  for (const key of Object.keys(LEAGUE.rivalries)) {
+    const [aStr, bStr] = key.split("::");
+    const a = parseInt(aStr, 10), b = parseInt(bStr, 10);
+    if (a === knightId) {
+      if (!seen.has(b)) seen.set(b, { otherId: b, iKilledThem: 0, theyKilledMe: 0 });
+      seen.get(b).iKilledThem += LEAGUE.rivalries[key];
+    } else if (b === knightId) {
+      if (!seen.has(a)) seen.set(a, { otherId: a, iKilledThem: 0, theyKilledMe: 0 });
+      seen.get(a).theyKilledMe += LEAGUE.rivalries[key];
+    }
+  }
+  // Mark mutual rivals (both directions >= 3)
+  const out = Array.from(seen.values());
+  for (const r of out) r.isMutual = r.iKilledThem >= 3 && r.theyKilledMe >= 3;
+  return out;
+}
+window.getRivalriesFor = getRivalriesFor;
+
+/* Pre-match check: are any mutual rivalries on the field? Returns
+   array of { aKnight, bKnight, aKilledB, bKilledA } for each mutual
+   rival pair detected, or empty array if none. */
+function detectActiveRivalries(m) {
+  if (!m || !LEAGUE.rivalries) return [];
+  const all = (m.teamAplayers || []).concat(m.teamBplayers || []);
+  const onFieldIds = new Set(all.filter(p => !p.deceased).map(p => p.id));
+  const pairs = [];
+  const seen = new Set();
+  for (const key of Object.keys(LEAGUE.rivalries)) {
+    const [aStr, bStr] = key.split("::");
+    const a = parseInt(aStr, 10), b = parseInt(bStr, 10);
+    if (!onFieldIds.has(a) || !onFieldIds.has(b)) continue;
+    // Different teams only
+    const ka = all.find(p => p.id === a);
+    const kb = all.find(p => p.id === b);
+    if (!ka || !kb || ka.teamId === kb.teamId) continue;
+    const dedup = a < b ? a + "::" + b : b + "::" + a;
+    if (seen.has(dedup)) continue;
+    const fwd = LEAGUE.rivalries[a + "::" + b] || 0;
+    const rev = LEAGUE.rivalries[b + "::" + a] || 0;
+    if (fwd >= 3 && rev >= 3) {
+      pairs.push({ aKnight: ka, bKnight: kb, aKilledB: fwd, bKilledA: rev });
+      seen.add(dedup);
+    }
+  }
+  return pairs;
+}
+window.detectActiveRivalries = detectActiveRivalries;
+
+/* ============================================================
+   SCOUTING REPORTS — v37.23
+   One-line characterization of a rookie or veteran knight, generated
+   at first profile-open and cached on the player. Templates draw on
+   stat outliers + archetype + personality to produce evocative copy.
+   ============================================================ */
+function _generateScoutingReport(p) {
+  if (!p) return "—";
+  const pos = POS_BY_ID[p.position];
+  const personality = PERSONALITY_BY_ID[p.personality] || PERSONALITY_BY_ID.methodical;
+  const s = p.stats || {};
+  const tier = (val, low, mid, high) => val >= high ? "high" : val >= mid ? "mid" : val >= low ? "low" : "vlow";
+
+  // Stat outliers
+  const hpTier = tier(s.hp,   100, 130, 165);
+  const dmgTier = tier(s.dmg, 6,   10,  14);
+  const spdTier = tier(s.spd, 1.0, 1.4, 1.8);
+  const critTier = tier(s.crit, 0.05, 0.10, 0.18);
+
+  const outliers = [];
+  if (hpTier === "high")  outliers.push("walks heavy");
+  if (hpTier === "vlow") outliers.push("brittle frame");
+  if (dmgTier === "high") outliers.push("hits like a hammer-strike");
+  if (dmgTier === "vlow") outliers.push("light hands, depends on positioning");
+  if (spdTier === "high") outliers.push("moves fast enough to be hard to track");
+  if (spdTier === "vlow") outliers.push("slow on the rotation");
+  if (critTier === "high") outliers.push("a finisher's edge on the crit");
+  if (critTier === "vlow") outliers.push("steady but rarely lucky");
+
+  // Personality-driven framing line
+  const personLines = {
+    aggressive: ["closes harder than the position usually asks", "doesn't wait for the opening, makes one"],
+    cautious:   ["picks her shots", "won't engage the wounded until the rest of the line is sorted"],
+    showboat:   ["plays to the broadcast", "celebrates before he should"],
+    loyal:      ["watches her healer like she's family", "the kind who stays with a downed teammate when the stunlock comes"],
+    methodical: ["plays the percentages", "no surprises, no flair, just the math"],
+  };
+  const personLine = pick(personLines[personality.id] || personLines.methodical);
+
+  // Archetype expectation lines
+  const posExpect = {
+    tank:      "expected to soak; the body will, in due course, tell us",
+    striker:   "the position is the kill. she will, by every report, take the kill",
+    speedster: "fast hands. faster feet. the league will, in due course, learn the rotation",
+    brawler:   "close work. the close work will, by my read, pay",
+    sniper:    "long shots. long waits. the work is, on the matter, the patience",
+    healer:    "the line will, in due course, depend on her. she will, by every read, hold",
+    grenadier: "we will, on this matter, watch the splash radius",
+  };
+  const posLine = posExpect[pos.id] || "the position is the position";
+
+  let outlierClause = "";
+  if (outliers.length === 1) outlierClause = ` — ${outliers[0]}`;
+  else if (outliers.length >= 2) outlierClause = ` — ${outliers[0]}, ${outliers[1]}`;
+
+  const verdict = pick([
+    "watch the rotation",
+    "by my read, ready",
+    "the body will, in due course, tell us",
+    "we are, on the matter, optimistic",
+    "the cohort is, by my read, glad to have her",
+    "promising",
+    "the position will, in due course, be safe in these hands",
+    "i will, on the matter, withhold further opinion until R3",
+  ]);
+
+  return `${pos.label.charAt(0).toUpperCase() + pos.label.slice(1)} rookie${outlierClause}. ${personLine.charAt(0).toUpperCase() + personLine.slice(1)}; ${posLine}. <em>${verdict}.</em>`;
+}
+window._generateScoutingReport = _generateScoutingReport;
+
+/* Lazy accessor — generates if not yet cached, returns the string. */
+function getScoutingReport(p) {
+  if (!p) return "";
+  if (!p.scoutingReport) {
+    p.scoutingReport = _generateScoutingReport(p);
+  }
+  return p.scoutingReport;
+}
+window.getScoutingReport = getScoutingReport;
+
+/* ============================================================
+   ACHIEVEMENTS — v37.23
+   Per-team progress tracker and global "world first" tracker, with a
+   WoW-style modal UI. Achievements have categories, point values, and
+   are either:
+     - per-team (every team has its own progress)
+     - global (single "world first" — first team to unlock locks it
+       globally; can also be unlocked per-team after that)
+
+   Storage:
+     LEAGUE.achievements.teams[teamId].unlocked[achId] = {season, ts}
+     LEAGUE.achievements.teams[teamId].progress[achId] = number (for tracker types)
+     LEAGUE.achievements.global[achId] = {season, ts, byTeamId, byKnightId}
+
+   Events feed in via recordAchievementEvent(type, ctx). Type→ach
+   mapping is declarative below.
+   ============================================================ */
+
+const ACHIEVEMENT_CATEGORIES = [
+  { id: "combat",   label: "Combat",     icon: "⚔️" },
+  { id: "career",   label: "Career",     icon: "📜" },
+  { id: "lineage",  label: "Lineage",    icon: "⚜️" },
+  { id: "glory",    label: "Glory",      icon: "🏆" },
+  { id: "oddity",   label: "Oddity",     icon: "🎲" },
+  { id: "world",    label: "World First", icon: "🌟" },
+];
+
+const ACHIEVEMENTS = [
+  // === COMBAT ===
+  { id: "first_blood",         category: "combat",  scope: "team",   icon: "🩸", points: 5,
+    name: "First Blood",
+    desc: "Score the team's first sanctioned-match KO.",
+    type: "event_first", event: "team_first_kill" },
+  { id: "spree_5",             category: "combat",  scope: "team",   icon: "🔥", points: 10,
+    name: "Killing Spree",
+    desc: "A single knight scores 5 kills in one match.",
+    type: "event_first", event: "match_killer_5" },
+  { id: "spree_10",            category: "combat",  scope: "team",   icon: "⚡", points: 25,
+    name: "Rampage",
+    desc: "A single knight scores 10 kills in one match.",
+    type: "event_first", event: "match_killer_10" },
+  { id: "team_50_kills",       category: "combat",  scope: "team",   icon: "💀", points: 10,
+    name: "Bloodied Hands",
+    desc: "Accumulate 50 team kills.",
+    type: "tracker", event: "team_kill", goal: 50 },
+  { id: "team_250_kills",      category: "combat",  scope: "team",   icon: "💀", points: 25,
+    name: "Tested in Steel",
+    desc: "Accumulate 250 team kills.",
+    type: "tracker", event: "team_kill", goal: 250 },
+  { id: "team_1000_kills",     category: "combat",  scope: "team",   icon: "💀", points: 75,
+    name: "Generations of Steel",
+    desc: "Accumulate 1000 team kills.",
+    type: "tracker", event: "team_kill", goal: 1000 },
+  { id: "perfect_round",       category: "combat",  scope: "team",   icon: "✨", points: 15,
+    name: "Perfect Round",
+    desc: "Win a round without a single team KO.",
+    type: "event_first", event: "perfect_round" },
+
+  // === CAREER ===
+  { id: "veteran_knight",      category: "career",  scope: "team",   icon: "🎖", points: 15,
+    name: "Veteran on the Roster",
+    desc: "Have a knight survive 3 seasons.",
+    type: "event_first", event: "knight_3_seasons" },
+  { id: "elder_knight",        category: "career",  scope: "team",   icon: "🎖", points: 30,
+    name: "Elder of the Pack",
+    desc: "Have a knight survive 5 seasons.",
+    type: "event_first", event: "knight_5_seasons" },
+  { id: "lifer",               category: "career",  scope: "team",   icon: "🎖", points: 50,
+    name: "Lifer",
+    desc: "Have a knight survive 10 seasons.",
+    type: "event_first", event: "knight_10_seasons" },
+  { id: "promoted_legend",     category: "career",  scope: "team",   icon: "⭐", points: 25,
+    name: "Promoted Legend",
+    desc: "A knight reaches Promoted Legend status before perma-death.",
+    type: "event_first", event: "promoted_legend" },
+  { id: "career_50_kills",     category: "career",  scope: "team",   icon: "🗡", points: 25,
+    name: "Career Killer",
+    desc: "A knight on the roster reaches 50 career kills.",
+    type: "event_first", event: "knight_50_kills" },
+  { id: "career_100_kills",    category: "career",  scope: "team",   icon: "🗡", points: 60,
+    name: "Centurion",
+    desc: "A knight on the roster reaches 100 career kills.",
+    type: "event_first", event: "knight_100_kills" },
+
+  // === LINEAGE ===
+  { id: "second_in_chain",     category: "lineage", scope: "team",   icon: "⚜", points: 10,
+    name: "The Second",
+    desc: "A lineage chain reaches its second knight.",
+    type: "event_first", event: "lineage_2" },
+  { id: "third_in_chain",      category: "lineage", scope: "team",   icon: "⚜", points: 25,
+    name: "The Third",
+    desc: "A lineage chain reaches its third knight.",
+    type: "event_first", event: "lineage_3" },
+  { id: "fifth_in_chain",      category: "lineage", scope: "team",   icon: "⚜", points: 50,
+    name: "The Fifth",
+    desc: "A lineage chain reaches its fifth knight.",
+    type: "event_first", event: "lineage_5" },
+  { id: "rivalry_decl",        category: "lineage", scope: "team",   icon: "⚔", points: 15,
+    name: "Rivalry Declared",
+    desc: "Two knights cross the 3+/3+ threshold against each other.",
+    type: "event_first", event: "rivalry_declared" },
+
+  // === GLORY ===
+  { id: "first_match_win",     category: "glory",   scope: "team",   icon: "🥉", points: 5,
+    name: "First Light",
+    desc: "Win a sanctioned match.",
+    type: "event_first", event: "team_match_win" },
+  { id: "first_championship",  category: "glory",   scope: "team",   icon: "🥇", points: 30,
+    name: "First Championship",
+    desc: "Win a season championship.",
+    type: "event_first", event: "team_championship" },
+  { id: "back_to_back",        category: "glory",   scope: "team",   icon: "🥇", points: 60,
+    name: "Back-to-Back",
+    desc: "Win two consecutive championships.",
+    type: "event_first", event: "team_b2b_championship" },
+  { id: "dynasty",             category: "glory",   scope: "team",   icon: "👑", points: 120,
+    name: "Dynasty",
+    desc: "Win three consecutive championships.",
+    type: "event_first", event: "team_dynasty_championship" },
+  { id: "five_titles",         category: "glory",   scope: "team",   icon: "👑", points: 200,
+    name: "Five Titles",
+    desc: "Hold five total championships.",
+    type: "tracker", event: "team_championship", goal: 5 },
+
+  // === ODDITY ===
+  { id: "comeback_kid",        category: "oddity",  scope: "team",   icon: "🔄", points: 20,
+    name: "Comeback Kid",
+    desc: "Win a match after losing the first 2 rounds.",
+    type: "event_first", event: "team_comeback_win" },
+  { id: "all_alive",           category: "oddity",  scope: "team",   icon: "🍀", points: 25,
+    name: "Bloodless Bracket",
+    desc: "Complete a season with zero team perma-deaths.",
+    type: "event_first", event: "team_zero_deaths_season" },
+  { id: "rookie_carry",        category: "oddity",  scope: "team",   icon: "🌱", points: 20,
+    name: "Rookie Carries the Match",
+    desc: "A rookie (debut season) leads the team in match kills.",
+    type: "event_first", event: "rookie_match_lead" },
+  { id: "scavenger_streak",    category: "oddity",  scope: "team",   icon: "🧰", points: 15,
+    name: "Sticky Fingers",
+    desc: "A team scavenges 25 items.",
+    type: "tracker", event: "team_scavenge", goal: 25 },
+  { id: "scavenger_master",    category: "oddity",  scope: "team",   icon: "🧰", points: 50,
+    name: "Master of the Trade",
+    desc: "A team scavenges 100 items.",
+    type: "tracker", event: "team_scavenge", goal: 100 },
+  { id: "janitor_generous",    category: "oddity",  scope: "global", icon: "🧹", points: 20,
+    name: "Generous to the Crew",
+    desc: "Tip the cleanup crew 10 times across the league's lifetime.",
+    type: "event_first", event: "janitor_generous" },
+
+  // === WORLD FIRSTS (global) ===
+  { id: "world_first_perma",   category: "world",   scope: "global", icon: "🌟", points: 50,
+    name: "First Blood (World)",
+    desc: "First perma-death recorded in this league.",
+    type: "event_first", event: "league_first_permadeath" },
+  { id: "world_first_legend",  category: "world",   scope: "global", icon: "🌟", points: 75,
+    name: "First Legend",
+    desc: "First Promoted Legend in this league's history.",
+    type: "event_first", event: "league_first_legend" },
+  { id: "world_first_champ",   category: "world",   scope: "global", icon: "🌟", points: 50,
+    name: "First Banner",
+    desc: "First sanctioned championship in this league.",
+    type: "event_first", event: "league_first_championship" },
+  { id: "world_first_lineage", category: "world",   scope: "global", icon: "🌟", points: 100,
+    name: "First Bloodline",
+    desc: "First lineage chain to reach the Fifth.",
+    type: "event_first", event: "league_first_5_chain" },
+  { id: "world_first_century", category: "world",   scope: "global", icon: "🌟", points: 150,
+    name: "First Centurion",
+    desc: "First knight in the league to reach 100 career kills.",
+    type: "event_first", event: "league_first_century" },
+];
+
+const ACHIEVEMENT_BY_ID = Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]));
+
+/* Initialize a team's achievement state if missing. */
+function _ensureTeamAchievementState(teamId) {
+  if (!LEAGUE.achievements) LEAGUE.achievements = { teams: {}, global: {} };
+  if (!LEAGUE.achievements.teams) LEAGUE.achievements.teams = {};
+  if (!LEAGUE.achievements.teams[teamId]) {
+    LEAGUE.achievements.teams[teamId] = { unlocked: {}, progress: {} };
+  }
+  return LEAGUE.achievements.teams[teamId];
+}
+
+/* Mark an achievement as unlocked for a team. Idempotent: re-calling
+   for an already-unlocked ach is a no-op. Surfaces a toast + feed line
+   on first unlock. Also handles the "world first" case if the achievement
+   is global. */
+function _unlockAchievement(achId, teamId, ctx) {
+  const ach = ACHIEVEMENT_BY_ID[achId];
+  if (!ach) return false;
+  ctx = ctx || {};
+
+  // Global "world first" achievements: only the FIRST team to trigger gets it.
+  if (ach.scope === "global") {
+    if (!LEAGUE.achievements) LEAGUE.achievements = { teams: {}, global: {} };
+    if (!LEAGUE.achievements.global) LEAGUE.achievements.global = {};
+    if (LEAGUE.achievements.global[achId]) return false; // already claimed
+    LEAGUE.achievements.global[achId] = {
+      season: LEAGUE.season,
+      ts: Date.now(),
+      byTeamId: teamId,
+      byKnightId: ctx.knightId || null,
+    };
+    const team = TEAM_BY_ID[teamId];
+    feed("season", `🌟 <b>WORLD FIRST</b> — ${team ? team.emoji + " " + team.short + ": " : ""}${ach.name} (${ach.points} pts)`);
+    if (typeof window !== "undefined" && window.toast) {
+      window.toast(
+        `🌟 <b>WORLD FIRST</b><br>${escapeHTML(ach.name)} — ${team ? team.short : "?"}<br><span style="opacity:0.85;">${escapeHTML(ach.desc)}</span>`,
+        "info",
+        { ico: "🌟", ttl: 9000 }
+      );
+    }
+    if (typeof saveLocal === "function") saveLocal();
+    return true;
+  }
+
+  // Team-scoped: track per-team progress
+  const state = _ensureTeamAchievementState(teamId);
+  if (state.unlocked[achId]) return false;
+  state.unlocked[achId] = { season: LEAGUE.season, ts: Date.now(), ctx };
+
+  const team = TEAM_BY_ID[teamId];
+  feed("season", `🏅 ${team ? team.emoji + " " + team.short + ": " : ""}<b>${escapeHTML(ach.name)}</b> unlocked. (+${ach.points} pts)`);
+  if (typeof window !== "undefined" && window.toast) {
+    window.toast(
+      `🏅 ${team ? team.short : "?"}: <b>${escapeHTML(ach.name)}</b><br><span style="opacity:0.85;">${escapeHTML(ach.desc)}</span>`,
+      "info",
+      { ico: ach.icon || "🏅", ttl: 6000 }
+    );
+  }
+  if (typeof saveLocal === "function") saveLocal();
+  return true;
+}
+
+/* Increment a team's tracker progress for a given achievement. If the
+   goal is reached, automatically unlocks. */
+function _incrementTracker(achId, teamId, amount, ctx) {
+  const ach = ACHIEVEMENT_BY_ID[achId];
+  if (!ach || ach.type !== "tracker") return;
+  const state = _ensureTeamAchievementState(teamId);
+  if (state.unlocked[achId]) return;
+  state.progress[achId] = (state.progress[achId] || 0) + (amount || 1);
+  if (state.progress[achId] >= ach.goal) {
+    _unlockAchievement(achId, teamId, ctx);
+  }
+}
+
+/* Public entry point: record an event, dispatch to all matching
+   achievements. Type-driven dispatch keeps the call sites clean —
+   they just describe what happened, not which achievements care. */
+function recordAchievementEvent(eventType, ctx) {
+  if (!eventType) return;
+  ctx = ctx || {};
+  for (const ach of ACHIEVEMENTS) {
+    if (ach.event !== eventType) continue;
+    if (ach.type === "event_first") {
+      // For team-scoped: needs ctx.teamId. For global: also needs ctx.teamId
+      // (the team that triggered it).
+      if (ctx.teamId) _unlockAchievement(ach.id, ctx.teamId, ctx);
+    } else if (ach.type === "tracker") {
+      if (ctx.teamId) _incrementTracker(ach.id, ctx.teamId, ctx.amount || 1, ctx);
+    }
+  }
+}
+window.recordAchievementEvent = recordAchievementEvent;
+
+/* Compute total achievement points for a team. */
+function teamAchievementPoints(teamId) {
+  let pts = 0;
+  const state = LEAGUE.achievements && LEAGUE.achievements.teams && LEAGUE.achievements.teams[teamId];
+  if (!state) return 0;
+  for (const achId of Object.keys(state.unlocked || {})) {
+    const ach = ACHIEVEMENT_BY_ID[achId];
+    if (ach) pts += ach.points || 0;
+  }
+  // Add global ones the team has earned
+  if (LEAGUE.achievements && LEAGUE.achievements.global) {
+    for (const achId of Object.keys(LEAGUE.achievements.global)) {
+      if (LEAGUE.achievements.global[achId].byTeamId === teamId) {
+        const ach = ACHIEVEMENT_BY_ID[achId];
+        if (ach) pts += ach.points || 0;
+      }
+    }
+  }
+  return pts;
+}
+window.teamAchievementPoints = teamAchievementPoints;
+
+/* ============================================================
+   ACHIEVEMENTS MODAL — v37.23
+   WoW-style sidebar + grid. Sidebar lists categories; main pane
+   shows achievements in selected category for selected team
+   (or "World First" tab for global achievements).
+   ============================================================ */
+let _achActiveCategory = "combat";
+let _achActiveTeamId = null;
+
+function showAchievements() {
+  // Default team selection: first team alphabetically (stable)
+  if (!_achActiveTeamId) {
+    _achActiveTeamId = TEAMS.length > 0 ? TEAMS[0].id : null;
+  }
+  _renderAchievementsModal();
+}
+window.showAchievements = showAchievements;
+
+function _renderAchievementsModal() {
+  const teamId = _achActiveTeamId;
+  const team = teamId ? TEAM_BY_ID[teamId] : null;
+  const cat = _achActiveCategory;
+
+  // Build sidebar — category list with per-team unlock counts
+  const teamState = teamId ? (LEAGUE.achievements && LEAGUE.achievements.teams && LEAGUE.achievements.teams[teamId]) : null;
+  const teamUnlocked = teamState ? teamState.unlocked : {};
+
+  let sidebarHTML = `<div class="ach-team-picker">`;
+  for (const t of TEAMS) {
+    const cls = t.id === teamId ? "active" : "";
+    sidebarHTML += `<button class="ach-team-pick ${cls}" onclick="_achSelectTeam('${t.id}')" title="${escapeHTML(t.name)}">${t.emoji} ${t.short}</button>`;
+  }
+  sidebarHTML += `</div>`;
+
+  for (const c of ACHIEVEMENT_CATEGORIES) {
+    const all = ACHIEVEMENTS.filter(a => a.category === c.id);
+    let unlocked = 0;
+    if (c.id === "world") {
+      // For "World First", count globally (across all teams); also count if teamId earned them
+      const globalAch = (LEAGUE.achievements && LEAGUE.achievements.global) || {};
+      unlocked = all.filter(a => globalAch[a.id]).length;
+    } else {
+      unlocked = all.filter(a => teamUnlocked[a.id]).length;
+    }
+    const cls = c.id === cat ? "active" : "";
+    sidebarHTML += `<button class="ach-tab-btn ${cls}" onclick="_achSelectCategory('${c.id}')">
+      ${c.icon} ${escapeHTML(c.label)}
+      <div class="ach-tab-meta">${unlocked} / ${all.length}</div>
+    </button>`;
+  }
+
+  // Build main content
+  const catAchs = ACHIEVEMENTS.filter(a => a.category === cat);
+  const isWorldCat = cat === "world";
+
+  // Summary cards (top of content area)
+  let totalUnlocked = 0, totalAchs = 0, totalPts = 0;
+  if (isWorldCat) {
+    const globalAch = (LEAGUE.achievements && LEAGUE.achievements.global) || {};
+    totalAchs = ACHIEVEMENTS.filter(a => a.category === "world").length;
+    totalUnlocked = Object.keys(globalAch).filter(id => ACHIEVEMENT_BY_ID[id] && ACHIEVEMENT_BY_ID[id].category === "world").length;
+    for (const id of Object.keys(globalAch)) {
+      const ach = ACHIEVEMENT_BY_ID[id];
+      if (ach && ach.category === "world") totalPts += ach.points || 0;
+    }
+  } else {
+    totalAchs = ACHIEVEMENTS.filter(a => a.scope === "team").length;
+    totalUnlocked = teamState ? Object.keys(teamUnlocked).length : 0;
+    totalPts = teamId && typeof teamAchievementPoints === "function" ? teamAchievementPoints(teamId) : 0;
+  }
+  const allTeamPts = TEAMS.map(t => ({
+    t,
+    pts: typeof teamAchievementPoints === "function" ? teamAchievementPoints(t.id) : 0,
+  })).sort((a, b) => b.pts - a.pts);
+  const teamRank = teamId ? allTeamPts.findIndex(x => x.t.id === teamId) + 1 : 0;
+
+  let summaryHTML = "";
+  if (isWorldCat) {
+    summaryHTML = `<div class="ach-header">
+      <div>
+        <div class="ach-header-title">🌟 WORLD FIRSTS</div>
+        <div class="ach-header-meta">League-wide milestones — first team to claim each.</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="ach-header-pts">${totalUnlocked} / ${totalAchs}</div>
+        <div class="ach-header-meta">${totalPts} pts claimed</div>
+      </div>
+    </div>`;
+  } else {
+    summaryHTML = `<div class="ach-header">
+      <div>
+        <div class="ach-header-title">${team ? team.emoji + " " + team.name : "—"}</div>
+        <div class="ach-header-meta">League rank: #${teamRank} of ${TEAMS.length} by achievement points</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="ach-header-pts">${totalPts} pts</div>
+        <div class="ach-header-meta">${totalUnlocked} / ${totalAchs} unlocked</div>
+      </div>
+    </div>`;
+  }
+
+  // Achievement rows
+  let rowsHTML = `<div class="ach-list">`;
+  for (const ach of catAchs) {
+    let unlockedRecord = null;
+    let progress = 0, goal = 0;
+    let isUnlocked = false;
+    let unlockedByTeam = null;
+    if (ach.scope === "global") {
+      const g = (LEAGUE.achievements && LEAGUE.achievements.global) || {};
+      unlockedRecord = g[ach.id] || null;
+      isUnlocked = !!unlockedRecord;
+      if (unlockedRecord) {
+        unlockedByTeam = TEAM_BY_ID[unlockedRecord.byTeamId];
+      }
+    } else {
+      unlockedRecord = teamUnlocked[ach.id] || null;
+      isUnlocked = !!unlockedRecord;
+      if (ach.type === "tracker") {
+        progress = teamState && teamState.progress ? (teamState.progress[ach.id] || 0) : 0;
+        goal = ach.goal;
+      }
+    }
+
+    const cls = isUnlocked
+      ? (ach.scope === "global" ? "world-first" : "unlocked")
+      : "locked";
+    const dateStr = unlockedRecord && unlockedRecord.season
+      ? `S${unlockedRecord.season}` + (unlockedByTeam ? ` · ${unlockedByTeam.short}` : "")
+      : "—";
+
+    let progressHTML = "";
+    if (ach.type === "tracker" && !isUnlocked && goal > 0) {
+      const pct = Math.min(100, Math.floor((progress / goal) * 100));
+      progressHTML = `
+        <div class="ach-progress"><div class="ach-progress-fill" style="width:${pct}%"></div></div>
+        <div class="ach-progress-text">${progress} / ${goal}</div>`;
+    }
+
+    rowsHTML += `<div class="ach-row ${cls}">
+      <div class="ach-icon">${ach.icon}</div>
+      <div class="ach-body">
+        <div class="ach-name">${escapeHTML(ach.name)}</div>
+        <div class="ach-desc">${escapeHTML(ach.desc)}</div>
+        ${progressHTML}
+      </div>
+      <div class="ach-meta-col">
+        <div class="ach-pts">${ach.points}</div>
+        <div class="ach-unlock-date">${dateStr}</div>
+      </div>
+    </div>`;
+  }
+  rowsHTML += `</div>`;
+
+  const body = `<div class="ach-modal-wrap">
+    <div class="ach-sidebar">${sidebarHTML}</div>
+    <div class="ach-content">${summaryHTML}${rowsHTML}</div>
+  </div>`;
+
+  openModal("🏅 Achievements", body, `<button onclick="closeModal()" class="secondary">Close</button>`, null, { width: "fullscreen" });
+}
+
+function _achSelectCategory(catId) {
+  _achActiveCategory = catId;
+  _renderAchievementsModal();
+}
+window._achSelectCategory = _achSelectCategory;
+
+function _achSelectTeam(teamId) {
+  _achActiveTeamId = teamId;
+  _renderAchievementsModal();
+}
+window._achSelectTeam = _achSelectTeam;
+
+
+
+
+function getCoachFor(teamId) {
+  return COACHES[teamId] || null;
+}
+window.getCoachFor = getCoachFor;
 
 /* ============================================================
    LEAGUE STATE — top-level game state
@@ -9236,6 +10489,23 @@ const LEAGUE = {
   // { teamId: styleId } — rolled fresh each season. Style choices live in
   // AI_PATHING_STYLES (declared in _part2_sim_b.html).
   aiStyles: {},
+  // === v37.23: Knight rivalries ===
+  // Pairwise kill counts. Key format: "{killerKnightId}::{victimKnightId}".
+  // When both directions reach 3+ kills against each other, the pair is
+  // detected as a "mutual rivalry" — surfaced pre-match, on profile, and
+  // in feed lines whenever they cross paths.
+  // Knight IDs are integers from _idCounter; survive serialization.
+  rivalries: {},
+  // === v37.23.3: Cumulative janitor tips ===
+  // Counter for "Tip the Janitors" shop purchases. Drives the cleanup
+  // crew's visual upgrade tier (better hats at 5+, hi-vis green vests at
+  // 20+, fifth janitor + thank-you text at 50+). Cumulative across the
+  // whole league's lifetime — the crew has, on the matter, a long memory.
+  janitorTips: 0,
+  // === v37.23: Achievements ===
+  // { teams: { [teamId]: { unlocked: { [achId]: {season, ts, ctx} }, progress: { [achId]: int } } },
+  //   global: { [achId]: { season, ts, byTeamId, byKnightId } } }
+  achievements: { teams: {}, global: {} },
   // === v37.16: Followed knights (idol system) ===
   // Array of knight IDs the user has starred to track. The Following panel
   // surfaces their match appearances and KOs. When a followed knight
@@ -9513,6 +10783,20 @@ function registerLineageOnDeath(deceasedKnight) {
     deceasedSeason: LEAGUE.season,
     deceasedBy: deceasedKnight.deceasedBy || null,
   });
+  // === v37.23: lineage achievement hooks ===
+  // Trigger achievements based on the new chain length (post-push).
+  // length 2 means this knight is the SECOND in the chain (one predecessor
+  // before them was already there; we just pushed knight #1's record so
+  // the next rookie minted will be the Second).
+  if (typeof recordAchievementEvent === "function") {
+    const len = chain.predecessors.length;
+    if (len === 1) recordAchievementEvent("lineage_2", { teamId: deceasedKnight.teamId });
+    else if (len === 2) recordAchievementEvent("lineage_3", { teamId: deceasedKnight.teamId });
+    else if (len === 4) {
+      recordAchievementEvent("lineage_5", { teamId: deceasedKnight.teamId });
+      recordAchievementEvent("league_first_5_chain", { teamId: deceasedKnight.teamId });
+    }
+  }
   return key;
 }
 
@@ -9847,6 +11131,18 @@ const SHOP_ITEMS = [
     apply: (boost) => { boost.hp = (boost.hp||0)+50; boost.def = (boost.def||0)+10; } },
   { id: "curse",   ico: "💀", nm: "Curse of the Loser", cost: 175, rarity: "legendary", desc: "Opponent: -10 HP and -5 DEF and -3 DMG",
     apply: (boost) => { boost.hp = (boost.hp||0)-10; boost.def = (boost.def||0)-5; boost.dmg = (boost.dmg||0)-3; }, target: "opp" },
+
+  // === v37.23.3: Tip the cleanup crew ===
+  // Special civic-engagement item. Doesn't buff teams. Doesn't debuff
+  // anyone. Costs 15 bits, repeatable. Increments LEAGUE.janitorTips,
+  // which drives visual upgrades to the inter-round janitor crew over
+  // time. Read by drawJanitors and spawnJanitors. The Featherquill
+  // press has, on the matter, declined to comment on whether this is
+  // strictly within the spirit of the betting market.
+  { id: "tip_janitors", ico: "🧹", nm: "Tip the Crew", cost: 15, rarity: "common",
+    desc: "A thank-you to the cleanup crew. They notice. The hats get better.",
+    target: "janitors",
+    apply: () => {} },
 ];
 const SHOP_BY_ID = Object.fromEntries(SHOP_ITEMS.map(s => [s.id, s]));
 
@@ -10223,8 +11519,42 @@ function startMatch() {
   SIM_RNG.reseed(matchSeed);
   BIOME_RNG.reseed(matchSeed);
 
-  const teamA = LEAGUE.rosters[b.teamA].filter(p => !p.deceased);
-  const teamB = LEAGUE.rosters[b.teamB].filter(p => !p.deceased);
+  // === v37.23: process injury counters and exclude injured knights ===
+  // Decrement matchesRemaining on all injured knights NOT in the match
+  // (they sit out this one). Active-line filter excludes any knight
+  // currently injured.
+  if (typeof _processInjuryStatuses === "function") {
+    _processInjuryStatuses(b.teamA);
+    _processInjuryStatuses(b.teamB);
+  }
+
+  const teamA = LEAGUE.rosters[b.teamA].filter(p => !p.deceased && !p.injury);
+  const teamB = LEAGUE.rosters[b.teamB].filter(p => !p.deceased && !p.injury);
+
+  // === v37.23: emergency call-up if injuries opened a position ===
+  // If a position is empty in either team's active line because of
+  // injuries, mint a rookie to fill it. The roster already has the
+  // injured knight; this rookie is a temporary cover and joins the
+  // pool permanently (will compete for the slot when the injured
+  // returns; backfillRosters next match will reconcile).
+  for (const teamId of [b.teamA, b.teamB]) {
+    const teamRoster = LEAGUE.rosters[teamId];
+    const lineup = teamId === b.teamA ? teamA : teamB;
+    const filledPositions = new Set(lineup.map(p => p.position));
+    for (const pos of POSITIONS) {
+      if (!filledPositions.has(pos.id)) {
+        const rookie = makePlayer(teamId, pos);
+        rookie.debutSeason = LEAGUE.season;
+        if (typeof _drawLineageNameFor === "function") {
+          const lineageName = _drawLineageNameFor(teamId, pos.id);
+          if (lineageName) rookie.name = lineageName;
+        }
+        teamRoster.push(rookie);
+        lineup.push(rookie);
+        feed("spawn", `🪖 ${TEAM_BY_ID[teamId]?.short}: ${escapeHTML(rookie.name)} called up to cover injured ${pos.label}.`);
+      }
+    }
+  }
 
   // Reset match-level state on every player going into this match
   for (const p of [...teamA, ...teamB]) {
@@ -10232,6 +11562,12 @@ function startMatch() {
     p.itemUsed = false;
     p.boostMods = null;
     p.balloonsPopped = 0;
+    // === v37.23: clear any stale stat penalty cache from prior injury ===
+    // (Re-applied below if applicable.)
+    if (p._origStats) {
+      p.stats = p._origStats;
+      delete p._origStats;
+    }
   }
 
   // Apply pending shop boosts (consumed once per match)
@@ -10297,6 +11633,26 @@ function startMatch() {
     commentate("chant", `${tB.emoji} ${tB.short}: "${pick(tB.chants)}"`, { flavor: "hype" });
   }
 
+  // === v37.23: surface mutual rivalries on the field ===
+  // If two knights with a 3+/3+ history are facing off, drop a feed line
+  // (and a small toast) so the user knows to watch the duel.
+  if (typeof detectActiveRivalries === "function") {
+    const rivalries = detectActiveRivalries(LEAGUE.match);
+    for (const r of rivalries) {
+      const taShort = TEAM_BY_ID[r.aKnight.teamId]?.short || "?";
+      const tbShort = TEAM_BY_ID[r.bKnight.teamId]?.short || "?";
+      feed("season", `⚔️ Active rivalry on the field: ${escapeHTML(r.aKnight.name)} (${taShort}) vs ${escapeHTML(r.bKnight.name)} (${tbShort}) — ${r.aKilledB}–${r.bKilledA}.`);
+    }
+    if (rivalries.length > 0 && typeof window !== "undefined" && window.toast) {
+      const r = rivalries[0]; // surface only the first as a toast
+      window.toast(
+        `⚔️ Rivalry on the field: <b>${escapeHTML(r.aKnight.name)}</b> vs <b>${escapeHTML(r.bKnight.name)}</b>`,
+        "info",
+        { ico: "⚔️", ttl: 5000 }
+      );
+    }
+  }
+
   // === v37.16: surface followed knights in this match ===
   // If any of the user's starred knights are on the field, drop a
   // distinctive toast naming them and a feed line so the user notices.
@@ -10354,6 +11710,44 @@ function startRound() {
       const posLabel = POS_BY_ID[c.rookie.position]?.label || c.rookie.position;
       feed("spawn", `🆕 ${team.name} pool: ${c.rookie.name} (${posLabel}) added between rounds.`);
     }
+    // === v37.22: mid-match rookie infusion ===
+    // Earlier, new rookies sat in the league pool until next match — so
+    // a team that lost their Sniper to permadeath in round 2 played the
+    // rest of the match short-handed (5 vs 7, etc). The user (correctly)
+    // flagged this as imbalance. Now: any new rookie minted by the
+    // between-rounds backfill ALSO gets injected into the current match's
+    // active line, with full lives. They dress for the next round.
+    const matchTeamArrays = {
+      [m.teamAId]: m.teamAplayers,
+      [m.teamBId]: m.teamBplayers,
+    };
+    for (const c of roundCallups) {
+      const teamArr = matchTeamArrays[c.team];
+      if (!teamArr) continue; // rookie's team isn't in the current match
+      // Avoid double-add if this knight is somehow already there
+      if (teamArr.some(p => p.id === c.rookie.id)) continue;
+      // Init match-state on the rookie so they're round-ready
+      c.rookie.lives = MATCH.startingLives;
+      c.rookie.itemUsed = false;
+      c.rookie.boostMods = null;
+      c.rookie.balloonsPopped = 0;
+      c.rookie.alive = true;
+      c.rookie.hp = c.rookie.stats.hp;
+      teamArr.push(c.rookie);
+      const team = TEAM_BY_ID[c.team];
+      const posLabel = POS_BY_ID[c.rookie.position]?.label || c.rookie.position;
+      feed("spawn", `🪂 ${team.emoji} ${team.short}: ${c.rookie.name} drops in to fill the empty ${posLabel} slot.`);
+      // === v37.23: rookie scouting report on debut feed ===
+      if (typeof getScoutingReport === "function") {
+        const report = getScoutingReport(c.rookie);
+        if (report) feed("spawn", `📋 Scouting (${c.rookie.name}): ${report.replace(/<[^>]+>/g, "")}`);
+      }
+    }
+    // === v37.22: invalidate the per-frame flat-players cache ===
+    // tickMatch builds m._allPlayersFlat from teamAplayers+teamBplayers.
+    // We just mutated those arrays, so the cache is stale. Clear it so
+    // the next tickMatch rebuilds it with the new rookies included.
+    m._allPlayersFlat = null;
   }
   m.currentRoundIndex++;
   m.phase = "round";
@@ -12899,6 +14293,23 @@ const TEAM_AI = (function() {
       else if (e.position === "sniper" || e.position === "grenadier") util += 1.5;
       // Stunned target bonus — easy DPS
       if ((e.stunned || 0) > 0) util += 2.0;
+      // === v37.23: personality bias ===
+      // Subtle weight shifts that compound into recognizably different
+      // playstyles. Each modifier is small per-decision; the cumulative
+      // effect across a season tells the story.
+      const pers = PERSONALITY_BY_ID[p.personality];
+      if (pers) {
+        if (pers.distancePref) util += d * pers.distancePref;
+        if (pers.woundedBonus) util += (1 - eHp) * pers.woundedBonus;
+        if (pers.healerBonus && e.position === "healer") util += pers.healerBonus;
+        if (pers.protectAllyBonus && e.target) {
+          // Is this enemy targeting one of our allies?
+          const allies = (p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers);
+          if (allies.some(a => a.alive && a.id === e.target)) {
+            util += pers.protectAllyBonus;
+          }
+        }
+      }
       if (util > bestUtility) { bestUtility = util; bestTarget = e; }
     }
     return bestTarget;
@@ -15848,6 +17259,85 @@ function handleKO(attacker, defender, m) {
   attacker.career.kills++;
   m.killsByTeam[attacker.teamId]++;
 
+  // === v37.23: Rivalry tracking ===
+  // Increment killer→victim count, then check whether the reverse
+  // direction has also accumulated kills. A "mutual rivalry" is
+  // declared when BOTH directions reach 3, and is announced once
+  // (the moment the threshold is crossed) via the kill feed.
+  if (typeof attacker.id === "number" && typeof defender.id === "number") {
+    if (!LEAGUE.rivalries) LEAGUE.rivalries = {};
+    const fwdKey = attacker.id + "::" + defender.id;
+    const revKey = defender.id + "::" + attacker.id;
+    LEAGUE.rivalries[fwdKey] = (LEAGUE.rivalries[fwdKey] || 0) + 1;
+    const fwd = LEAGUE.rivalries[fwdKey];
+    const rev = LEAGUE.rivalries[revKey] || 0;
+    // Mutual rivalry achievement message — only on the EXACT moment we cross
+    if (fwd === 3 && rev >= 3) {
+      feed("kill", `⚔️ <b>RIVALRY DECLARED:</b> ${escapeHTML(attacker.name)} and ${escapeHTML(defender.name)} have killed each other 3+ times.`);
+      // Hook achievement system
+      if (typeof recordAchievementEvent === "function") {
+        recordAchievementEvent("rivalry_declared", {
+          teamId: attacker.teamId,
+          aId: attacker.id, bId: defender.id,
+          aTeamId: attacker.teamId, bTeamId: defender.teamId,
+        });
+        // Symmetric — defender's team also gets it
+        recordAchievementEvent("rivalry_declared", {
+          teamId: defender.teamId,
+          aId: defender.id, bId: attacker.id,
+          aTeamId: defender.teamId, bTeamId: attacker.teamId,
+        });
+      }
+    } else if (fwd >= 3 && rev >= 3 && (fwd + rev) % 2 === 0) {
+      // Quiet flag-feed every other kill once mutual rivalry is established
+      feed("kill", `⚔️ Rivalry update: ${escapeHTML(attacker.name)} ${fwd}–${rev} ${escapeHTML(defender.name)}.`);
+    }
+  }
+
+  // === v37.23: kill-event achievement hooks ===
+  if (typeof recordAchievementEvent === "function") {
+    // First-blood (per team): the very first kill the team ever scored
+    const teamRec = LEAGUE.records[attacker.teamId];
+    if (teamRec) {
+      const totalKillsBefore = (teamRec._cumulativeKills || 0);
+      teamRec._cumulativeKills = totalKillsBefore + 1;
+      if (totalKillsBefore === 0) {
+        recordAchievementEvent("team_first_kill", { teamId: attacker.teamId, knightId: attacker.id });
+      }
+    }
+    // Per-team tracker
+    recordAchievementEvent("team_kill", { teamId: attacker.teamId });
+    // Match-killer thresholds — fire when this attacker's match-kills hit 5/10
+    attacker._matchKills = (attacker._matchKills || 0) + 1;
+    if (attacker._matchKills === 5) {
+      recordAchievementEvent("match_killer_5", { teamId: attacker.teamId, knightId: attacker.id });
+    }
+    if (attacker._matchKills === 10) {
+      recordAchievementEvent("match_killer_10", { teamId: attacker.teamId, knightId: attacker.id });
+    }
+    // Career-kill thresholds (50, 100)
+    if (attacker.career.kills === 50) {
+      recordAchievementEvent("knight_50_kills", { teamId: attacker.teamId, knightId: attacker.id });
+    }
+    if (attacker.career.kills === 100) {
+      recordAchievementEvent("knight_100_kills", { teamId: attacker.teamId, knightId: attacker.id });
+      // World-first century
+      recordAchievementEvent("league_first_century", { teamId: attacker.teamId, knightId: attacker.id });
+    }
+    // Showboat personality taunt
+    const aPers = PERSONALITY_BY_ID[attacker.personality];
+    if (aPers && aPers.showboat) {
+      const taunts = [
+        "Did you all see that? Of course you did.",
+        "Camera's still on, right?",
+        "I will, on the matter, autograph the corpse.",
+        "Tell the broadcast booth to slow that one down.",
+        "Did the LMG cut to my face yet? They should.",
+      ];
+      m.floats.push({ x: attacker.x, y: attacker.y - 36, text: '"' + pick(taunts) + '"', life: 50, color: "#ffd76b" });
+    }
+  }
+
   // === v28.4: trigger stadium crowd cheer ===
   // Sets a transient flag the renderer reads to bounce fans near the
   // kill location for ~30 frames. Honored regardless of disableCrowd
@@ -15940,6 +17430,16 @@ function handleKO(attacker, defender, m) {
       finalSeasonsPlayed: defender.career.seasonsPlayed || 0,
       finalMatchesWon: defender.career.matchesWon || 0,
     });
+    // === v37.23: perma-death achievement hooks ===
+    if (typeof recordAchievementEvent === "function") {
+      // World-first perma-death
+      if (LEAGUE.graveyard.length === 1) {
+        recordAchievementEvent("league_first_permadeath", {
+          teamId: defender.teamId, knightId: defender.id,
+          killerTeamId: attacker.teamId,
+        });
+      }
+    }
     m.corpses.push({ x: defender.x, y: defender.y, color: TEAM_BY_ID[defender.teamId].color });
     dropGear(defender, m);
     feed("kill", phrasePick(PHRASE_KILL, { a: attacker.name, b: defender.name }));
@@ -15981,6 +17481,14 @@ function handleKO(attacker, defender, m) {
 
     if (isLegend) {
       if (!LEAGUE.promotedLegends) LEAGUE.promotedLegends = [];
+      // === v37.23: legend achievement hooks ===
+      if (typeof recordAchievementEvent === "function") {
+        recordAchievementEvent("promoted_legend", { teamId: defender.teamId, knightId: defender.id });
+        // World-first legend
+        if (LEAGUE.promotedLegends.length === 0) {
+          recordAchievementEvent("league_first_legend", { teamId: defender.teamId, knightId: defender.id });
+        }
+      }
       LEAGUE.promotedLegends.push({
         name: defender.name,
         teamId: defender.teamId,
@@ -16278,6 +17786,10 @@ function attemptScavenge(p, m) {
     p[slot] = d.gear;
     if (slot === "item") p.itemUsed = false;
     p.career.scavenged = (p.career.scavenged || 0) + 1;
+    // === v37.23: scavenge achievement tracker ===
+    if (typeof recordAchievementEvent === "function") {
+      recordAchievementEvent("team_scavenge", { teamId: p.teamId, knightId: p.id });
+    }
     const legendary = d.gear.scavengedCount >= 3 ? " ⭐LEGENDARY⭐" : "";
     feed("item", `🎒 ${p.name} scavenges ${gearDisplayName(d.gear)}!${legendary}`);
     m.floats.push({ x: p.x, y: p.y - 16, text: "+gear", life: 22, color: "#4dd58a" });
@@ -16362,6 +17874,8 @@ function finalizeRound(forfeit) {
   }
 
   m.phase = "betweenRounds";
+  // === v37.22: spawn cleanup crew for the inter-round break ===
+  if (typeof spawnJanitors === "function") spawnJanitors(m);
   if (typeof showRoundIntermission === "function") showRoundIntermission();
 }
 
@@ -16381,6 +17895,19 @@ function finalizeMatch(matchDraw) {
   if (!m) return;
 
   m.phase = "post";
+  // === v37.22: spawn cleanup crew for the post-match break ===
+  if (typeof spawnJanitors === "function") spawnJanitors(m);
+
+  // === v37.23: roll injuries for survivors ===
+  // Each surviving (non-deceased) knight on either team has a chance to
+  // pick up a 1-2 match injury. The roll happens BEFORE the match-result
+  // record is settled so the feed-order reads naturally: post-match
+  // result → injury reports → coach quote.
+  if (typeof _rollPostMatchInjury === "function") {
+    for (const p of [...m.teamAplayers, ...m.teamBplayers]) {
+      if (!p.deceased) _rollPostMatchInjury(p, m);
+    }
+  }
 
   if (matchDraw) {
     // True match-level draw — bestOf rounds played, score tied
@@ -16429,6 +17956,53 @@ function finalizeMatch(matchDraw) {
   LEAGUE.records[loserId].losses++;
 
   LEAGUE.bracket[m.slot].winner = winnerId;
+  // === v37.23: match-win achievement hooks ===
+  if (typeof recordAchievementEvent === "function") {
+    recordAchievementEvent("team_match_win", { teamId: winnerId });
+    // Comeback kid: did this team lose the first 2 rounds AND win the match?
+    const firstTwo = (m.rounds || []).slice(0, 2);
+    const teamARounds = firstTwo.filter(r => r.winner === m.teamAId).length;
+    const teamBRounds = firstTwo.filter(r => r.winner === m.teamBId).length;
+    const winnerRoundsInFirst2 = winnerId === m.teamAId ? teamARounds : teamBRounds;
+    if (firstTwo.length >= 2 && winnerRoundsInFirst2 === 0) {
+      recordAchievementEvent("team_comeback_win", { teamId: winnerId });
+    }
+    // Rookie carries the match — was the top team killer a rookie?
+    const winnerRoster = winnerId === m.teamAId ? m.teamAplayers : m.teamBplayers;
+    if (winnerRoster && winnerRoster.length) {
+      let topKiller = null, topKills = 0;
+      for (const p of winnerRoster) {
+        const k = p._matchKills || 0;
+        if (k > topKills) { topKills = k; topKiller = p; }
+      }
+      if (topKiller && topKills >= 2 && topKiller.debutSeason === LEAGUE.season) {
+        recordAchievementEvent("rookie_match_lead", { teamId: winnerId, knightId: topKiller.id });
+      }
+    }
+    // Perfect round — any round won by winnerId with all teammates alive?
+    for (const r of (m.rounds || [])) {
+      if (r.winner !== winnerId) continue;
+      const winnerAlive = winnerId === m.teamAId ? r.aAlive : r.bAlive;
+      const winnerRosterCount = winnerId === m.teamAId ? m.teamAplayers.length : m.teamBplayers.length;
+      if (winnerAlive === winnerRosterCount) {
+        recordAchievementEvent("perfect_round", { teamId: winnerId });
+        break;
+      }
+    }
+  }
+  // === v37.23: post-match press conference (coach quotes) ===
+  if (typeof getCoachFor === "function") {
+    const winningCoach = getCoachFor(winnerId);
+    const losingCoach = getCoachFor(loserId);
+    if (winningCoach && COACH_QUOTES.win[winningCoach.archetype]) {
+      const q = pick(COACH_QUOTES.win[winningCoach.archetype]);
+      feed("match", `🎤 ${TEAM_BY_ID[winnerId].emoji} <b>${escapeHTML(winningCoach.name)}</b> (post-match): <em>"${escapeHTML(q)}"</em>`);
+    }
+    if (losingCoach && COACH_QUOTES.loss[losingCoach.archetype]) {
+      const q = pick(COACH_QUOTES.loss[losingCoach.archetype]);
+      feed("match", `🎤 ${TEAM_BY_ID[loserId].emoji} <b>${escapeHTML(losingCoach.name)}</b> (post-match): <em>"${escapeHTML(q)}"</em>`);
+    }
+  }
   LEAGUE.bracket[m.slot].casualties = LEAGUE.graveyard
     .filter(g => g.season === LEAGUE.season && g.slot === m.slot);
 
@@ -16549,6 +18123,39 @@ function finalizeSeason() {
     LEAGUE.records[champion].championships++;
     feed("season",
       `🏆 SEASON ${LEAGUE.season} CHAMPION: ${TEAM_BY_ID[champion].emoji} ${TEAM_BY_ID[champion].name}!`);
+
+    // === v37.23: championship achievement hooks ===
+    if (typeof recordAchievementEvent === "function") {
+      const champRec = LEAGUE.records[champion];
+      const totalChamps = champRec.championships;
+      // First championship for this team
+      if (totalChamps === 1) recordAchievementEvent("team_championship", { teamId: champion });
+      // Tracker increments for "five titles"
+      recordAchievementEvent("team_championship", { teamId: champion });
+      // World first championship in the league
+      const anyTeamHasMore = Object.values(LEAGUE.records).some(r => r.championships >= 1 && r !== champRec);
+      if (totalChamps === 1 && !anyTeamHasMore) {
+        recordAchievementEvent("league_first_championship", { teamId: champion });
+      }
+      // Back-to-back / dynasty: check history
+      const lastSeasonChamp = LEAGUE.history.length >= 2
+        ? LEAGUE.history[LEAGUE.history.length - 2].champion
+        : null;
+      const twoBackChamp = LEAGUE.history.length >= 3
+        ? LEAGUE.history[LEAGUE.history.length - 3].champion
+        : null;
+      if (lastSeasonChamp === champion) {
+        recordAchievementEvent("team_b2b_championship", { teamId: champion });
+        if (twoBackChamp === champion) {
+          recordAchievementEvent("team_dynasty_championship", { teamId: champion });
+        }
+      }
+      // Bloodless bracket — zero perma-deaths for this team this season
+      const teamSeasonDeaths = LEAGUE.graveyard.filter(g => g.teamId === champion && g.season === LEAGUE.season).length;
+      if (teamSeasonDeaths === 0) {
+        recordAchievementEvent("team_zero_deaths_season", { teamId: champion });
+      }
+    }
   }
 
   const seasonCasualties = LEAGUE.graveyard.filter(g => g.season === LEAGUE.season);
@@ -16585,6 +18192,12 @@ function beginNextSeason() {
   const { callups, reaped } = backfillRosters();
   for (const p of Object.values(LEAGUE.rosters).flat()) {
     p.career.seasonsPlayed++;
+    // === v37.23: longevity achievement hooks ===
+    if (typeof recordAchievementEvent === "function" && !p.deceased) {
+      if (p.career.seasonsPlayed === 3)  recordAchievementEvent("knight_3_seasons",  { teamId: p.teamId, knightId: p.id });
+      if (p.career.seasonsPlayed === 5)  recordAchievementEvent("knight_5_seasons",  { teamId: p.teamId, knightId: p.id });
+      if (p.career.seasonsPlayed === 10) recordAchievementEvent("knight_10_seasons", { teamId: p.teamId, knightId: p.id });
+    }
   }
   if (callups.length) {
     feed("season", `📣 Off-season call-ups: ${callups.length} rookies join the league.`);
@@ -16974,6 +18587,53 @@ function buyItem(itemId, teamId) {
   // Specific-player targeted items must use buyTargetedItem instead.
   if (item.target === "specific_player") return false;
 
+  // === v37.23.3: Tip the cleanup crew ===
+  // Special-case item — doesn't apply to any team's pendingBoosts. Just
+  // increments the lifetime tip counter (drives crew visual upgrades) and
+  // fires lore-flavor feedback on milestone tips. Repeatable.
+  if (item.target === "janitors") {
+    LEAGUE.bits -= item.cost;
+    LEAGUE.janitorTips = (LEAGUE.janitorTips || 0) + 1;
+    const tips = LEAGUE.janitorTips;
+    feed("item", `🧹 You tipped the cleanup crew. Total: ${tips}.`);
+    // Milestone toasts in the established voice
+    if (tips === 1) {
+      if (typeof window !== "undefined" && window.toast) {
+        window.toast(`🧹 The cleanup crew has, on the matter, noticed.<br><span style="opacity:0.85;font-size:10px;">First tip received.</span>`, "info", { ico: "🧹", ttl: 5000 });
+      }
+    } else if (tips === 5) {
+      if (typeof window !== "undefined" && window.toast) {
+        window.toast(`🧹 The crew has, in due course, upgraded their hats.<br><span style="opacity:0.85;font-size:10px;">Small gold pin added. (5 tips)</span>`, "info", { ico: "✨", ttl: 5000 });
+      }
+      feed("item", `✨ The crew's hats have, by their own report, gained a small gold pin.`);
+    } else if (tips === 20) {
+      if (typeof window !== "undefined" && window.toast) {
+        window.toast(`🧹 The crew has signed an LMG vest sponsorship.<br><span style="opacity:0.85;font-size:10px;">Hi-vis green vests now standard. (20 tips)</span>`, "info", { ico: "🟢", ttl: 6000 });
+      }
+      feed("item", `🟢 The cleanup crew has, by Foundation accounting records, transitioned to LMG-sponsored hi-vis green vests.`);
+    } else if (tips === 50) {
+      if (typeof window !== "undefined" && window.toast) {
+        window.toast(`🧹 A fifth janitor joins the crew.<br><span style="opacity:0.85;font-size:10px;">Watch for the thank-you wave on first sweep. (50 tips)</span>`, "info", { ico: "🎉", ttl: 7000 });
+      }
+      feed("item", `🎉 A fifth janitor has joined the cleanup crew. The crew has, on the matter, expanded.`);
+    } else if (tips === 100) {
+      if (typeof window !== "undefined" && window.toast) {
+        window.toast(`🧹 The crew has named a broom after you.<br><span style="opacity:0.85;font-size:10px;">No further upgrades. They have, on the matter, sufficient hats. (100 tips)</span>`, "info", { ico: "🏆", ttl: 8000 });
+      }
+      feed("item", `🏆 The cleanup crew has, on the matter, named a broom after the bettor. The bettor will, by Foundation tradition, never be told which broom.`);
+    }
+    // Hook achievement at 10 tips
+    if (typeof recordAchievementEvent === "function" && tips >= 10) {
+      // Fire on first crossing
+      const am = activeMatchTeams();
+      if (am && tips === 10) {
+        recordAchievementEvent("janitor_generous", { teamId: am.teamA });
+      }
+    }
+    if (typeof saveLocal === "function") saveLocal();
+    return true;
+  }
+
   // Saboteur targets the OPPONENT in the next active match
   let appliedToTeam = teamId;
   if (item.target === "opp") {
@@ -17140,6 +18800,19 @@ const CAMERA = {
 function _computeCameraTarget(m) {
   const W = COMBAT.arenaW || 1280, H = COMBAT.arenaH || 720;
   if (!m) return { cx: W/2, cy: H/2, zoom: 1.0 };
+
+  // === v37.22: pull camera back to wide stadium view between rounds ===
+  // Whenever the live action is paused (betweenRounds, post, preRound for
+  // rounds 2+), frame the entire field plus the surrounding crowd. Users
+  // explicitly asked to see the stadium during intermissions; the previous
+  // behavior left the camera tight on the last engagement and slow-glided
+  // back, so the crowd was rarely visible.
+  // The MIN_ZOOM here matches the "empty match" wide-shot below so the
+  // pulled-back composition is identical whether players are alive but
+  // paused (this case) or no players are present (count===0 case).
+  if (m.phase && m.phase !== "round") {
+    return { cx: W/2, cy: H/2, zoom: CAMERA.MIN_ZOOM };
+  }
 
   const pad = CAMERA.PAD_NORMAL;
 
@@ -17315,11 +18988,20 @@ function _updateCamera(m) {
   CAMERA.targetY = tgt.cy;
   CAMERA.targetZoom = tgt.zoom;
 
+  // === v37.22: snappier glide during non-round phases ===
+  // The default LERP/ZOOM_LERP are tuned for live action (smooth, slow
+  // tracking that doesn't jerk during fights). Between rounds the camera
+  // needs to reset to wide stadium view in maybe one second of real time,
+  // not eight. Use 4× the normal lerp coefficient when the match is paused.
+  const isPaused = m && m.phase && m.phase !== "round";
+  const posLerp  = isPaused ? Math.min(0.20, CAMERA.LERP * 4)      : CAMERA.LERP;
+  const zoomLerp = isPaused ? Math.min(0.15, CAMERA.ZOOM_LERP * 4) : CAMERA.ZOOM_LERP;
+
   // Smooth lerp — separate factors for position and zoom so zoom
   // changes don't cause motion sickness.
-  CAMERA.x = CAMERA.x + (CAMERA.targetX - CAMERA.x) * CAMERA.LERP;
-  CAMERA.y = CAMERA.y + (CAMERA.targetY - CAMERA.y) * CAMERA.LERP;
-  CAMERA.zoom = CAMERA.zoom + (CAMERA.targetZoom - CAMERA.zoom) * CAMERA.ZOOM_LERP;
+  CAMERA.x = CAMERA.x + (CAMERA.targetX - CAMERA.x) * posLerp;
+  CAMERA.y = CAMERA.y + (CAMERA.targetY - CAMERA.y) * posLerp;
+  CAMERA.zoom = CAMERA.zoom + (CAMERA.targetZoom - CAMERA.zoom) * zoomLerp;
 }
 
 /* Apply the current camera transform to ctx. Caller must save+restore
@@ -18475,6 +20157,341 @@ function drawAmbientParticles(particles) {
    fans within crowdCheer.radius of crowdCheer.x bounce more vigorously.
 
    Honors LEAGUE_CONFIG.disableCrowd (settings toggle in v28.4). */
+/* ============================================================
+   JANITOR CLEANUP CREW — v37.22
+   Between rounds and after matches, a small crew of janitorial
+   sprites sweeps the field clean: clears corpses, picks up dropped
+   items, removes blood spatter. Capped at ~7 seconds of animation.
+   The crew runs off real-time animation (drawArena), not the sim
+   tick — so they animate during paused phases when tickMatch is
+   not running.
+
+   Lifecycle:
+     spawnJanitors(m)  — called from finalizeRound + finalizeMatch
+                         and from showSeasonEnd. Adds 4 janitor
+                         sprites at field edges, each with a target
+                         priority list of debris to clean.
+     tickJanitors(m)   — called from drawArena every frame. Walks
+                         each janitor toward their next target,
+                         "sweeps" when in range (debris removed),
+                         walks them off when their list is empty
+                         or the global timeout fires.
+     drawJanitors(m)   — called from drawArena before player render
+                         so they layer above corpses/blood and
+                         below mascots+projectiles (which won't
+                         exist mid-cleanup anyway).
+   ============================================================ */
+const JANITOR = {
+  WALK_SPEED: 1.7,        // px per real-time frame (rendered, not sim)
+  SWEEP_FRAMES: 12,       // ~0.4s of sweeping per debris item
+  TIMEOUT_FRAMES: 140,    // hard cap (~5s at 30fps, ~2.3s at 60fps;
+                          // the SHOW won't go longer than ~7s of real time)
+  CREW_SIZE: 4,           // four janitors — four field edges
+  COLOR_BODY:    "#3a4350",
+  COLOR_BODY_ALT:"#4d5666",
+  COLOR_HAT:     "#f7c948",   // yellow safety hat — they're staff
+  COLOR_VEST:    "#ef9d3a",   // hi-vis orange vest
+  COLOR_BROOM_H: "#7d4f3d",   // broom handle
+  COLOR_BROOM_B: "#dccc8d",   // broom bristles
+};
+
+/* Spawn the cleanup crew. Builds a target queue per janitor by
+   round-robin assigning all current debris (corpses, drops, blood
+   pools) to the four crew members.
+
+   Idempotent in spirit: calling twice in the same paused window
+   simply REPLACES the crew (rare; only if user manually re-triggers
+   intermission UI). */
+function spawnJanitors(m) {
+  if (!m) return;
+  const W = COMBAT.arenaW || 1280;
+  const H = COMBAT.arenaH || 720;
+  m.janitors = [];
+  m._janitorStartFrame = m._janitorRenderFrame || 0;
+
+  // Build target list — one entry per debris piece. Each target carries
+  // a reference back to the source array so we can splice on sweep.
+  const targets = [];
+  if (m.corpses && m.corpses.length) {
+    for (const c of m.corpses) targets.push({ x: c.x, y: c.y, ref: c, kind: "corpse" });
+  }
+  // === v37.22: drop-sweep policy ===
+  // Between ROUNDS (m.phase === "betweenRounds"): only sweep neutral
+  // spawn drops (health packs, armor pickups, etc.) — those have no
+  // `fromName`. Scavenged legacy gear (Bristlebeard's Riot Shield, etc.)
+  // has `fromName` set by dropGear and MUST persist across rounds so
+  // surviving knights can still scavenge it. After a perma-death's
+  // legacy weapon hits the field, the rest of the match should still
+  // see it on the field.
+  // Between MATCHES (m.phase === "post"): sweep everything. The next
+  // match starts on a different field (new `m` object) anyway, so
+  // there's nothing to preserve.
+  const sweepAllDrops = m.phase === "post";
+  if (m.drops && m.drops.length) {
+    for (const d of m.drops) {
+      const isLegacy = d && d.fromName;
+      if (sweepAllDrops || !isLegacy) {
+        targets.push({ x: d.x, y: d.y, ref: d, kind: "drop" });
+      }
+    }
+  }
+  // Blood pools — sample sparsely so we don't queue 200 targets.
+  // We just sweep every 8th blood splatter; the rest fade naturally.
+  if (m.blood && m.blood.length) {
+    for (let i = 0; i < m.blood.length; i += 8) {
+      targets.push({ x: m.blood[i].x, y: m.blood[i].y, ref: m.blood[i], kind: "blood" });
+    }
+  }
+
+  // Spawn one janitor per field edge: top, right, bottom, left.
+  // Each gets every Nth target in round-robin order so the field
+  // is cleared evenly rather than one corner first.
+  const edges = [
+    { x: W * 0.25, y: -10,      // entry from top
+      walkOffX: W * 0.25, walkOffY: -10 },
+    { x: W + 10, y: H * 0.25,   // from right
+      walkOffX: W + 10, walkOffY: H * 0.25 },
+    { x: W * 0.75, y: H + 10,   // from bottom
+      walkOffX: W * 0.75, walkOffY: H + 10 },
+    { x: -10, y: H * 0.75,      // from left
+      walkOffX: -10, walkOffY: H * 0.75 },
+  ];
+  // === v37.23.3: tip-tier expands crew size at 50+ tips ===
+  const tipTier = LEAGUE.janitorTips || 0;
+  const crewSize = tipTier >= 50 ? 5 : JANITOR.CREW_SIZE;
+  // If we need a 5th janitor, give them the center-bottom edge
+  if (crewSize > edges.length) {
+    edges.push({ x: W * 0.5, y: H + 10, walkOffX: W * 0.5, walkOffY: H + 10 });
+  }
+  for (let i = 0; i < crewSize; i++) {
+    const myTargets = [];
+    for (let t = i; t < targets.length; t += JANITOR.CREW_SIZE) {
+      myTargets.push(targets[t]);
+    }
+    m.janitors.push({
+      x: edges[i].x,
+      y: edges[i].y,
+      walkOffX: edges[i].walkOffX,
+      walkOffY: edges[i].walkOffY,
+      targets: myTargets,
+      currentTarget: null,
+      state: "walking",
+      sweepLeft: 0,
+      bobPhase: i * 1.7,
+      // Slight species variety — color tweak per crew member
+      bodyColor: i % 2 === 0 ? JANITOR.COLOR_BODY : JANITOR.COLOR_BODY_ALT,
+    });
+  }
+  // === v37.23.3: thank-you banner at 50+ tips ===
+  // Fires once per cleanup spawn — a small floating "THANK YOU" text
+  // hovers over the crew's first member during their first sweep.
+  if (tipTier >= 50 && m.floats) {
+    m.floats.push({
+      x: m.janitors[0].x,
+      y: m.janitors[0].y - 24,
+      text: "THANK YOU",
+      life: 80,
+      color: "#8cc86e",
+    });
+  }
+}
+window.spawnJanitors = spawnJanitors;
+
+/* Advance the cleanup crew by one render frame. Cheap when no crew
+   is active (returns immediately). */
+function tickJanitors(m) {
+  if (!m || !m.janitors || m.janitors.length === 0) return;
+
+  // Track real-time frames since spawn for the global timeout.
+  m._janitorRenderFrame = (m._janitorRenderFrame || 0) + 1;
+  const startFrame = m._janitorStartFrame || 0;
+  const elapsed = m._janitorRenderFrame - startFrame;
+  const timedOut = elapsed > JANITOR.TIMEOUT_FRAMES;
+
+  let allDone = true;
+  for (const j of m.janitors) {
+    j.bobPhase += 0.2;
+
+    if (j.state === "walking") {
+      // If we don't have a current target, pick one (next in queue).
+      if (!j.currentTarget) {
+        if (timedOut || j.targets.length === 0) {
+          j.state = "leaving";
+          continue;
+        }
+        j.currentTarget = j.targets.shift();
+      }
+      // Walk toward currentTarget
+      const tx = j.currentTarget.x, ty = j.currentTarget.y;
+      const dx = tx - j.x, dy = ty - j.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 6) {
+        // Arrived — start sweeping
+        j.state = "sweeping";
+        j.sweepLeft = JANITOR.SWEEP_FRAMES;
+        allDone = false;
+      } else {
+        const sp = JANITOR.WALK_SPEED;
+        j.x += (dx / dist) * sp;
+        j.y += (dy / dist) * sp;
+        allDone = false;
+      }
+    } else if (j.state === "sweeping") {
+      j.sweepLeft--;
+      if (j.sweepLeft <= 0) {
+        // Sweep done — remove the debris
+        const t = j.currentTarget;
+        if (t && t.kind === "corpse" && m.corpses) {
+          const i = m.corpses.indexOf(t.ref);
+          if (i >= 0) m.corpses.splice(i, 1);
+        } else if (t && t.kind === "drop" && m.drops) {
+          const i = m.drops.indexOf(t.ref);
+          if (i >= 0) m.drops.splice(i, 1);
+        } else if (t && t.kind === "blood" && m.blood) {
+          // Sweep a small radius of blood near the target
+          for (let i = m.blood.length - 1; i >= 0; i--) {
+            const b = m.blood[i];
+            const ddx = b.x - t.x, ddy = b.y - t.y;
+            if (ddx * ddx + ddy * ddy < 14 * 14) m.blood.splice(i, 1);
+          }
+        }
+        j.currentTarget = null;
+        j.state = "walking";
+      }
+      allDone = false;
+    } else if (j.state === "leaving") {
+      // Walk back to off-field exit point
+      const dx = j.walkOffX - j.x, dy = j.walkOffY - j.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 4) {
+        j.state = "gone";
+      } else {
+        const sp = JANITOR.WALK_SPEED * 1.3; // exit a bit faster
+        j.x += (dx / dist) * sp;
+        j.y += (dy / dist) * sp;
+        allDone = false;
+      }
+    }
+    // "gone" state — no action; janitor is invisible
+  }
+
+  if (timedOut) {
+    // Force any still-walking/sweeping janitors to exit
+    for (const j of m.janitors) {
+      if (j.state !== "gone" && j.state !== "leaving") {
+        j.state = "leaving";
+      }
+    }
+  }
+
+  // If everyone's gone, drop the array entirely so we stop ticking
+  if (m.janitors.every(j => j.state === "gone")) {
+    m.janitors = [];
+    // Final cleanup: at this point we want any remaining corpses /
+    // drops / blood the crew didn't get to ALSO removed, so the
+    // next round opens on a clean field. (Without this, a long
+    // debris list would survive the timeout.)
+    // === v37.22: preserve legacy drops between rounds ===
+    // Same policy as spawnJanitors: legacy gear (with fromName) must
+    // persist across rounds so the scavenge lineage chain continues.
+    // Only between matches (phase==="post") does everything go.
+    m.corpses = [];
+    m.blood = [];
+    if (m.phase === "post") {
+      m.drops = [];
+    } else {
+      m.drops = (m.drops || []).filter(d => d && d.fromName);
+    }
+  }
+}
+window.tickJanitors = tickJanitors;
+
+/* Render the cleanup crew. Tiny pixel-art figures with a yellow
+   safety hat, hi-vis orange vest, and a broom held angled toward
+   their sweep direction. */
+function drawJanitors(m) {
+  if (!m || !m.janitors || m.janitors.length === 0) return;
+  for (const j of m.janitors) {
+    if (j.state === "gone") continue;
+    const x = Math.floor(j.x);
+    const y = Math.floor(j.y);
+    const bob = Math.floor(Math.sin(j.bobPhase) * 1.2);
+
+    // Shadow
+    ctx.fillStyle = "rgba(0,0,0,0.25)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + 6, 6, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Body (rectangle torso)
+    ctx.fillStyle = j.bodyColor;
+    ctx.fillRect(x - 3, y - 3 + bob, 6, 6);
+
+    // === v37.23.3: tip-tier vest color (20+ tips switches to hi-vis green) ===
+    const _vestColor = (LEAGUE.janitorTips || 0) >= 20
+      ? "#8cc86e"               // LMG-sponsored hi-vis green
+      : JANITOR.COLOR_VEST;     // standard orange
+    ctx.fillStyle = _vestColor;
+    ctx.fillRect(x - 3, y - 1 + bob, 6, 3);
+
+    // Head
+    ctx.fillStyle = "#dba373";
+    ctx.fillRect(x - 2, y - 8 + bob, 4, 4);
+
+    // Hat (yellow safety hard-hat)
+    ctx.fillStyle = JANITOR.COLOR_HAT;
+    ctx.fillRect(x - 3, y - 9 + bob, 6, 2);
+    ctx.fillRect(x - 2, y - 10 + bob, 4, 1);
+    // === v37.23.3: tip-tier hat pin (5+ tips) ===
+    // A single-pixel gold sparkle on the front of the hat. Subtle, but
+    // noticeable when you know to look.
+    const _tips = LEAGUE.janitorTips || 0;
+    if (_tips >= 5) {
+      ctx.fillStyle = "#fff4a8";
+      ctx.fillRect(x - 1, y - 10 + bob, 1, 1);
+    }
+
+    // Legs (small, black)
+    ctx.fillStyle = "#1a1d22";
+    ctx.fillRect(x - 2, y + 3 + bob, 2, 3);
+    ctx.fillRect(x + 0, y + 3 + bob, 2, 3);
+
+    // Broom — angled differently in each state
+    ctx.strokeStyle = JANITOR.COLOR_BROOM_H;
+    ctx.lineWidth = 1.5;
+    if (j.state === "sweeping") {
+      // Animated sweep — the broom oscillates while sweeping
+      const sweepAng = Math.sin(j.bobPhase * 1.5) * 0.4 + 0.5;
+      const bx1 = x + 4, by1 = y - 4 + bob;
+      const bx2 = x + 4 + Math.cos(sweepAng) * 8;
+      const by2 = y - 4 + bob + Math.sin(sweepAng) * 8;
+      ctx.beginPath();
+      ctx.moveTo(bx1, by1);
+      ctx.lineTo(bx2, by2);
+      ctx.stroke();
+      // Bristles
+      ctx.fillStyle = JANITOR.COLOR_BROOM_B;
+      ctx.fillRect(Math.floor(bx2 - 2), Math.floor(by2 - 1), 4, 3);
+      // Sparkle puff to show sweeping is doing something
+      ctx.fillStyle = "rgba(220,210,180,0.55)";
+      ctx.beginPath();
+      ctx.arc(bx2, by2 + 2, 3 + Math.sin(j.bobPhase * 2) * 1, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Walking pose — broom slung diagonally
+      const bx1 = x + 3, by1 = y - 4 + bob;
+      const bx2 = x + 8, by2 = y + 2 + bob;
+      ctx.beginPath();
+      ctx.moveTo(bx1, by1);
+      ctx.lineTo(bx2, by2);
+      ctx.stroke();
+      ctx.fillStyle = JANITOR.COLOR_BROOM_B;
+      ctx.fillRect(bx2 - 1, by2 - 1, 3, 3);
+    }
+  }
+}
+window.drawJanitors = drawJanitors;
+
 const CROWD_DEPTH = 180;       // v37.15: was 32 — extended deep enough that
                                 // at MIN_ZOOM=0.55 the seating fills the
                                 // perimeter the camera now reveals. Seating
@@ -19495,6 +21512,13 @@ function drawArena() {
     ctx.moveTo(c.x + 4, c.y - 4); ctx.lineTo(c.x - 4, c.y + 4);
     ctx.stroke();
   }
+
+  // === v37.22: cleanup crew tick + draw ===
+  // The janitors animate in real-time during paused phases. Tick them
+  // here (cheap when no crew is active — early-returns). They draw
+  // over corpses/blood so it looks like they're sweeping the debris.
+  if (typeof tickJanitors === "function") tickJanitors(m);
+  if (typeof drawJanitors === "function") drawJanitors(m);
 
   // Terrain obstacles (drawn over corpses but under drops/players;
   // mascots float OVER them via balloons but bodies clip on the side)
@@ -21444,12 +23468,17 @@ function renderTeamPanel(side) {
   if (styleEl) {
     const styleId = LEAGUE.aiStyles && LEAGUE.aiStyles[teamId];
     const style = styleId && AI_PATHING_STYLES[styleId];
-    if (style) {
-      styleEl.textContent = "Playbook: " + style.label;
-      styleEl.title = style.desc;
-    } else {
-      styleEl.textContent = "";
+    // === v37.23: append coach name under playbook ===
+    const coach = (typeof getCoachFor === "function") ? getCoachFor(teamId) : null;
+    let txt = "";
+    if (style) txt += "Playbook: " + style.label;
+    if (coach) {
+      txt += (txt ? "  ·  " : "") + "Coach: " + coach.name;
     }
+    styleEl.textContent = txt;
+    if (style && coach) styleEl.title = style.desc + "\n\n" + (coach.lore || "");
+    else if (style) styleEl.title = style.desc;
+    else if (coach) styleEl.title = coach.lore || "";
   }
 
   // Alive count (active match only; otherwise show roster size)
@@ -21500,6 +23529,11 @@ function renderTeamPanel(side) {
       const cls = streak >= 20 ? "streak-red" : streak >= 10 ? "streak-orange" : "streak-yellow";
       streakHTML = `<span class="chip-streak ${cls}" title="${streak}-kill streak">🔥${streak}</span>`;
     }
+    // === v37.23: injury badge on chip (for sidelined knights) ===
+    let injuryChipHTML = "";
+    if (p.injury && !p.deceased) {
+      injuryChipHTML = `<span class="chip-injury" title="${escapeHTML(p.injury.label)} · ${p.injury.matchesRemaining} match${p.injury.matchesRemaining === 1 ? "" : "es"} remaining">🩹</span>`;
+    }
 
     // === v28.1: Armor badge — restores per-armor visual identity ===
     // Small icon in chip's bottom-right corner showing what armor they wear.
@@ -21509,10 +23543,25 @@ function renderTeamPanel(side) {
       armorHTML = `<span class="chip-armor" title="${escapeHTML(p.armor.name || p.armor.ico)}">${p.armor.ico}</span>`;
     }
 
+    // === v37.22: veteran badge ===
+    // Knights persist across seasons (beginNextSeason increments
+    // seasonsPlayed for every survivor). Without a visual indicator,
+    // returning veterans look identical to fresh rookies — which made
+    // it feel like rosters were being wiped between seasons. Now we
+    // surface seasonsPlayed: a small "S2", "S3", etc. badge next to
+    // the name. Rookies (seasonsPlayed === 0) get no badge.
+    let veteranHTML = "";
+    const seasons = p.career.seasonsPlayed || 0;
+    if (seasons >= 1 && !p.deceased) {
+      // Color tier: bronze (1-2), silver (3-4), gold (5+)
+      const tierCls = seasons >= 5 ? "vet-gold" : seasons >= 3 ? "vet-silver" : "vet-bronze";
+      veteranHTML = `<span class="chip-vet ${tierCls}" title="${seasons} season${seasons === 1 ? "" : "s"} survived">S${seasons}</span>`;
+    }
+
     chip.innerHTML = `
       <div class="pos-icon ${pos.cls}" title="${pos.label}">${pos.icon}</div>
       <div class="name-block">
-        <div class="pname">${escapeHTML(p.name)}${streakHTML}</div>
+        <div class="pname">${escapeHTML(p.name)}${streakHTML}${veteranHTML}${injuryChipHTML}</div>
         <div class="psub">${pos.label} · K:${p.career.kills}${livesHTML ? "" : ""}</div>
       </div>
       ${livesHTML || `<div class="hpbar ${hpCls}"><div style="width:${Math.round(hpFrac * 100)}%"></div></div>`}
@@ -22047,7 +24096,9 @@ function renderCountdownOverlay() {
     overlay.classList.add("visible");
     if (sec <= 5) overlay.classList.add("urgent");
     else overlay.classList.remove("urgent");
-    if (canvasEl) canvasEl.classList.add("countdown-blur");
+    // v37.22: countdown-blur class no longer applied — canvas stays sharp
+    // so users can watch the cleanup-crew animation between rounds.
+    if (canvasEl) canvasEl.classList.remove("countdown-blur");
   } else {
     overlay.classList.remove("visible", "urgent");
     if (canvasEl) canvasEl.classList.remove("countdown-blur");
@@ -22480,12 +24531,16 @@ function renderStore() {
     for (const item of byRarity[sec.key]) {
       const btn = document.createElement("button");
       btn.className = "store-card rarity-" + (item.rarity || "common");
-      btn.disabled = LEAGUE.bits < item.cost || roundLive || !am;
+      // Tip the crew is buyable any time except mid-round (no `am` requirement)
+      const needsActiveMatch = item.target !== "janitors";
+      btn.disabled = LEAGUE.bits < item.cost || roundLive || (needsActiveMatch && !am);
       if (btn.disabled) btn.setAttribute("aria-disabled", "true");
       const targetTag = item.target === "opp"
         ? `<div class="store-target-tag">debuff opponent</div>`
         : item.target === "specific_player"
         ? `<div class="store-target-tag store-target-targeted">pick one knight</div>`
+        : item.target === "janitors"
+        ? `<div class="store-target-tag store-target-tip">tip the crew</div>`
         : `<div class="store-target-tag store-target-buff">buff your team</div>`;
       btn.innerHTML = `
         <div class="ico">${item.ico}</div>
@@ -22495,6 +24550,14 @@ function renderStore() {
         <div class="desc">${escapeHTML(item.desc)}</div>
       `;
       btn.addEventListener("click", () => {
+        // === v37.23.3: tip-the-crew can be purchased without an active match ===
+        if (item.target === "janitors") {
+          // Pass any team id — buyItem ignores it for janitors target
+          const anyTeam = am ? am.teamA : (TEAMS[0] && TEAMS[0].id);
+          const ok = buyItem(item.id, anyTeam);
+          if (ok) renderAll();
+          return;
+        }
         if (!am) return;
         if (item.target === "specific_player") {
           // Open knight-picker modal — caller chooses which opponent to sandbag
@@ -22985,9 +25048,10 @@ function openModal(title, bodyHTML, footerHTML, onCloseCallback, opts) {
   // every open so a previous wide-modal doesn't leak into the next.
   const card = $("#modalCard");
   if (card) {
-    card.classList.remove("modal-wide", "modal-extra-wide");
+    card.classList.remove("modal-wide", "modal-extra-wide", "modal-fullscreen");
     if (opts && opts.width === "wide")       card.classList.add("modal-wide");
     if (opts && opts.width === "extra-wide") card.classList.add("modal-extra-wide");
+    if (opts && opts.width === "fullscreen") card.classList.add("modal-fullscreen");
   }
   $("#modalBack").classList.add("show");
   MODAL_AFTER_CLOSE = onCloseCallback || null;
@@ -23427,7 +25491,53 @@ function showPlayerProfile(p) {
          🔥 <b>ON A ${currentStreak}-KILL STREAK</b>
        </div>` : "";
 
-  const body = `
+  // === v37.23: personality, injury, scouting, rivals on profile ===
+  const pers = PERSONALITY_BY_ID[p.personality];
+  const personalityHTML = pers
+    ? `<br><span style="font-size:10px;color:var(--gold);">${pers.icon} ${escapeHTML(pers.label)}</span><span style="font-size:10px;color:var(--dim);"> · ${escapeHTML(pers.desc)}</span>`
+    : "";
+  const injuryHTML = p.injury
+    ? `<br><span style="font-size:10px;color:var(--red);">🩹 ${escapeHTML(p.injury.label)} (${p.injury.matchesRemaining} match${p.injury.matchesRemaining === 1 ? "" : "es"} remaining)</span>`
+    : "";
+  // Scouting report — generated lazily
+  const scoutingReport = (typeof getScoutingReport === "function") ? getScoutingReport(p) : "";
+  const scoutingHTML = scoutingReport
+    ? `<div style="margin-top:10px;padding:8px;background:rgba(247,201,72,0.06);border-left:3px solid var(--gold);font-size:11px;line-height:1.5;color:var(--ink);">
+         <div style="font-size:9px;color:var(--gold);letter-spacing:1px;font-weight:700;margin-bottom:3px;">SCOUTING REPORT</div>
+         ${scoutingReport}
+       </div>` : "";
+  // Active rivalries — list mutual rivals (3+/3+) and major one-sided ones (5+/anything)
+  const rivals = (typeof getRivalriesFor === "function") ? getRivalriesFor(p.id) : [];
+  const mutualRivals = rivals.filter(r => r.isMutual);
+  const oneSidedRivals = rivals.filter(r => !r.isMutual && (r.iKilledThem >= 5 || r.theyKilledMe >= 5));
+  let rivalsHTML = "";
+  if (mutualRivals.length > 0 || oneSidedRivals.length > 0) {
+    const findOther = (id) => {
+      for (const tid of Object.keys(LEAGUE.rosters)) {
+        const found = LEAGUE.rosters[tid].find(x => x.id === id);
+        if (found) return found;
+      }
+      // Search graveyard too
+      const dead = LEAGUE.graveyard.find(g => g.knightId === id);
+      return dead ? { name: dead.name, teamId: dead.teamId, deceased: true } : null;
+    };
+    const rivalRow = (r) => {
+      const other = findOther(r.otherId);
+      if (!other) return "";
+      const ot = TEAM_BY_ID[other.teamId];
+      const lbl = r.isMutual ? "⚔️ MUTUAL" : (r.iKilledThem > r.theyKilledMe ? "→" : "←");
+      const lblColor = r.isMutual ? "var(--gold)" : "var(--dim)";
+      const decClass = other.deceased ? "color:var(--red);" : "";
+      return `<li style="${decClass}"><span style="color:${lblColor};font-weight:700;">${lbl}</span> ${ot ? ot.emoji : ""} ${escapeHTML(other.name)} <span style="color:var(--dim);">(${r.iKilledThem}–${r.theyKilledMe})</span></li>`;
+    };
+    rivalsHTML = `
+      <h4 style="margin:14px 0 6px;font-size:11px;color:var(--gold);letter-spacing:1px;">⚔️ RIVALRIES</h4>
+      <ul style="margin:0;padding-left:20px;font-size:11px;line-height:1.6;color:var(--ink);">
+        ${mutualRivals.map(rivalRow).join("") + oneSidedRivals.slice(0, 4).map(rivalRow).join("")}
+      </ul>`;
+  }
+
+    const body = `
     <div style="text-align:center;font-size:48px;">${pos.icon}</div>
     <div style="text-align:center;font-size:14px;font-weight:700;">${escapeHTML(p.name)}</div>
     <div style="text-align:center;font-size:11px;color:var(--dim);margin-bottom:6px;">
@@ -23455,7 +25565,7 @@ function showPlayerProfile(p) {
       </div>
     </div>
     <table class="dt" style="margin-top:10px;">
-      <tr><th>Status</th><td>${status}</td></tr>
+      <tr><th>Status</th><td>${status}${personalityHTML}${injuryHTML}</td></tr>
       ${gearRow(w, "Weapon")}
       ${gearRow(a, "Armor")}
       ${gearRow(it, "Item")}
@@ -23465,6 +25575,8 @@ function showPlayerProfile(p) {
       <tr><th>Matches won / played</th><td class="num">${p.career.matchesWon} / ${p.career.matchesPlayed}</td></tr>
       <tr><th>Seasons played</th><td class="num">${p.career.seasonsPlayed}</td></tr>
     </table>
+    ${scoutingHTML}
+    ${rivalsHTML}
     ${victims.length ? `
       <h4 style="margin:14px 0 6px;font-size:11px;color:var(--gold);letter-spacing:1px;">RECENT VICTIMS</h4>
       <ul style="margin:0;padding-left:20px;font-size:11px;line-height:1.6;color:var(--ink);">${victimList}</ul>
@@ -23818,7 +25930,7 @@ function showBracket() {
    can pull cleanly; anyone with an older code gets a clear error
    message and a path forward (Reset League → start fresh).
    ============================================================ */
-const SAVE_SCHEMA_VERSION = 13;
+const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries, personalities
 
 function serializeLeague() {
   const cleanRosters = {};
@@ -23837,6 +25949,10 @@ function serializeLeague() {
       deceasedSeason: p.deceasedSeason,
       deceasedBy: p.deceasedBy,
       debutSeason: p.debutSeason,
+      // === v37.23 ===
+      personality: p.personality,
+      injury: p.injury,
+      scoutingReport: p.scoutingReport,
     }));
   }
   return JSON.stringify({
@@ -23877,6 +25993,11 @@ function serializeLeague() {
     loreBookmarks: LEAGUE.loreBookmarks || {},
     // === v37.19: Promoted League Legends ===
     promotedLegends: LEAGUE.promotedLegends || [],
+    // === v37.23: rivalries + achievements ===
+    rivalries: LEAGUE.rivalries || {},
+    achievements: LEAGUE.achievements || { teams: {}, global: {} },
+    // === v37.23.3: janitor tips counter ===
+    janitorTips: LEAGUE.janitorTips || 0,
 
     // === Tunables ===
     leagueConfig: typeof LEAGUE_CONFIG !== "undefined" ? LEAGUE_CONFIG : null,
@@ -24006,6 +26127,13 @@ function deserializeLeague(jsonStr) {
   LEAGUE.previousLadder = data.previousLadder || {};
   LEAGUE.matchHistory = data.matchHistory || [];
   LEAGUE.lostItems = data.lostItems || [];
+  // === v37.23: rivalries + achievements ===
+  LEAGUE.rivalries = data.rivalries || {};
+  LEAGUE.achievements = data.achievements || { teams: {}, global: {} };
+  if (!LEAGUE.achievements.teams) LEAGUE.achievements.teams = {};
+  if (!LEAGUE.achievements.global) LEAGUE.achievements.global = {};
+  // === v37.23.3: janitor tips counter ===
+  LEAGUE.janitorTips = (typeof data.janitorTips === "number") ? data.janitorTips : 0;
   LEAGUE.genesisSeed = data.genesisSeed || ((Math.random() * 0xFFFFFFFF) >>> 0);
   LEAGUE.startedAt = data.startedAt || Date.now();
   LEAGUE.lastTickAt = data.lastTickAt || Date.now();
