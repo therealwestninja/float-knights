@@ -12427,6 +12427,77 @@ function generateTerrain() {
     }
     blocks.push({ x, y, size: SIZE });
   }
+
+  // === v37.23.6: scattered field obstacle blocks ===
+  // The original centerline-only generation gave fights one row of cover
+  // and otherwise an open field. Per the design reference (red-marked
+  // zones in the wings), additional obstacles spawn in the field interior
+  // — between team spawn zones and the centerline scrim — so snipers and
+  // grenadiers have meaningful cover during approach and brawlers have
+  // corner-work to use.
+  //
+  // Constraints:
+  //   - Avoid team spawn zones: x < 200 left, x > 1080 right
+  //     (spawnRadius = 580 puts left team at x≈60, right at x≈1220; we
+  //     keep ~140px of clear approach lane on either side)
+  //   - Avoid the Power Core 70px keepout at center
+  //   - Don't collide with centerline blocks already placed
+  //   - Don't sit on top of the corner pillar SCENERY (50,50) (1230,50)
+  //     (50,670) (1230,670) — give those a 50px keepout
+  //   - Min 60px spacing between scattered blocks (so cover patches
+  //     stay distinct rather than forming inadvertent walls)
+  const SCATTER_COUNT = RI(4, 8);   // 4-8 additional blocks per match
+  const X_MIN = 200;                // outside left spawn zone
+  const X_MAX = COMBAT.arenaW - 200; // outside right spawn zone (1080)
+  const Y_MIN = 60;                 // off the top edge
+  const Y_MAX = COMBAT.arenaH - 60 - SIZE; // off the bottom edge
+  const SCATTER_SPACING_SQ = 60 * 60;
+  // Corner pillars from SCENERY — same coords as the const so we don't
+  // need to import it. If SCENERY ever moves them, this should follow.
+  const PILLAR_KEEPOUT = 50;
+  const pillars = [
+    { x:  50, y:  50 }, { x: 1230, y:  50 },
+    { x:  50, y: 670 }, { x: 1230, y: 670 },
+  ];
+
+  let placed = 0;
+  let attempts = 0;
+  while (placed < SCATTER_COUNT && attempts < 80) {
+    attempts++;
+    const x = Math.round(X_MIN + Math.random() * (X_MAX - X_MIN));
+    const y = Math.round(Y_MIN + Math.random() * (Y_MAX - Y_MIN));
+    const blockCx = x + SIZE / 2, blockCy = y + SIZE / 2;
+
+    // Power-core keepout
+    const dCenter = Math.hypot(blockCx - cx, blockCy - cy);
+    if (dCenter < CORE_KEEPOUT + SIZE / 2) continue;
+
+    // Pillar keepout
+    let nearPillar = false;
+    for (const p of pillars) {
+      if (Math.hypot(blockCx - p.x, blockCy - p.y) < PILLAR_KEEPOUT + SIZE / 2) {
+        nearPillar = true;
+        break;
+      }
+    }
+    if (nearPillar) continue;
+
+    // Existing-block spacing
+    let tooClose = false;
+    for (const b of blocks) {
+      const otherCx = b.x + b.size / 2, otherCy = b.y + b.size / 2;
+      const ddx = blockCx - otherCx, ddy = blockCy - otherCy;
+      if (ddx * ddx + ddy * ddy < SCATTER_SPACING_SQ) {
+        tooClose = true;
+        break;
+      }
+    }
+    if (tooClose) continue;
+
+    blocks.push({ x, y, size: SIZE });
+    placed++;
+  }
+
   return blocks;
 }
 
@@ -13696,6 +13767,67 @@ function tickMatch() {
     }
   }
 }
+
+/* ============================================================
+   PAUSE ANIMATIONS — v37.23.5
+
+   tickMatch only runs during gameplay (phase === "round"). During
+   pauses (betweenRounds, post, preRound), all the cosmetic ticks
+   inside tickMatch are skipped — clouds freeze mid-drift, snow
+   hangs in the air, the crowd is stuck mid-cheer, and old floats
+   from the last KO sit motionless on the field for the full 60s
+   intermission.
+
+   This function runs the cosmetic-only subset on a parallel
+   accumulator so the world keeps moving during pauses. It does
+   NOT run gameplay logic — no AI, no projectiles, no damage,
+   no respawns, no objective ticks. Just background visual life.
+
+   Called from the main loop at 20fps wall-clock, same cadence as
+   tickMatch would have used. Safe to call when m is null (returns
+   early). Idempotent within a single frame; no double-effect risk
+   because the accumulator gates the call rate.
+   ============================================================ */
+function tickPauseAnimations(m) {
+  if (!m) return;
+
+  // Only fires during paused phases. During gameplay, tickMatch
+  // already runs all of these and we'd double-tick if we ran here.
+  if (m.phase === "round") return;
+
+  // Advance the cosmetic frame counter so anim phases (fan bob,
+  // drop bobble, decorative scatter sway) keep cycling.
+  m.frame++;
+
+  // Cloud shadows drift across the field.
+  if (typeof tickCloudShadows === "function") tickCloudShadows(m);
+
+  // Ambient particles (snow, embers, petals, shimmer, fireflies, bats).
+  if (typeof tickAmbientParticles === "function") tickAmbientParticles(m);
+
+  // Decay any floats lingering from the last gameplay frame so old
+  // "+gear" or "RESPAWN" texts don't sit visible for the entire
+  // intermission. Same logic as tickMatch's float-decay block.
+  if (m.floats) {
+    for (let i = m.floats.length - 1; i >= 0; i--) {
+      m.floats[i].life--;
+      m.floats[i].y -= 0.7;
+      if (m.floats[i].life <= 0) m.floats.splice(i, 1);
+    }
+  }
+
+  // Blood spatters fade with time so the field doesn't look frozen
+  // in the moment of the last KO. Janitors clear them after 8s
+  // anyway, but the natural fade keeps the look alive in between.
+  if (m.blood) {
+    for (let i = m.blood.length - 1; i >= 0; i--) {
+      m.blood[i].life--;
+      if (m.blood[i].life <= 0) m.blood.splice(i, 1);
+    }
+  }
+}
+window.tickPauseAnimations = tickPauseAnimations;
+
 
 /* ============================================================
    AI STATE SELECTION (v28 rewrite)
@@ -18733,7 +18865,18 @@ function applyShake() {
   const dx = Math.sin(t * 0.07) * _shakeAmp;
   const dy = Math.cos(t * 0.09) * _shakeAmp * 0.7;
   target.style.transform = `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px)`;
-  _shakeAmp *= 0.78; // exponential decay
+  // === v37.23.5: wall-clock decay ===
+  // Was a flat 0.78 per render frame, which gave faster decay at 60fps
+  // than at 30fps. Now we compute an FPS-independent decay using elapsed
+  // time since the last frame. Reference: 0.78 at 60fps (16.67ms ref).
+  // At any other dt, decay = 0.78 ^ (dt / refDt).
+  const lastTs = applyShake._lastTs || t;
+  let dt = t - lastTs;
+  if (dt > 100) dt = 100;
+  if (dt < 1)   dt = 1;
+  applyShake._lastTs = t;
+  const REF_DT = 1000 / 60;
+  _shakeAmp *= Math.pow(0.78, dt / REF_DT);
 }
 /* `ctx` is the global drawing context — bound to the main arena canvas
    by default. It's declared with `let` (not `const`) so the biome-preview
@@ -18994,8 +19137,39 @@ function _updateCamera(m) {
   // needs to reset to wide stadium view in maybe one second of real time,
   // not eight. Use 4× the normal lerp coefficient when the match is paused.
   const isPaused = m && m.phase && m.phase !== "round";
-  const posLerp  = isPaused ? Math.min(0.20, CAMERA.LERP * 4)      : CAMERA.LERP;
-  const zoomLerp = isPaused ? Math.min(0.15, CAMERA.ZOOM_LERP * 4) : CAMERA.ZOOM_LERP;
+  const basePosLerp  = isPaused ? Math.min(0.20, CAMERA.LERP * 4)      : CAMERA.LERP;
+  const baseZoomLerp = isPaused ? Math.min(0.15, CAMERA.ZOOM_LERP * 4) : CAMERA.ZOOM_LERP;
+
+  // === v37.23.5: wall-clock-based lerp ===
+  // Previously, lerp was applied once per render frame. At 30fps render
+  // (default), that's 30 lerps/sec — half as much convergence per real
+  // second as 60fps mode. The camera felt sluggish at 30fps and snappy
+  // at 60fps. Now we scale the lerp by frameDt / refDt where refDt is a
+  // 60fps reference. This makes camera convergence rate independent of
+  // the user's FPS setting.
+  const now = (typeof performance !== "undefined" && performance.now)
+    ? performance.now()
+    : Date.now();
+  const lastTs = _updateCamera._lastTs || now;
+  let dt = now - lastTs;
+  // Clamp dt to avoid catastrophic catch-up on backgrounded tabs (where
+  // dt could be 30s+) — the camera would teleport. Cap at 100ms so even
+  // a paused tab resumes with a smooth 6× glide instead of a hard cut.
+  if (dt > 100) dt = 100;
+  if (dt < 1)   dt = 1;
+  _updateCamera._lastTs = now;
+  // Reference: 60fps == 16.67ms. At dt = 16.67ms, scale = 1 (preserves
+  // the original lerp behavior). At dt = 33.3ms (30fps), scale = 2,
+  // so the per-frame lerp doubles to keep the wall-clock convergence
+  // identical.
+  const REF_DT = 1000 / 60;
+  const scale  = dt / REF_DT;
+  // Cap scale at 4 to avoid overshoot if a frame stalled for any reason
+  const scaleSafe = Math.min(scale, 4);
+  // Apply scaled lerps — we cap each at 0.95 to ensure the algorithm
+  // never overshoots (lerp > 1 would push past the target).
+  const posLerp  = Math.min(0.95, basePosLerp  * scaleSafe);
+  const zoomLerp = Math.min(0.95, baseZoomLerp * scaleSafe);
 
   // Smooth lerp — separate factors for position and zoom so zoom
   // changes don't cause motion sickness.
@@ -20182,17 +20356,33 @@ function drawAmbientParticles(particles) {
                          exist mid-cleanup anyway).
    ============================================================ */
 const JANITOR = {
-  WALK_SPEED: 1.7,        // px per real-time frame (rendered, not sim)
-  SWEEP_FRAMES: 12,       // ~0.4s of sweeping per debris item
-  TIMEOUT_FRAMES: 140,    // hard cap (~5s at 30fps, ~2.3s at 60fps;
-                          // the SHOW won't go longer than ~7s of real time)
-  CREW_SIZE: 4,           // four janitors — four field edges
+  // === v37.23.4: wall-clock duration model ===
+  // Previously the cleanup ran on a frame counter (140 frames), which gave
+  // 4.7s at 30fps and 2.3s at 60fps — both too short for the design intent
+  // of an 8-second cleanup show. Now driven by performance.now() deltas so
+  // the duration is constant regardless of the user's FPS setting.
+  // The "minimum round/match duration" follows from this: the autoplay
+  // round cooldown is 60s by default, of which the first 8s belong to
+  // the crew. (If a user manually skips the cooldown, we still let the
+  // cleanup finish before the next round's terrain spawns.)
+  WALK_SPEED:    3.6,        // px per real-time frame (~108px/s @ 30fps,
+                             // ~216px/s @ 60fps — fast enough that a 4-crew
+                             // can cover a 1280×720 field's debris in ~6-7s
+                             // even with 8-10 targets per janitor).
+  SWEEP_FRAMES:  10,         // ~0.33s @ 30fps. Visible "sweeping" pause.
+  DURATION_MS:   8000,       // === Hard cap on the cleanup show ===
+                             // 8 seconds wall-clock. Whatever the crew
+                             // hasn't reached by this point gets cleaned
+                             // up programmatically (scroll the field's
+                             // debris arrays clean) so the next round
+                             // opens on a tidy stadium.
+  CREW_SIZE:     4,          // four janitors — four field edges
   COLOR_BODY:    "#3a4350",
   COLOR_BODY_ALT:"#4d5666",
-  COLOR_HAT:     "#f7c948",   // yellow safety hat — they're staff
-  COLOR_VEST:    "#ef9d3a",   // hi-vis orange vest
-  COLOR_BROOM_H: "#7d4f3d",   // broom handle
-  COLOR_BROOM_B: "#dccc8d",   // broom bristles
+  COLOR_HAT:     "#f7c948",  // yellow safety hat — they're staff
+  COLOR_VEST:    "#ef9d3a",  // hi-vis orange vest
+  COLOR_BROOM_H: "#7d4f3d",  // broom handle
+  COLOR_BROOM_B: "#dccc8d",  // broom bristles
 };
 
 /* Spawn the cleanup crew. Builds a target queue per janitor by
@@ -20207,7 +20397,16 @@ function spawnJanitors(m) {
   const W = COMBAT.arenaW || 1280;
   const H = COMBAT.arenaH || 720;
   m.janitors = [];
-  m._janitorStartFrame = m._janitorRenderFrame || 0;
+  // === v37.23.4: wall-clock spawn timestamp ===
+  // performance.now() is monotonic and works during pause phases when
+  // the sim isn't ticking. We use it for both the duration check and
+  // the optional thank-you-banner timing.
+  m._janitorSpawnTs = (typeof performance !== "undefined" && performance.now)
+    ? performance.now()
+    : Date.now();
+  // Per-cleanup-cycle tallies (reset every spawn; accumulate into the
+  // league cleanup log when the crew finishes).
+  m._janitorSwept = { corpses: 0, drops: 0, drops_legacy: 0, blood: 0 };
 
   // Build target list — one entry per debris piece. Each target carries
   // a reference back to the source array so we can splice on sweep.
@@ -20256,12 +20455,44 @@ function spawnJanitors(m) {
     { x: -10, y: H * 0.75,      // from left
       walkOffX: -10, walkOffY: H * 0.75 },
   ];
-  // === v37.23.3: tip-tier expands crew size at 50+ tips ===
+  // === v37.23.6: procedural crew sizing ===
+  // Right-size the crew to the actual debris pile so the cleanup
+  // finishes in the 8-second window. Each janitor comfortably handles
+  // ~5 items in 8s (walk + sweep + walk to next + sweep). Tip tier
+  // adds +1 for celebrity flair at 50+ lifetime tips.
   const tipTier = LEAGUE.janitorTips || 0;
-  const crewSize = tipTier >= 50 ? 5 : JANITOR.CREW_SIZE;
-  // If we need a 5th janitor, give them the center-bottom edge
-  if (crewSize > edges.length) {
-    edges.push({ x: W * 0.5, y: H + 10, walkOffX: W * 0.5, walkOffY: H + 10 });
+  const itemCount = targets.length;
+  // Throughput target: 5 items per janitor in the 8s window.
+  // At minimum, the original 4-crew. At maximum, 12 (visual chaos cap).
+  // Tips add +1 to the upper bound at 50+ tips.
+  const throughputCrew = Math.ceil(itemCount / 5);
+  const tipBonus = tipTier >= 50 ? 1 : 0;
+  const crewSize = Math.max(JANITOR.CREW_SIZE, Math.min(12, throughputCrew + tipBonus));
+
+  // === Spawn-edge expansion ===
+  // Original 4 edges = top-25%, right-25%, bottom-75%, left-75%.
+  // For a larger crew we add additional perimeter entries:
+  //   5th: bottom-50% (center-bottom)
+  //   6th: top-50%    (center-top)
+  //   7th: top-75%    (top-right approach)
+  //   8th: bottom-25% (bottom-left approach)
+  //   9th: left-25%   (left-mid-upper)
+  //  10th: right-75%  (right-mid-lower)
+  //  11th: top-12%    (top-left approach, very near corner)
+  //  12th: bottom-88% (bottom-right approach, very near corner)
+  // The existing 4 are pushed in spawnJanitors above; we extend in-place.
+  const extraEdges = [
+    { x: W * 0.50, y: H + 10,    walkOffX: W * 0.50, walkOffY: H + 10    },  // 5
+    { x: W * 0.50, y: -10,       walkOffX: W * 0.50, walkOffY: -10       },  // 6
+    { x: W * 0.75, y: -10,       walkOffX: W * 0.75, walkOffY: -10       },  // 7
+    { x: W * 0.25, y: H + 10,    walkOffX: W * 0.25, walkOffY: H + 10    },  // 8
+    { x: -10,      y: H * 0.25,  walkOffX: -10,      walkOffY: H * 0.25  },  // 9
+    { x: W + 10,   y: H * 0.75,  walkOffX: W + 10,   walkOffY: H * 0.75  },  // 10
+    { x: W * 0.12, y: -10,       walkOffX: W * 0.12, walkOffY: -10       },  // 11
+    { x: W * 0.88, y: H + 10,    walkOffX: W * 0.88, walkOffY: H + 10    },  // 12
+  ];
+  while (edges.length < crewSize && extraEdges.length > 0) {
+    edges.push(extraEdges.shift());
   }
   for (let i = 0; i < crewSize; i++) {
     const myTargets = [];
@@ -20302,11 +20533,17 @@ window.spawnJanitors = spawnJanitors;
 function tickJanitors(m) {
   if (!m || !m.janitors || m.janitors.length === 0) return;
 
-  // Track real-time frames since spawn for the global timeout.
-  m._janitorRenderFrame = (m._janitorRenderFrame || 0) + 1;
-  const startFrame = m._janitorStartFrame || 0;
-  const elapsed = m._janitorRenderFrame - startFrame;
-  const timedOut = elapsed > JANITOR.TIMEOUT_FRAMES;
+  // === v37.23.4: wall-clock duration check ===
+  // performance.now() is monotonic across pause phases, frame-rate
+  // independent, and accurate to ~ms. The cleanup runs for exactly
+  // JANITOR.DURATION_MS regardless of whether the user has set 30fps
+  // or 60fps render mode.
+  const now = (typeof performance !== "undefined" && performance.now)
+    ? performance.now()
+    : Date.now();
+  const spawnTs = m._janitorSpawnTs || now;
+  const elapsedMs = now - spawnTs;
+  const timedOut = elapsedMs > JANITOR.DURATION_MS;
 
   let allDone = true;
   for (const j of m.janitors) {
@@ -20339,21 +20576,58 @@ function tickJanitors(m) {
     } else if (j.state === "sweeping") {
       j.sweepLeft--;
       if (j.sweepLeft <= 0) {
-        // Sweep done — remove the debris
+        // Sweep done — remove the debris and tally it for the records
         const t = j.currentTarget;
+        const tally = m._janitorSwept || (m._janitorSwept = { corpses: 0, drops: 0, drops_legacy: 0, blood: 0 });
         if (t && t.kind === "corpse" && m.corpses) {
           const i = m.corpses.indexOf(t.ref);
-          if (i >= 0) m.corpses.splice(i, 1);
+          if (i >= 0) {
+            m.corpses.splice(i, 1);
+            tally.corpses++;
+          }
         } else if (t && t.kind === "drop" && m.drops) {
           const i = m.drops.indexOf(t.ref);
-          if (i >= 0) m.drops.splice(i, 1);
+          if (i >= 0) {
+            // === v37.23.4: legacy gear gets logged separately ===
+            // Items with a fromName were carried by a knight before being
+            // dropped on the field. When the crew sweeps these (only
+            // happens between matches; between rounds we preserve them),
+            // they enter the lost-items record like any other lost piece.
+            const drop = m.drops[i];
+            if (drop && drop.fromName) {
+              tally.drops_legacy++;
+              if (typeof LEAGUE !== "undefined" && drop.gear) {
+                if (!LEAGUE.lostItems) LEAGUE.lostItems = [];
+                LEAGUE.lostItems.push({
+                  season: LEAGUE.season,
+                  slot: m.slot || "?",
+                  slotType: drop.slot,
+                  name: drop.gear.displayName || drop.gear.name,
+                  baseName: drop.gear.name,
+                  scavengedCount: drop.gear.scavengedCount || 0,
+                  ico: drop.gear.ico,
+                  lostBy: drop.fromName,
+                  // Marks this entry as cleanup-recorded vs naturally lost
+                  cleanupSwept: true,
+                });
+              }
+            } else {
+              tally.drops++;
+            }
+            m.drops.splice(i, 1);
+          }
         } else if (t && t.kind === "blood" && m.blood) {
           // Sweep a small radius of blood near the target
+          let bloodSwept = 0;
           for (let i = m.blood.length - 1; i >= 0; i--) {
             const b = m.blood[i];
             const ddx = b.x - t.x, ddy = b.y - t.y;
-            if (ddx * ddx + ddy * ddy < 14 * 14) m.blood.splice(i, 1);
+            if (ddx * ddx + ddy * ddy < 14 * 14) {
+              m.blood.splice(i, 1);
+              bloodSwept++;
+            }
           }
+          tally.blood += bloodSwept;
         }
         j.currentTarget = null;
         j.state = "walking";
@@ -20387,6 +20661,32 @@ function tickJanitors(m) {
   // If everyone's gone, drop the array entirely so we stop ticking
   if (m.janitors.every(j => j.state === "gone")) {
     m.janitors = [];
+    // === v37.23.4: enter the cleanup into the records ===
+    // Per-cycle tally accumulates into LEAGUE.cleanupLog (lifetime
+    // totals), and a summary feed line fires once.
+    const tally = m._janitorSwept || { corpses: 0, drops: 0, drops_legacy: 0, blood: 0 };
+    const totalSwept = tally.corpses + tally.drops + tally.drops_legacy + tally.blood;
+    if (typeof LEAGUE !== "undefined") {
+      if (!LEAGUE.cleanupLog) {
+        LEAGUE.cleanupLog = { lifetimeCorpses: 0, lifetimeDrops: 0, lifetimeLegacyDrops: 0, lifetimeBlood: 0, totalCleanups: 0 };
+      }
+      LEAGUE.cleanupLog.lifetimeCorpses += tally.corpses;
+      LEAGUE.cleanupLog.lifetimeDrops += tally.drops;
+      LEAGUE.cleanupLog.lifetimeLegacyDrops += tally.drops_legacy;
+      LEAGUE.cleanupLog.lifetimeBlood += tally.blood;
+      LEAGUE.cleanupLog.totalCleanups++;
+    }
+    // Summary feed line — only when the crew actually swept something
+    if (totalSwept > 0 && typeof feed === "function") {
+      const parts = [];
+      if (tally.corpses > 0) parts.push(`${tally.corpses} corpse${tally.corpses === 1 ? "" : "s"}`);
+      if (tally.drops > 0) parts.push(`${tally.drops} loose item${tally.drops === 1 ? "" : "s"}`);
+      if (tally.drops_legacy > 0) parts.push(`${tally.drops_legacy} legacy weapon${tally.drops_legacy === 1 ? "" : "s"}`);
+      if (tally.blood > 0) parts.push(`${tally.blood} blood spatter${tally.blood === 1 ? "" : "s"}`);
+      feed("season", `🧹 Cleanup complete — the crew has, on the matter, processed ${parts.join(", ")} into the records.`);
+    }
+    m._janitorSwept = null;
+
     // Final cleanup: at this point we want any remaining corpses /
     // drops / blood the crew didn't get to ALSO removed, so the
     // next round opens on a clean field. (Without this, a long
@@ -25025,6 +25325,8 @@ function requestAiCommentaryEnhancement(entry, ctx) {
 let SPEED = 1;
 let lastTick = 0;
 let pendingTickAcc = 0;
+// === v37.23.5: parallel accumulator for pause-phase cosmetic animation ===
+let pendingPauseTickAcc = 0;
 
 function setSpeed(s) {
   SPEED = s;
@@ -25998,6 +26300,8 @@ function serializeLeague() {
     achievements: LEAGUE.achievements || { teams: {}, global: {} },
     // === v37.23.3: janitor tips counter ===
     janitorTips: LEAGUE.janitorTips || 0,
+    // === v37.23.4: cleanup crew lifetime tally ===
+    cleanupLog: LEAGUE.cleanupLog || null,
 
     // === Tunables ===
     leagueConfig: typeof LEAGUE_CONFIG !== "undefined" ? LEAGUE_CONFIG : null,
@@ -26134,6 +26438,8 @@ function deserializeLeague(jsonStr) {
   if (!LEAGUE.achievements.global) LEAGUE.achievements.global = {};
   // === v37.23.3: janitor tips counter ===
   LEAGUE.janitorTips = (typeof data.janitorTips === "number") ? data.janitorTips : 0;
+  // === v37.23.4: cleanup crew lifetime tally ===
+  LEAGUE.cleanupLog = data.cleanupLog || null;
   LEAGUE.genesisSeed = data.genesisSeed || ((Math.random() * 0xFFFFFFFF) >>> 0);
   LEAGUE.startedAt = data.startedAt || Date.now();
   LEAGUE.lastTickAt = data.lastTickAt || Date.now();
@@ -29610,6 +29916,29 @@ function loop(ts) {
     }
   } else {
     pendingTickAcc = 0;
+  }
+
+  // === v37.23.5: pause-phase cosmetic ticks ===
+  // When the match is paused (betweenRounds, post, preRound), tickMatch
+  // doesn't run, which previously meant the world also stopped: clouds
+  // froze mid-drift, snow hung in the air, fan animation locked, +gear
+  // floats from the last frame sat there for 60 seconds. Now we tick
+  // the cosmetic-only subset on a separate accumulator at sim rate
+  // (20fps wall-clock) so the world keeps breathing during the cleanup
+  // and intermission.
+  if (LEAGUE.match && LEAGUE.match.phase !== "round") {
+    pendingPauseTickAcc = (pendingPauseTickAcc || 0) + cappedDt;
+    let pauseTicksThisFrame = 0;
+    while (pendingPauseTickAcc >= COMBAT.frameMs && pauseTicksThisFrame < 4) {
+      if (typeof tickPauseAnimations === "function") tickPauseAnimations(LEAGUE.match);
+      pendingPauseTickAcc -= COMBAT.frameMs;
+      pauseTicksThisFrame++;
+    }
+    // Cap recovery from a long backgrounded tab so we don't burst-tick
+    // hundreds of pause animations on first foreground.
+    if (pendingPauseTickAcc > COMBAT.frameMs * 4) pendingPauseTickAcc = 0;
+  } else {
+    pendingPauseTickAcc = 0;
   }
 
   // Track wall-clock activity for catch-up on next page load
