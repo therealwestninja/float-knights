@@ -5361,13 +5361,24 @@
         </div>
         <label>Username</label>
         <input id="syncName" placeholder="trainer name" />
-        <label>Sync Code (auto)</label>
-        <input id="syncCode" readonly placeholder="will appear after first save" />
+        <label>Sync Code (paste an existing one, or save to get a new one)</label>
+        <input id="syncCode" placeholder="paste a sync URL here, or click Save to generate one" />
         <div class="btn-row">
           <button id="btnPush">Save</button>
           <button id="btnPull">Load</button>
         </div>
         <div class="status" id="syncStatus"></div>
+        <!-- v37.31: Local file import/export — works without the upload plugin -->
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--bg-2);">
+          <div style="font-size: 11px; color: var(--mute); margin-bottom: 6px; line-height: 1.4;">
+            Or save to a file on this device (no upload, no internet):
+          </div>
+          <div class="btn-row">
+            <button id="btnExportFile">📥 Export to File</button>
+            <button id="btnImportFile">📤 Import from File</button>
+          </div>
+          <input type="file" id="importFileInput" accept="application/json,.json,text/plain,.txt" style="display:none" />
+        </div>
         <div style="font-size: 10px; color: var(--mute); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--bg-2); line-height: 1.4;">
           <b style="color: var(--gold);">Schema:</b> v13 (v28.13 Continental Expansion).
           Older sync codes are not compatible — they reference team IDs that no longer exist after the Year 36 league reorganization. Reset League if you need to start fresh.
@@ -9187,12 +9198,14 @@
       <article class="history">
         <h3>The Stories Cabinet — what's archived here</h3>
         <div class="meta">A working archive · Float Foundation Stories Cabinet · curated narrative arcs from across the continent · entries added on a rolling basis</div>
-        <p>The Stories cabinet of the Foundation Archive holds long-running narrative columns, serialized correspondence, and curated ephemera from the continent's print outlets and grandstand seats, stored in the form their authors and editors and (in some cases) silent contributors chose to leave them. The cabinet was opened formally in Y41 closeout. As of this revision, four tenants have been admitted.</p>
+        <p>The Stories cabinet of the Foundation Archive holds long-running narrative columns, serialized correspondence, and curated ephemera from the continent's print outlets and grandstand seats, stored in the form their authors and editors and (in some cases) silent contributors chose to leave them. The cabinet was opened formally in Y41 closeout. As of this revision, six tenants have been admitted.</p>
         <p>The first tenant, taking up the cabinet's first five chapters below, is <em>South Strip Songbook</em> — Cyril Halberd's standing column from the Wing Standard culture page, which has run since Y28 and which the Foundation has, with the Wing Standard's permission, copied into this archive in its entirety to date. Its organizing thread is the singer Byakko of Reno's Velvet Lacquer, whose debut record is at the time of this archive's opening in active production.</p>
         <p>The second tenant is the <em>Selected Ephemera from the Pew-Pew Ewe's Archive</em> — a curated draw from the seventy-five filed items the Foundation has accumulated since Y33 closeout, when an anonymous female sheep first took Section 14, Row M, seat 3 at Brewer's Reach. The selection is unauthorized in the sense that the subject has never identified herself and has, by every measurable sign, no idea this archive exists; it is authorized in the sense that the Section 14 ushers' working agreement with the Foundation permits the filing of fan ephemera as a matter of historical record.</p>
         <p>The third tenant is <em>From the Embankment</em> — the inaugural-year columns and earlier preserved letters of the anonymous fox kit who, since Y34 R3, has manned Gate Three at Brewer's Reach Pitch on every match day, and who began writing a signed column for the Wing Standard sports pages in Y41 closeout under that title.</p>
         <p>The fourth tenant is <em>Two Letters That Found Each Other</em> — the paired correspondence and shared-archive material of two young Boston Beavers fans whose paths converged in the Wing Standard letters page in Y41 mid-season and at Bess Beaverfoot's Concession Row stand at Y41 closeout, and whose families had, in the way of the Brewer's Row block, vaguely known each other for years before either child knew it. One of the two is named in print; the other is, by family preference and Section 14 fan-anonymity tradition, not.</p>
-        <p>The Foundation does not, as a general rule, archive culture columns or fan ephemera; the sports archive has long been the bulk of what comes through these doors. The decision to extend the archive to these four was made by the Commissioner's office in consultation with the Wing Standard's editor, on the grounds that each had, by every measurable sign, become its own kind of permanent record of a life lived inside the League's orbit, and that this kind of record — when it appears, in any field — is worth keeping.</p>
+        <p>The fifth tenant is <em>Marin's Classroom</em> — the paired archive of Marin Bristlebeard, Boston schoolteacher of forty-six years' standing and wife of the retired Beaver Tank known to the canon as Bristlebeard the Second, and her secondary-school student Hollis (older brother of the Tenant Four letter-writer Penn), whose intergenerational friendship across fifty-some years of age has, since Y40 founding bell, been conducted principally on the after-school broadcasts of Beavers home matches in classroom 3-B of the Brewer's Row Common School.</p>
+        <p>The sixth tenant is <em>A Hug Is Technically Legal</em> — the paired cartoon archive of two young Float Knights cartoonists from opposite coasts of the continent (Saskia Goldenpaw, twelve, Olympia Harbor, Golden Retriever; Theo Nightwhisker, eleven, Saint-Laurent, black-furred cat), whose youthful and entirely affectionate mockery of the Portland Punching Pandas' non-play eccentricities first appeared together on the Wing Standard's Y41 Hallowtide youth cartoon supplement and has, with the Pandas' coach Yu Cobblepad's gracefully written approval, run in every Hallowtide special edition since.</p>
+        <p>The Foundation does not, as a general rule, archive culture columns or fan ephemera; the sports archive has long been the bulk of what comes through these doors. The decision to extend the archive to these six was made by the Commissioner's office in consultation with the Wing Standard's editor, on the grounds that each had, by every measurable sign, become its own kind of permanent record of a life lived inside the League's orbit, and that this kind of record — when it appears, in any field — is worth keeping.</p>
         <div class="signoff">— Float Foundation, Stories Cabinet, opened Y41 closeout, expanded Y42 founding bell</div>
       </article>
 
@@ -9836,6 +9849,225 @@
           <p>Penn brought a fresh notebook. The apprentice brought hers — a smaller bound book, blue cloth cover, three years deep into its pages, with the spine slightly cracked from the way she has, by every match's end, been folding it backward to write on the cover-side of the back endpaper, which she has by long habit reserved for the part of her observation she most wants to remember. The two of them, on this matchday, did not sit together in Row N — there was no seat for Penn there. They sat one behind the other, Penn directly behind the apprentice, on a sight-line that put Penn's notebook page directly above the apprentice's head and her notebook page directly in front of his eyes. They did not, by either child's recollection, copy from each other. They did, by every measurable sign of the Section 14 night-clean crew's recovered note-bits, write down some of the same observations, in different words, at the same moments, with the same kind of sustained attention that had brought each of their fathers to the four-thirty bread queue twelve years apart.</p>
           <p>The Pew-Pew Ewe, two rows down and two seats over, hollered her usual register at every Badgers Sniper draw. The apprentice hollered hers, half a beat behind. Penn, on his own initiative, did not holler. He held his stopwatch at the ready for the post-match line and timed the bow. The bow ran, by his stopwatch, eleven seconds exactly. He wrote it down. He showed the page, after the match, to the apprentice, who read it, nodded once, and turned around in her seat to face him. Bryn Brushpaw, walking the aisle on his end-of-match sweep, by his own account saw the moment and did not, on the matter, interrupt it. He filed, that evening, a single line in the Section 14 archive: <em>the pew-pew ewe's apprentice and the brewer's row letter writer, Section 14 Row N seat 5 and Row O seat 5, one row apart, one quiet question and one quiet nod. file holds. — B.B.</em></p>
           <div class="signoff">— Foundation Archive, Section 14 ephemera files, item 076 · transcribed Y42 founding bell with both families' permission, the apprentice's name held back by request</div>
+        </article>
+      </details>
+
+
+      <article class="history">
+        <h3>Tenant Five — Marin's Classroom</h3>
+        <div class="meta">A paired archive · the Boston schoolteacher and the older brother · two Beavers fans whose registers of fandom are, by every measurable sign, the same · opened Y42 mid-season</div>
+        <p>The two principals of this tenant are Marin Bristlebeard, schoolteacher of forty-six years' standing at the Brewer's Row Common School, wife of the retired Beaver Tank known to the canon as Bristlebeard the Second and mother of the current Beaver Tank Bjorn Bristlebeard the Third; and Hollis, older brother of the Tenant Four letter-writer Penn, who entered Marin's Y40 founding-bell secondary-class roster at age thirteen and has, in the two and a half years since, been Marin's after-school radio companion for every Beavers home match the school calendar will allow.</p>
+        <p>Marin has, by every measurable sign, been a Beavers fan all her life. She was born in Boston, raised three blocks from Brewer's Reach Pitch, has watched matches in person at the stadium since the age of four, and has hung above her classroom chalkboard since her first year of teaching in Y15 a Beavers-blue banner her sister sewed for her as a teaching-job-acceptance gift. The banner is now twenty-six years old. It is faded. It has never been replaced. Marin has, by her own quiet account given for this column's purposes, never been asked by any of her students to take it down. She has, by the school's own quiet protocol, also never been asked by any administrator to take it down. The banner is, on the matter, part of the room.</p>
+        <p>Hollis is, by his brother Penn's account and by Marin's own confirmation, the kind of Beavers fan who watches with his hands. He does not, by his family's report, keep a notebook. He does not, by his own quiet preference, write to the Wing Standard. He does not, by his school records, ask many questions in class. He does, by every available account, attend every Beavers home match his family has been able to bring him to, sit very still through every minute of it, and grip the front edge of his seat hard enough that his mother has, in due course, taken to bringing a small folded handkerchief on matchday for the purpose of wiping his palms in the post-match line. Penn, on this point, is on record as having said in a Y42 interview for this column, in his own twelve-year-old phrasing: <em>my brother watches different than me. I watch with my pencil. He watches with his hands. Both of us watch the same match. We do not, on the matter, get the same things out of it. The match is, on the matter, big enough for both of us. Marin watches like Hollis. I think this is, in due course, why they get along.</em></p>
+        <p>What follows is each principal's archive in turn — Marin's first, Hollis's second — and then a brief third chapter on the convergence. The convergence is, by every measurable sign, ongoing, and is conducted principally on Saturdays from one PM to roughly four PM in classroom 3-B of the Brewer's Row Common School, secondary wing, with the radio set to the Wing Standard's broadcast feed and the windows open in any weather warmer than thirty degrees.</p>
+        <div class="signoff">— Float Foundation, Stories Cabinet, tenant entry, opened Y42 mid-season</div>
+      </article>
+
+
+      <details class="lore-timeline-era">
+        <summary><span class="era-name">Chapter I — Marin</span> <span class="era-count">3 entries · Y-24 (birth) — Y41 · the Boston schoolteacher, the banner above the chalkboard, the weight she carries from her husband's career</span></summary>
+        <article class="bio">
+          <h3>Marin Bristlebeard — Boston schoolteacher of forty-six years</h3>
+          <div class="meta">A bio · Beaver, age sixty-five at time of this filing · Brewer's Row Common School · classroom 3-B, secondary wing · married to Bristlebeard the Second since Y10, mother of Bjorn Bristlebeard the Third (current Beaver Tank)</div>
+          <p>Marin Bristlebeard was born in Boston in Y-24, the second of three sisters in a family that has, by Marin's own account, lived within the same six-block radius of Brewer's Reach Pitch for four generations and has, by every available record, never sat anywhere except the home grandstand at a Beavers home match. Her father was a millwright at the Brewer's Row paper mill and a season-ticket holder in Section 6 (the home dugout-side section) since Y-30. Her mother taught reading at the same Brewer's Row Common School where Marin would, in due course, teach for forty-six years and counting. Her older sister Sigrid sews; her younger sister Petra runs the Brewer's Row morning bread queue's bakery (which is, by long Brewer's Row arrangement, the same bakery where Penn's father and the apprentice's father have been queueing at four-thirty in the morning for twelve years).</p>
+          <p>Marin married Bristlebeard the Second in Y10, when she was thirty-four and he was thirty-six. He had, by then, been the Beavers' Tank for eight seasons; he would, in due course, be the Tank for another twenty-two. Their son Bjorn was born in Y11. He is now thirty years old and has, since Y36 founding bell, occupied the same Tank position his father occupied, on the same field, in the same blue. Marin watches Bjorn play from Section 6 on every match her schedule allows. She has, by her own quiet account, watched her husband play from the same section across thirty seasons. She has, by every measurable sign, watched the Beavers play from somewhere in the home grandstand for sixty-one of her sixty-five years.</p>
+          <p>She does not, by her own preference, talk about her husband's career to her students. She does not, by the school's own protocol, refer to her son by his playing name. The students know. The students have, in forty-six years of teaching, always known. Marin's preference is that the knowing be quiet. The students, by every available account, have respected this. The Brewer's Row Common School's secondary classroom 3-B is, by long student tradition, the room where you do not, on the matter, ask Marin about her family. You ask Marin about the team.</p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · transcribed Y42 mid-season with Marin's permission</div>
+        </article>
+
+
+        <article class="found">
+          <h3>The Banner Above the Chalkboard (Y15 — present)</h3>
+          <div class="meta">An ephemeral · physical object now still in active use · forty-eight-by-thirty-six-inch hand-sewn cotton, Beavers blue · gift from Sigrid Marrowby (Marin's older sister) on Marin's first day of teaching, Y15</div>
+          <p>The banner was sewn by Marin's older sister Sigrid in the three weeks between Marin's hiring at the Brewer's Row Common School (Y14 closeout) and her first day of teaching (Y15 founding-bell-week). Sigrid had been waiting, by Marin's later account, for the right occasion to sew her a Beavers thing; the teaching-job acceptance was, by Sigrid's own quiet read, the right occasion. The banner is forty-eight inches wide and thirty-six inches tall. It is hand-stitched in cotton, Beavers blue throughout, with the team initial <em>BVR</em> embroidered in cream-coloured thread at the centre, and a small white beaver silhouette stitched in the lower-right corner at perhaps a quarter-scale.</p>
+          <p>Marin hung the banner above the chalkboard in classroom 3-B on her first day of teaching, Y15 founding bell. The banner has remained on that nail, with brief removals only for spring cleaning and one repair in Y28 (a hem stitch had given way; Sigrid mended it that same week), for twenty-six years. The banner is now considerably faded. The Beavers blue is, by Marin's own admission, more of a stadium-twilight blue than the bright matchday blue it was when Sigrid stitched it. Marin has not, in twenty-six years, replaced the banner, repainted the room, or moved classrooms. She has been offered, on three occasions across her career, the option of moving to a larger room; she has, on each occasion, politely declined.</p>
+          <p>There is, by long student tradition, a small pencil mark on the bottom hem of the banner, in the shape of a careful capital <em>R</em>. The R was put there in Y22 by a student named Roan Halverick (no relation, by every available genealogy, to the Reno Halloran), who has by his own subsequent account no memory of having put it there but whose mother, when shown the mark in Y36 by Marin at a school reunion, identified it instantly as Roan's. The R has remained on the banner since. Marin has not, in nineteen years, attempted to erase it. She has, by every available account, also not attempted to invite any subsequent student to add a second mark. The R is, on the matter, the only mark. It is the kind of mark Marin's classroom keeps.</p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · the banner remains in active use; it is not available for inspection</div>
+        </article>
+
+
+        <article class="found">
+          <h3>Why She Stopped Going to the Wolves Match (Y32 R7 — present)</h3>
+          <div class="meta">An ephemeral · oral testimony from Marin, transcribed by the column with both her and Bristlebeard the Second's permission · the only article in this tenant that touches the Loambright weight</div>
+          <p>The Wolves' visiting match at Brewer's Reach in Y32 R7 was the match in which the Beavers' Tank — Marin's husband, then in his twenty-fifth season as the Beavers' Tank — took a shot from the Wolves' Sniper Avery Loambright that landed where it landed and resolved the way it resolved, and from which Loambright did not, on the matter, get up. The match has been written about in the Wolves' bow tradition since Y33; the Wolves bow eleven seconds at the chalk mark where Loambright fell at every visiting match they play at Brewer's Reach. The chalk mark is on the embankment side of the field — the visitor's side — which is why the boy at Gate Three, who has manned that gate every match day since Y34, has the closest fan-vantage to the bow on the side the Wolves face.</p>
+          <p>Marin attended the Y32 R7 match. She was, by her own count, seven rows behind her husband's home dugout, in seat 14 of Section 6 Row J, the seat she has held by season ticket since Y4. Her husband, in the post-match line, did not look up at her. He looked at the chalk mark for what Marin has, in private, given as approximately ninety seconds. He has, by Marin's account, never spoken to her about that ninety seconds. She has not, by her own preference, asked him about it. She has, by her own account, also not, in any of the eight Wolves visiting matches that have been played at Brewer's Reach since Y33, attended one in person. She listens to them on the broadcast in her kitchen, with the windows closed, with the volume set to a level that Sigrid (who comes over for every Wolves visiting match) has, by long arrangement between the sisters, calibrated for her.</p>
+          <p>Bristlebeard the Second, on review of this filing, asked the column to add the following sentence verbatim: <em>I have, by my own preference, asked Marin not to attend a Wolves visiting match at Brewer's Reach until and unless I am, on the matter, no longer here. I have not asked her to do this for my sake. I have asked her to do it for her own. She has, in due course, accepted. She has not, on the matter, accepted easily. I am, on the matter, grateful that she has accepted.</em> Marin, on review of his addition, asked the column to print the addition exactly as he has written it. Marin's own closing sentence on this filing, in her own pencil printing on the typescript: <em>the Wolves are, on the matter, a good team. their bow is, by every measurable standard, the right thing for them to do. I would, in due course, like to be in the stadium for it again. I am, on the matter, not yet ready. I will, in due course, get there. that is, on the matter, the work.</em></p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · transcribed Y42 mid-season with both Marin's and Bristlebeard the Second's permission · the only article in Tenant Five that the Marrowby sisters' family has formally requested be reviewed annually for redaction; no redaction has been requested in the seven months of file life so far</div>
+        </article>
+      </details>
+
+
+      <details class="lore-timeline-era">
+        <summary><span class="era-name">Chapter II — Hollis</span> <span class="era-count">3 entries · Y27 (birth) — Y41 founding bell · Penn's older brother, the visceral watcher, the boy who watches with his hands</span></summary>
+        <article class="bio">
+          <h3>Hollis — Penn's older brother, age fourteen at time of this filing</h3>
+          <div class="meta">A bio · Beaver, age fourteen · Boston, Brewer's Row, the small house with the green door · two years older than Penn (Tenant Four) · the visceral watcher</div>
+          <p>Hollis was born in Y27, two years before his brother Penn, in the same small house on Brewer's Row that the brothers continue to share a bedroom in. He is, at the time of this filing in Y42 mid-season, fourteen years old. He attends the secondary wing of the Brewer's Row Common School, in classroom 3-B, where his teacher is Marin Bristlebeard. He has been a Beavers fan since the age at which a Beaver kit is canonically a Beavers fan, which is, by Beaver standing tradition, from the day they first see one of their parents wear blue.</p>
+          <p>Hollis is, by every available account, the visceral watcher his brother Penn called him in Penn's own column-interview. He does not write letters to the Wing Standard. He does not keep a notebook. He does not, when his brother is writing one of Penn's careful rules-questions at the kitchen table during the post-match dinner, contribute. He sits, by his father's account, with his hands flat on the table, and he listens. Penn writes the question. Their father reads the question. Hollis says, perhaps once an evening, <em>I watched that. I think Penn has it right</em>, or, less often, <em>I watched that. I think Penn has it slightly off in the second sentence</em>. He does not, by his father's continuing account, ever offer a fix. He waits for Penn to find the fix. Penn does, in due course, find the fix. Hollis, on each occasion, nods.</p>
+          <p>This is, by Penn's own assessment, the family arrangement. Penn watches with the pencil. Hollis watches with the hands. Their father watches with the chair he sits in (which has, by long house tradition, four small dents on the right armrest, where their father grips it during particularly close rounds). Their mother, who is a translator at the Brewer's Row morning bread queue's bakery and who is the only one of the four of them who does not, in her own preference, watch the matches with the kind of full attention the rest of them give, watches, on her schedule, with cold lobster rolls eaten standing up at eleven PM. The arrangement, by every household account, holds.</p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · transcribed Y42 mid-season with Hollis's permission, granted with his usual single nod and his usual single phrase, <em>that's about right</em></div>
+        </article>
+
+
+        <article class="found">
+          <h3>How Hollis Watches the Match (Y36 founding bell — present)</h3>
+          <div class="meta">An ephemeral · oral and observational testimony from Hollis's family, the Section 6 ushers, and Marin (who has watched him watch from her own seat in the same section since Y40) · the canonical record of his viewing register</div>
+          <p>Hollis's first Beavers home match was the same Y37 founding-bell home opener at which his brother Penn, then aged eight, brought the small bound notebook his mother had given him for his eighth birthday. Hollis was ten. He brought, by his own subsequent account, nothing. He sat in the seat next to Penn (Section 6 Row J seat 16; Penn was in seat 15). He gripped the front edge of his seat. He did not, by his father's contemporaneous account, release the seat-edge during a single round break. He did not, by his father's account, eat his lobster roll until the post-match line. He did not, by his father's account, speak during play. He spoke in three of the round breaks; the speech was, by his father's contemporaneous note, <em>each time, a single sentence: that was good. that was good. that was good</em>. He has, in the five and a half years since, attended every Beavers home match the family has been able to bring him to, in the same seat, with the same handkerchief his mother now packs on matchday, with the same single phrase repeated at the round break.</p>
+          <p>Bryn Brushpaw, who works the Section 6 aisle on every Beavers home match in his standing usher's circuit, has — by his own quiet field-note refresh dated Y40 closeout, on a small carbon-paper form similar to the one Hyrum used for the Pew-Pew Ewe — described Hollis as <em>the most settled fan in Section 6 Row J. he does not, by my read, miss a moment. he does not, by my read, also notice himself watching. there are, on the matter, two ways to be a fan. he is the second one. file open</em>. The note has, in the eighteen months since, been refreshed once, in Bryn's hand, on a Y41 mid-season match at which Hollis had been moved one seat over by his father's allowance to make room for Marin Bristlebeard, who attended that match with the family on what was Marin's first match in Section 6 in eight years. Bryn's note from that match: <em>two visceral watchers in adjacent seats. neither one, on the matter, looking at the other. both one of them looking at the field. file holds.</em></p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · transcribed Y42 mid-season with Hollis's permission and Bryn Brushpaw's working consent</div>
+        </article>
+
+
+        <article class="found">
+          <h3>The Y40 Founding-Bell Class Roster (Y40 founding bell, age 13)</h3>
+          <div class="meta">An ephemeral · the school registration form · classroom 3-B, secondary wing, Brewer's Row Common School · the Y40-Y41 academic year roster · twenty-eight names in alphabetical order, in the school registrar's typewritten print</div>
+          <p>The roster was issued, in twenty-eight identical typewritten copies, to classroom 3-B's teacher (Marin Bristlebeard), the secondary-wing supervisor (Mrs. Periwinkle Marrowby, no relation to Marin's sister Sigrid Marrowby), and the school's senior administrator (Mrs. Halberd, no relation to Cyril Halberd of Reno's South Strip Songbook by any genealogy the Foundation has been able to trace) on the morning of Y40 founding-bell week. Hollis's name appears as the eleventh entry, alphabetized by surname under the family name his father uses for school correspondence: <em>Hollis, secondary year one, age 13, parental contact: father, Brewer's Row, the small house with the green door</em>.</p>
+          <p>Marin, by her own oral testimony for this column, did not connect the registration entry to any prior knowledge until the first day of class, when Hollis sat in seat eight of the room's twenty-four-seat configuration — third row, second column, on the window side — and looked, by Marin's account, at the banner above the chalkboard for the better part of three minutes before opening his bag. He did not, by Marin's continuing account, ask about the banner. He did not, by the same account, point to the banner. He did, by Marin's careful read, locate the small pencil <em>R</em> on the bottom hem in the third minute, look at it for what Marin counted as twenty seconds, and then return his attention to the rest of the room, which by then was filling up with twenty-seven other secondary-year-one students. Marin's own contemporaneous note, in pencil at the bottom of the day's lesson plan: <em>seat eight is a careful watcher. file open. — M.</em></p>
+          <p>Hollis, on the third day of class, in the post-lunch quiet hour, raised his hand for the first time. He did not, by Marin's account, ask the question. He waited for her to call on him. She called on him. He said, in his own quiet phrasing: <em>the R on your banner. is it from a student. I think it is from a student. I do not, on the matter, want to know which one.</em> Marin said, by her own account: <em>it is from a student. it has been there, on the matter, for nineteen years. you are, on the matter, the eighth student to ask. you are the first one not to ask which.</em> Hollis nodded. He did not say anything else for the rest of the class. He did not, by Marin's continuing account, ask about the banner again for the rest of the school year. He did, by Marin's continuing account, look at it on every weekday for the rest of the school year, in the same way she has watched her husband and her son watch the field for thirty-some years: settled, attentive, not asking.</p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · transcribed Y42 mid-season with Hollis's permission and Marin's and the school's working approval</div>
+        </article>
+      </details>
+
+
+      <details class="lore-timeline-era">
+        <summary><span class="era-name">Chapter III — When the Banner Was Noticed</span> <span class="era-count">3 entries · Y40 mid-season — Y42 mid-season · the convergence, conducted in classroom 3-B and at Brewer's Reach in turn</span></summary>
+        <article class="found">
+          <h3>The First After-School Broadcast (Y40 mid-season, Saturday matchday)</h3>
+          <div class="meta">An ephemeral · oral testimony from Marin and Hollis · the day classroom 3-B became, in Marin's own quiet phrasing, a Beavers grandstand for one student and one teacher</div>
+          <p>The Saturday in question was the third Saturday of Y40 mid-season, a Beavers home match against the Phoenix Furious Foxes. Hollis's family had not, on the matter, been able to attend in person — Hollis's father was working the bakery's Saturday afternoon shift on coverage for a coworker; Hollis's mother had a translator's deadline at four; Penn was at the kitchen table writing a letter that would, in due course, be his eleventh to the Wing Standard. Hollis, by every account, had no transportation to Brewer's Reach and no expectation of going. He had walked to the Brewer's Row Common School with the intention of using the school library's broadcast set, which is, by long Brewer's Row Common School standing-tradition, available to any student of the secondary wing on Saturdays from one PM to four PM at the librarian's discretion.</p>
+          <p>Marin was at the school for the same reason. The library's broadcast set was, on review of the Saturday's schedule, in active use by a senior-wing study group of three students who had filed for the slot the previous Friday. Marin had, by her own subsequent account, considered going home and listening on the kitchen radio. She had, by her continuing account, also considered, perhaps for the first time in twenty-six years, that classroom 3-B had its own working radio in the cabinet under the chalkboard, that the cabinet was not locked, that the radio worked, and that the room was — at one PM on a Saturday in the secondary wing — empty. Hollis, walking past 3-B on his way to the library, saw the door open. He saw Marin inside. He did not, by either party's account, ask permission. Marin did not, by either party's account, offer it. She did, by her own account, gesture once at seat eight. He took seat eight. She turned on the radio. The match was already in the second round. The Foxes were, by both witnesses' contemporaneous account, ahead by one point. The score had, by the close of the third round, evened.</p>
+          <p>Marin and Hollis did not speak to each other during play. They spoke during three of the round breaks; the speech, by both parties' careful subsequent reconstruction, consisted in its entirety of: <em>(round break two, Marin) — that was a good shot from your son, by my read. (Hollis) — yes ma'am. (round break four, Hollis) — Bjorn's shoulder is, on the matter, going. (Marin) — yes. (round break six, Marin) — would you like to come back next Saturday. (Hollis) — yes ma'am.</em> The match resolved 4-3 in favour of the Beavers in the seventh round. Marin turned off the radio. Hollis stood up. Marin walked Hollis to the school's front door. They did not, on the matter, speak on the walk. They have, in the eighty-six Saturdays of mid-season match-availability since, repeated the arrangement seventy-nine times. The seven absences are accounted for, in order, by two illnesses (Hollis), one school administrative event (Marin), three family obligations (Hollis), and one Saturday on which Marin had a doctor's appointment that ran late.</p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · transcribed Y42 mid-season with both parties' permission</div>
+        </article>
+
+
+        <article class="found">
+          <h3>The After-School Broadcasts — the standing arrangement (Y40 mid-season — present)</h3>
+          <div class="meta">An ephemeral · the working protocol · classroom 3-B, secondary wing, Brewer's Row Common School · Saturday afternoons one PM to roughly four PM · seventy-nine matches and counting</div>
+          <p>The arrangement, as it has settled across two and a half school years, runs by the following long-stable protocol. Marin arrives at classroom 3-B by twelve forty-five PM. She unlocks the cabinet under the chalkboard, removes the radio, sets it on her desk, plugs it into the wall outlet beneath the window (the one the chalkboard's drop-down map has obscured for forty-six years and which Marin, by long quiet preference, has kept clear by simply not lowering the map on Saturday afternoons), tunes the dial to the Wing Standard's broadcast feed, and waits. Hollis arrives at the door, almost always between twelve fifty-five and one PM, almost always on foot, almost always with a small wrapped sandwich his mother has packed for him on the way out. He sits in seat eight. Marin sits at her desk, three seats and one row away. Neither of them, by their own continuing reports, sits any closer than this. The room is, by Marin's own quiet account, exactly the right size for the two of them to share without either of them, on the matter, feeling watched.</p>
+          <p>The radio plays the broadcast feed for the duration of the match. Marin, in the round breaks, sometimes makes a single observation. Hollis, in the round breaks, sometimes responds. Their exchanges have, by Marin's careful tally written on the inside cover of her teaching diary, never exceeded twelve sentences across a single match. The shortest match-day exchange on record is one sentence (Marin's, Y41 R3, in the seventh round break: <em>your brother is going to be famous, by my read</em>; Hollis's response was a nod, which Marin counted, on review, as half a sentence and rounded down to zero). The longest is twelve (Y42 founding bell match, the Beavers-Badgers home opener; both parties were, by their joint subsequent recollection, more in spirits than usual; Marin has not, on the matter, archived the specific exchange).</p>
+          <p>Bryn Brushpaw — who is, in addition to his Section 14 senior-usher duties at Brewer's Reach, also Marin's distant cousin through the Marrowby line, and who therefore has, by family arrangement, occasional Saturday-afternoon walking access to the Common School secondary wing on the school's standing visitors-by-family-affiliation policy — has visited the broadcast Saturdays on three occasions across the eighty-six-Saturday history of the arrangement, and has, on each occasion, watched from the doorway for approximately ninety seconds before walking quietly back down the corridor without entering. His standing field note on the arrangement, refreshed Y42 mid-season: <em>they are doing it the way Hyrum and the boy at gate three did it, by my read, only at a different field of attention. teacher and student in their own grandstand of two. file holds and will, in due course, never close. — B.B.</em></p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · transcribed Y42 mid-season with both parties' permission and Bryn Brushpaw's working consent</div>
+        </article>
+
+
+        <article class="found">
+          <h3>The Y42 Founding-Bell Match — three Bristlebeards in the same row (Y42 founding bell)</h3>
+          <div class="meta">An ephemeral · oral testimony from Marin, Hollis, Bristlebeard the Second, and Bryn Brushpaw · the first Beavers home match all three Bristlebeards have attended together since Y32 R7 · Section 6 Row J seats 13, 14, and 15</div>
+          <p>The Y42 founding-bell match was the Beavers' home opener against the Boise Brawling Badgers — the same match, by separate filing, in which the Tenant Four apprentice and Penn first sat one row apart in Section 14. Section 6 Row J, three sections away on the home dugout side, held a separate convergence. Bristlebeard the Second, who had not, by every available account, attended a Beavers home match in person since the Y36 closeout match at which Bjorn took the Tank position from him in the post-match line, accompanied Marin to the match. He sat in seat 13. Marin sat in seat 14. Hollis, by Marin's quiet pre-match arrangement with Hollis's father (an arrangement made at the four-thirty bread queue the Friday before, by an exchange of perhaps fifteen words across the bakery counter), sat in seat 15. The seat had been Penn's father's by season ticket. Penn's father had given it up for the day, on the simple terms that Hollis sit there.</p>
+          <p>Bristlebeard the Second did not, by his own subsequent account, look at the chalk mark during the pre-match line. He looked at his son. Bjorn, on the field, looked back once — for what Bryn Brushpaw, working the aisle, counted as four seconds. The look ended. The match began. Bristlebeard the Second watched the match the way Bristlebeard the Second has, by Marin's account of thirty years, always watched a match: with both hands flat on his knees, with no notebook, with no commentary except in the round breaks, with his eyes never leaving the field. Marin watched the way Marin watches: the same way her husband watches, only with her left hand on his right hand for two of the seven rounds. Hollis watched the way Hollis watches: gripping the seat-edge, palms working, not speaking. Bryn, on his end-of-match sweep, refreshed his Section 6 Row J field note with a single sentence in his own pencil printing: <em>three Bristlebeards in adjacent seats. one on the field, one in seat 13, one in seat 14. one student of one of them in seat 15, by Marin's quiet arrangement. file holds. — B.B.</em></p>
+          <p>The match resolved 4-2 in favour of the Beavers in the sixth round. Bjorn, in the post-match line, walked to the chalk mark, paused for what Bryn timed at six seconds (which is not, on the matter, the eleven seconds the Wolves take, and was therefore not the same gesture, and was, by every available reading, not intended to be), and walked off. His father, watching from seat 13, by Marin's careful subsequent observation, did not, on the matter, weep. He did, by her continuing account, hold her hand harder for the duration of his son's six seconds. Hollis, in seat 15, by his own subsequent quiet remark to Marin on the walk back to Brewer's Row that evening, said only: <em>I think your son did that on purpose. I think your husband, on the matter, was hoping he would. I think your son knew that. I will not, in due course, ask either of them to confirm. it does not, on the matter, matter whether they confirm.</em> Marin, in her own quiet pencil note on the typescript of this column for the Foundation file, added one sentence below Hollis's: <em>he is, on the matter, fourteen. he saw all of it. file holds.</em></p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · transcribed Y42 mid-season with all four parties' permission · the article has been reviewed by the Bristlebeard family for redaction; no redaction has been requested</div>
+        </article>
+      </details>
+
+
+      <article class="history">
+        <h3>Tenant Six — A Hug Is Technically Legal</h3>
+        <div class="meta">A paired cartoon archive · the harbor cartoonist of Olympia and the wood-engraver's son of Saint-Laurent · two young Float Knights cartoonists whose Hallowtide submissions first appeared together on the Wing Standard's youth supplement in Y41 · opened Y42 closeout</div>
+        <p>The two principals of this tenant are Saskia Goldenpaw, age twelve at time of this filing, Golden Retriever with amber eyes, daughter of the Olympia coastal-merchant family Goldenpaw Trading and granddaughter of the late Captain Ada Goldenpaw, who has been drawing cartoons of Float Knights matches in pencil and ink since age nine and who intends, by her own express life-plan stated in her Y40 first published cartoon's accompanying letter, <em>to captain a sailing ship out of Olympia Harbor by the time I am twenty-five and to also, on the matter, keep drawing cartoons of the Pandas</em>; and Theo Nightwhisker, age eleven, black-furred cat with green eyes, son of the Saint-Laurent wood-engraver Marcel Nightwhisker and the pamphlet-printer Beatrice Nightwhisker, who has been drawing caricatures in his father's workshop since age eight and whose pencil-and-hatch style is, by every measurable comparison, a wood-engraver's son's style and accordingly nothing like Saskia's clean coastal-cartoonist line work.</p>
+        <p>What the two of them share, by every available account, is a deep and entirely affectionate love of mocking the Portland Punching Pandas' non-play eccentricities — the Pandas' standing tradition of taking six to nine seconds to confirm a tactical call, the Pandas' celebrated Y34 R8 hug formation (which is, by Caucus working-session minutes, technically legal and is also, on review, not a formation), the Pandas' standing inability to finish above tenth in the annual Hallowtide Tag, the Pandas' documented discomfort with bats, the Pandas' celebrated quiet championship celebrations, and the broad set of non-play behaviors the Pandas themselves, by their own quiet self-aware tradition, find funny about themselves. Neither child has, by either family's account, ever drawn a cartoon mocking the Pandas' play. Both children have, by both families' standing review, made it explicit in writing that the play is not, on the matter, the joke. The non-play is the joke. The Pandas, by every available reading, agree.</p>
+        <p>The Pandas' coach Yu Cobblepad has, on the matter, written to both children's families with a one-line note that both families now keep framed (Saskia's above her bedroom desk; Theo's above the workshop's small back door): <em>the cartoons are, on the matter, kind. we are, in turn, grateful. — Yu, Portland.</em></p>
+        <p>What follows is each principal's archive in turn — Saskia's first, Theo's second — and then a brief third chapter on the convergence, which has been conducted principally by post and once, in person, at the Y42 Hallowtide Tag in Reno, where the two met for the first time and where the Pandas, by every available measurement, finished eleventh.</p>
+        <div class="signoff">— Float Foundation, Stories Cabinet, tenant entry, opened Y42 closeout</div>
+      </article>
+
+
+      <details class="lore-timeline-era">
+        <summary><span class="era-name">Chapter I — Saskia</span> <span class="era-count">3 entries · Y29 (birth) — Y41 Hallowtide · Olympia Harbor, the Goldenpaw line, the harbor cartoonist's first cartoon</span></summary>
+        <article class="bio">
+          <h3>Saskia Goldenpaw — twelve, Olympia Harbor, future captain</h3>
+          <div class="meta">A bio · Golden Retriever · age twelve at time of this filing · Olympia Harbor district · Goldenpaw Trading Co., third generation · amber-eyed, by inheritance from her grandmother Captain Ada Goldenpaw</div>
+          <p>Saskia Goldenpaw was born in Y29, in the small upstairs room of the Goldenpaw Trading Co.'s shorefront office at Olympia Harbor — the same upstairs room her father had been born in twenty-eight years earlier, and the same upstairs room her grandmother Captain Ada Goldenpaw had been born in fifty-four years before that. Goldenpaw Trading is, by every continental coastal-merchants' registry, the third-oldest continuously operating coastal-merchant operation on the Pacific seaboard, founded in Y-26 by Saskia's great-grandfather Edmund Goldenpaw with a single forty-foot two-masted schooner, the <em>Sundip</em>, named for a sunset Edmund had watched from the Olympia harbor jetty on the day he had decided to enter the trade.</p>
+          <p>Saskia's grandmother Captain Ada Goldenpaw — who died in Y36 closeout at age sixty-nine, having captained Goldenpaw vessels out of Olympia for forty-three years and having, by every coastal-merchants' working register, been the first female ship captain on the Pacific seaboard with a continuous coastal-merchant license — taught Saskia knots from age four, charts from age six, the names of the seventeen wind-points the Pacific seaboard's working captains use from age seven, and the rule that <em>the harbor will, on the matter, always be there. the ship is, on the matter, the variable. the captain is, in due course, the constant. mind which one you are.</em> Saskia, by her own subsequent account, has minded.</p>
+          <p>Saskia's stated life-plan, on file with both her parents and the Foundation since Y40 Hallowtide, is to <em>captain a sailing ship out of Olympia Harbor by the time I am twenty-five and to also, on the matter, keep drawing cartoons of the Pandas</em>. The Olympia coastal-merchants' apprentice register has, on review of her grandmother's late-life recommendation letter (filed posthumously by Saskia's father in Y37 founding bell), reserved a working-apprentice slot for her in the Y45 founding-bell intake, on the contingency that she complete the Olympia Common School's secondary wing curriculum by Y44. She is, by every available report from the school, ahead on the curriculum. She is, by her own quiet account, also ahead on her cartoon archive.</p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · transcribed Y42 closeout with Saskia's permission and her parents' written approval</div>
+        </article>
+
+
+        <article class="bio">
+          <h3>The Olympia Harbor Pitch — Saskia's Otters seat (Y36 — present)</h3>
+          <div class="meta">A bio of a seat · Section 11 Row K seats 8 and 9 · the Goldenpaw family's standing season tickets · sixty-three Otters home matches attended by Saskia between ages seven and twelve</div>
+          <p>The Olympia Outlaw Otters' home pitch is, by long Olympia tradition, a converted boat-launch dock at the southern edge of the harbor, with the field laid out across the wide gravelled flat where the harbor's overflow vessels were, in pre-League years, stored over winter. The grandstand is built on a wooden pier-platform that runs along the dock's eastern edge. Section 11 is the second-from-northernmost section of the grandstand, three rows deep, with the long sight-line of the section angled (by the Otters' own pre-construction surveyor's specification) so that the home dugout sits exactly in the middle of the section's view. The Goldenpaw Trading Co. has held season tickets for Section 11 Row K seats 8 and 9 since the Otters' Y33 founding-bell admission to the League. The seats were, in the first three Otters seasons, occupied principally by Saskia's grandmother Ada and her father Edmund Goldenpaw the Third (Saskia's father). They have been, since Y36 closeout — the first Otters home match after Captain Ada's death — occupied by Saskia and her father.</p>
+          <p>Saskia's first attended Otters home match was Y36 founding bell, when she was seven and her grandmother was, by Saskia's later recollection, <em>still well enough to come to the dock but not, on the matter, to climb the stairs to the section</em>. Captain Ada watched the match from a wheelchair on the dock's lower walkway, where she had a view of about the front third of the field through the grandstand's pier-supports. Saskia and her father watched from Row K. Saskia drew her first match-cartoon that afternoon — a small pencil sketch on the back of the matchday programme, of an Otter Speedster mid-pivot, with the caption (in seven-year-old printing) <em>this one is fast. by every measurable measure</em>. The cartoon was given to Captain Ada in the post-match line. Captain Ada kept it. It is now in a small wooden box on Saskia's bedroom desk, alongside the cartoons Saskia has drawn at every Otters home match since.</p>
+          <p>Saskia has, in the eight Otters home matches at which the Otters have hosted the Portland Punching Pandas during her tenure in seat 8, drawn a Pandas-mockery cartoon at each. The cartoons have not, on the matter, all been published. Three were given directly to her father; two were given to the Otters' assistant equipment manager (a cordial Otter of forty-some years' service who has cultivated, by long Olympia working-tradition, a careful relationship with the children of the harbor's working-merchants); two were sent to the Wing Standard, where one was printed; one was, by Saskia's own later account, <em>not, on the matter, good enough to send anywhere</em>, and was burned in the Goldenpaw kitchen stove on the Sunday after the match in question, with her father's permission and his careful note that <em>cartoonists, in due course, do this; it is, on the matter, the work</em>.</p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · transcribed Y42 closeout with Saskia's and her father's permission</div>
+        </article>
+
+
+        <article class="found">
+          <h3>Saskia's First Published Cartoon — "WHAT IS THE HUG, IF NOT A HUG?" (Y40 Hallowtide, age 11)</h3>
+          <div class="meta">An ephemeral · pencil and ink on heavy cartoon-stock, eight by ten inches · printed in the Wing Standard's Y40 Hallowtide youth cartoon supplement · the cartoon that opened Saskia's published archive</div>
+          <p>The cartoon, drawn in pencil and inked over with India ink in Saskia's clean coastal-cartoonist line work, depicts five round Pandas standing in a tight cluster at the centre of an empty Float Knights pitch, all five of them with their arms wrapped around each other in a literal group hug. The Pandas' faces are visible only as eyes peering over each others' shoulders. The pitch markings are minimal — just the chalk-mark center spot and the four edge-circles. There is no opposing team in the frame. There is no ball, no formation, no engagement. There is only the hug. The cartoon's title, hand-lettered in Saskia's own block printing across the top: <em>WHAT IS THE HUG, IF NOT A HUG?</em>. The caption, hand-lettered along the bottom in smaller printing: <em>the Pandas drew this. on the matter. we should, in due course, respect it.</em></p>
+          <p>The cartoon was sent to the Wing Standard via the Olympia Harbor postal hub on the second Tuesday of Y40 Hallowtide-week, with a covering letter in Saskia's own pencil printing introducing herself, declaring her sailing-captain life-plan in full, and asking — politely — whether the Hallowtide youth supplement might consider publishing the cartoon. The covering letter ran, by Maelis Snowstep's careful subsequent count, to fourteen sentences. The closing sentence read, in full: <em>I am, on the matter, eleven. my parents have, on review, approved the submission. they have also, on the matter, approved my plan to captain a ship by twenty-five. I will, in due course, be ready for both. — Saskia Goldenpaw, Olympia Harbor.</em></p>
+          <p>Maelis Snowstep printed the cartoon in the Y40 Hallowtide youth supplement at full eight-by-ten size, on the supplement's third page. Her editorial note accompanying the cartoon: <em>this is, on the matter, exactly the cartoon Hallowtide called for. the cartoonist is eleven. the cartoonist intends to captain a ship. the Foundation, by my read, should keep an eye.</em> The Pandas' coach Yu Cobblepad, on review of the supplement, sent his first one-line note to the Goldenpaw family the following week. The note read: <em>the cartoon is, on the matter, kind. we are, in turn, grateful. — Yu, Portland.</em> The note was framed by Saskia's mother that same evening. It now hangs above Saskia's bedroom desk, beside the small wooden box that holds her cartoons.</p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · the original cartoon is held in archive box ST-Y40-014 · printed with Saskia's, her parents', and Yu Cobblepad's permission</div>
+        </article>
+      </details>
+
+
+      <details class="lore-timeline-era">
+        <summary><span class="era-name">Chapter II — Theo</span> <span class="era-count">3 entries · Y30 (birth) — Y41 Hallowtide · Saint-Laurent, the Nightwhisker workshop, the wood-engraver's son's first cartoon</span></summary>
+        <article class="bio">
+          <h3>Theo Nightwhisker — eleven, Saint-Laurent, wood-engraver's son</h3>
+          <div class="meta">A bio · black-furred cat · age eleven at time of this filing · Saint-Laurent, on the south bank of the river two blocks from the Antlerlords' bowl · son of Marcel Nightwhisker (wood-engraver) and Beatrice Nightwhisker (pamphlet-printer) · green-eyed</div>
+          <p>Theo Nightwhisker was born in Y30, in the small back room of the Nightwhisker workshop in Saint-Laurent's south-bank printers' quarter, two blocks from the Saint-Laurent Antlerlords' bowl and three blocks from the river. His father Marcel Nightwhisker is a wood-engraver of forty-some years' standing, whose workshop has produced broadsheet illustrations for the Saint-Laurent <em>Gazette</em> since Y22 and whose particular specialty — by every regional newspaper editor's standing assessment — is the cross-hatched-shadow technique that gives Saint-Laurent broadsheet illustrations their characteristic depth. Theo's mother Beatrice Nightwhisker runs the workshop's pamphlet-printing operation, which produces, on contract to the Antlerlords' front office, every matchday programme for every Antlerlords home match. The family has, by long workshop tradition, distributed pamphlets at the bowl gates personally on every matchday since Y34.</p>
+          <p>Theo speaks League Common and Saint-Laurent French in approximately equal measure, switching languages by audience without conscious selection, and has — by his father's careful early-childhood observation — drawn since he could hold a pencil, which Marcel has on file as having been at sixteen months. Theo's earliest preserved drawing, a pencil scribble on the back of a Y31 Antlerlords matchday programme, is in the family workshop's archive. It is, by Marcel's quiet later assessment, <em>not yet, on the matter, anything; but it is, in due course, going to be something</em>. Marcel's assessments have, by every available record from Theo's later cartooning life, held up.</p>
+          <p>Theo's stated life-plan, on file with his parents and the Foundation since Y41 Hallowtide, is to <em>take over the workshop from Papa when he, on the matter, is ready to give it; and to also, in due course, keep drawing cartoons of the Pandas, who are, on the matter, the funniest team in the League and do not, by every measurable sign, mind being told so</em>. Marcel has, on review of Theo's stated plan, indicated to Beatrice that he expects the workshop to be in Theo's hands by the time Theo is, in due course, twenty-eight or thereabouts. Beatrice has agreed. Theo has been, since age nine, allowed to operate the small hand-press in the workshop's back room without adult supervision. He has, by Marcel's count, made exactly four mistakes on the press in three years. None of them, by Marcel's count, has been the same mistake twice.</p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · transcribed Y42 closeout with Theo's permission and his parents' written approval</div>
+        </article>
+
+
+        <article class="bio">
+          <h3>The Saint-Laurent Bowl — Theo's Antlerlords seat (Y36 — present)</h3>
+          <div class="meta">A bio of a seat · Section 7 Row D seat 12 · Theo's father's standing season ticket, occupied by Theo since Y36 closeout when his father gave him the seat for his sixth birthday · forty-eight Antlerlords home matches attended</div>
+          <p>The Saint-Laurent Antlerlords' home bowl is built into a natural depression in the south-bank river plain, with the field set below grade and the grandstand cut into the slope on three sides. The fourth side is open to the river, which is visible past the field's far chalk-mark line on a clear day. Section 7 is the second section to the left of the home dugout, three rows deep, with seats narrow enough that the Antlerlords' Moose-class supporters generally avoid it (the bowl's wider Section 5 and 6 seats absorb most of the Moose attendance). Section 7 is, by long Saint-Laurent fan-tradition, the cat-and-fox section: the seats are, on the matter, scaled for smaller species, and the cats and foxes of the south bank's printers' quarter and the harbor's small-merchant quarter have, in two and a half decades of Antlerlords matches, made it their own.</p>
+          <p>Theo's father gave him the season-ticket transfer for Section 7 Row D seat 12 on Theo's sixth birthday in Y36 closeout — three weeks after Captain Ada Goldenpaw's death across the continent in Olympia, by a coincidence of dating that neither family has, in the years since, mentioned to the other and that the Foundation, on review of both timelines, has noted only in this archival entry on the matter. The Antlerlords have, since Y36 closeout, played forty-eight home matches at the bowl. Theo has, on his father's careful matchday count, attended forty-eight of them. The matches the Antlerlords have hosted the Portland Punching Pandas during this tenure number three. Theo has, on each of the three, drawn a Pandas-mockery cartoon during the round breaks, on the back of his mother's matchday programme.</p>
+          <p>The Antlerlords-Pandas matches are, by Caucus pre-match analyst's standing pre-print analysis, the slowest fixtures in the League. Both teams are slow. Both teams' armor is heavy. Both teams take their time. The Saint-Laurent broadcast booth's working tradition — established in Y33 by the bowl's first booth director, a heron of patient temperament — has been to declare, in a quiet pre-match aside that has been preserved on the matchday tapes since Y33, <em>this is, on the matter, going to be a long one. settle in. bring the second flask</em>. Theo's three Pandas-mockery cartoons drawn at these three Antlerlords-Pandas matches all, by his mother's quiet later observation, focus exclusively on the matches' off-field elements: the booth director's flask, the Antlerlords' pre-match dressing-room bamboo (a courtesy provision the bowl maintains for visiting Pandas), the Pandas' standing pre-match four-minute meditation interval. None of the three, by Theo's own subsequent affirmation, mock the play. The play is, on the matter, slow on both sides. The slowness is, by Theo's own ledger, not the joke. The non-play is the joke.</p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · transcribed Y42 closeout with Theo's and his parents' permission</div>
+        </article>
+
+
+        <article class="found">
+          <h3>Theo's First Published Cartoon — "PARDONS, MA CHAUVE-SOURIS" (Y41 Hallowtide, age 11)</h3>
+          <div class="meta">An ephemeral · pencil with ink hatching on heavy cartoon-stock, eight by ten inches · printed in the Wing Standard's Y41 Hallowtide youth cartoon supplement opposite Saskia's second cartoon · the cartoon that opened Theo's published archive</div>
+          <p>The cartoon, drawn in pencil and finished with the close cross-hatching technique Theo learned in his father's workshop, depicts a single Panda Tank — heavily armored, helmet under his arm — standing in a Pandas-team dressing room with his free paw raised in an apologetic gesture. A small bat hangs upside-down from a beam in the upper-left corner of the frame, looking down at the Panda with, in Theo's careful ink-hatching, an expression of mild but pointed indignation. The dressing room is, in the cartoon's background detail, lined with bamboo (a canon-accurate touch — the Pandas' Portland greenhouse and traveling dressing-room provisions both feature bamboo, by long team tradition). The cartoon's title, hand-lettered across the top in Theo's careful Saint-Laurent French: <em>PARDONS, MA CHAUVE-SOURIS</em>. (The League Common translation, lettered below in smaller print: <em>"pardons, my bat."</em>) The caption, lettered along the bottom: <em>the Panda did not, on the matter, mean to startle you. we are, in due course, very sorry.</em></p>
+          <p>The cartoon was sent to the Wing Standard via the Saint-Laurent <em>Gazette</em>'s morning post-bag on the third Tuesday of Y41 Hallowtide-week, accompanied by Theo's covering letter (in League Common, with two French parenthetical asides). The covering letter declared his stated life-plan in full, his sailing-captain-friend Saskia's prior-year cartoon as his direct inspiration, and his standing offer — should Maelis Snowstep find any of his future submissions wanting in League Common phrasing — to have his mother review the language before posting. He noted, in closing, that he was eleven, that his parents had approved the submission, and that he had, on the matter, no plans to sail anywhere, but that he would, in due course, be willing to draw cartoons about ships if Saskia, on the matter, asked him to.</p>
+          <p>Maelis Snowstep printed Theo's cartoon at full eight-by-ten size, in the Y41 Hallowtide youth supplement, opposite Saskia's second cartoon (a follow-up to the Y40 hug piece, depicting the Pandas' standing six-to-nine-second tactical-call confirmation as a small queue of Pandas politely waiting for the previous Panda to finish). Maelis's editorial note for the spread: <em>two cartoonists, on the matter, on the same subject. neither knows the other. both, by my read, are doing it with kindness. the Pandas, on the matter, deserve the kindness. they have asked for nothing else.</em> Yu Cobblepad's response — sent within ten days to both families separately — was the same single sentence: <em>the cartoons are, on the matter, kind. we are, in turn, grateful. — Yu, Portland.</em></p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · the original cartoon is held in archive box ST-Y41-038 · printed with Theo's, his parents', and Yu Cobblepad's permission</div>
+        </article>
+      </details>
+
+
+      <details class="lore-timeline-era">
+        <summary><span class="era-name">Chapter III — When the Hug Was Drawn Twice</span> <span class="era-count">3 entries · Y41 Hallowtide — Y42 Hallowtide · the convergence, in three filings</span></summary>
+        <article class="found">
+          <h3>The Y41 Hallowtide Youth Supplement — opposite-page spread</h3>
+          <div class="meta">An ephemeral · the Wing Standard's Y41 Hallowtide youth cartoon supplement, pages 4 and 5 · the first time Saskia's and Theo's cartoons appeared together · the spread that began the correspondence</div>
+          <p>The spread — pages 4 and 5 of the Y41 Hallowtide youth supplement, printed in the Wing Standard's annual seventy-two-page Hallowtide special edition — ran four cartoons across the two facing pages. Page 4, top: a Helena Hidden Hedgehog Speedster cartoon by an unsigned twelve-year-old from the Helena foundry-quarter, depicting a Hedgehog hiding in a pumpkin field on the basis that the Hedgehog had not, on the matter, realized the field was the field. Page 4, bottom: Saskia's second Pandas cartoon, depicting six Pandas in a single-file queue politely waiting for the previous Panda to finish a six-to-nine-second tactical-call confirmation, with the caption <em>the Pandas, on the matter, will be with you in eight to twelve seconds. please, in due course, hold</em>. Page 5, top: Theo's <em>PARDONS, MA CHAUVE-SOURIS</em>. Page 5, bottom: a Tampa Tornado Sharks cartoon by an anonymous adult contributor (Featherquill, by Maelis's quiet acknowledgement on the file) depicting Crash Wartooth taking a polite ten-second telephone call before declining, again politely, the Wolves' annual Hallowtide-tag-borrow-Wikrai request.</p>
+          <p>Saskia and Theo, by both children's later separately given accounts, each saw the other's cartoon for the first time on the morning of Y41 Hallowtide Eve, when the supplement reached the postal hubs in their respective cities. Saskia, by her father's later observation, did not put the supplement down for forty-five minutes. Theo, by his mother's later observation, also did not put the supplement down, and additionally walked into the workshop's back wall once with the supplement still in his paw. Each child, that same evening, asked their parents whether they could write to the other.</p>
+          <p>The parents, in both households, conferred (Saskia's father by post-card to Theo's father, and Theo's father by post-card back, with the post-cards crossing in transit and arriving on the same Tuesday in Y41 mid-Hallowtide-week). Both fathers, by the eventual reconstructed transcript of the post-card exchange, agreed in identical phrasing: <em>my child has, on the matter, asked. I have, in due course, no objection. let the children write to each other. let us, on the matter, also write.</em> Saskia wrote first. The first letter is in the next file.</p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · the original supplement is held in archive box WSE-Y41-Hallowtide · printed with all parties' permission</div>
+        </article>
+
+
+        <article class="found">
+          <h3>The Pen-Pal Correspondence (Y41 Hallowtide-week — Y42 mid-season)</h3>
+          <div class="meta">An ephemeral · summary of the seventeen letters exchanged between Saskia and Theo across approximately fourteen months · the parents' letters are filed separately by family preference</div>
+          <p>Saskia wrote first. Her opening letter, dated the eleventh of Hallowtide-week Y41 and posted from the Olympia Harbor postal hub, ran to four pages of careful Olympia-school printing on lined heavy paper. The letter introduced her by name and species and amber-eye-inheritance and ship-captain life-plan, summarized her cartoon archive to date, declared her admiration for the chauve-souris piece in clear and unambiguous terms, and asked Theo seventeen questions about his hatching technique, his father's workshop, his Antlerlords seat, his French, his school, his favorite Panda non-play eccentricity, and his thoughts on the standing question of whether the Pandas might, in due course, be persuaded to develop a hug-formation variant in which one Panda stands slightly outside the four-pace radius for the express purpose of being pulled in. The letter closed: <em>I am, on the matter, twelve. I will, by my own life-plan, be a sailing ship captain by twenty-five. I do not yet know whether I will be, on the matter, a captain who draws cartoons or a cartoonist who captains. I think both are, in due course, possible. — Saskia Goldenpaw, Olympia Harbor.</em></p>
+          <p>Theo wrote back. His reply, dated three weeks later (the post takes that long between Olympia and Saint-Laurent in Hallowtide-week, by every continental postal operator's standing acknowledgement), ran to six pages, in alternating League Common and Saint-Laurent French, with a small ink-hatch sketch of his father's workshop on the back of page six. The letter answered all seventeen of Saskia's questions in the order she had asked them, declared that his favorite Panda non-play eccentricity was <em>their standing pre-match four-minute meditation interval, which is, on the matter, the only meditation interval in the League, and is, on the matter, longer than the Pandas' average tactical-call confirmation by approximately three minutes and fifty-four seconds</em>, and proposed — with what Saskia's father later described, on his own review, as <em>characteristic Saint-Laurent earnestness</em> — that they collaborate on a joint Pandas-mockery cartoon series for the Y42 Hallowtide supplement.</p>
+          <p>Saskia agreed by return post. The series — six cartoons, three by each child, with each child's cartoon responding to the previous one in a continuous visual conversation across the cartoonists' differing techniques — was completed by Y42 mid-season and submitted to Maelis as a single bound portfolio in early Y42 closeout. Maelis printed the entire series, at full size, across pages 4 through 9 of the Y42 Hallowtide supplement (which is, by every continental measure, the largest single-author-pair feature in any continental Hallowtide supplement's history, the previous record having been a four-page Crash Wartooth photo-essay by an anonymous Olympia photographer in Y36). The series is, by both children's later joint statement printed at the close of the Y42 supplement, <em>by every measurable sign, what we wanted to do. we will, in due course, do another one. the Pandas, on the matter, have a lot of non-play left in them. we are, in due course, ready.</em></p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · the seventeen letters and the six-cartoon portfolio are held in archive box ST-Y41-Y42-CORR · printed with both families' and the Wing Standard's permission</div>
+        </article>
+
+
+        <article class="found">
+          <h3>The Y42 Hallowtide Tag in Reno — first in-person meeting; the Pandas finished eleventh</h3>
+          <div class="meta">An ephemeral · the continental Hallowtide Tag tournament · Reno, Y42 Hallowtide · the day Saskia and Theo met in person, drew a joint cartoon on the back of a programme, and watched the Pandas finish eleventh for the eighth consecutive year</div>
+          <p>The Y42 Hallowtide Tag — the continental fan-and-League annual event, hosted that year by Reno (the host rotates by Caucus working-session vote) — drew, by the host city's official tournament gate count, approximately fourteen thousand attendees, including a documented contingent of one hundred and forty-some children of working continental families who had travelled from at least six cities to attend. Saskia attended with her father, having travelled by coastal-merchant courtesy passage on a colleague's three-masted ship from Olympia to San Francisco, then by overland rail from San Francisco to Reno. Theo attended with both parents, having travelled by Quebec rail to the Yukon Boreal junction and then by Yukon overland service to Reno (the journey took, by Beatrice's later careful recount, four days and one bowl of moose stew at the junction). Both children had been told, by their families, that the other would be there. Both children had brought, by separate but identical decisions, a small bound sketchpad and one pencil each.</p>
+          <p>Saskia and Theo met for the first time at the Reno Power Cell's south-facing entry plaza at approximately two PM on the Tag's first match day, by the prior arrangement of their fathers' six-week-long postcard correspondence. Both children were, by both fathers' subsequent observation, immediately recognizable to each other from their earlier-exchanged letters' descriptive details (Saskia's amber eyes; Theo's green eyes against black fur). Neither child, by both fathers' continuing observation, said hello in the conventional sense. Saskia opened her sketchpad. Theo opened his. They each drew, in approximately the same six-minute window, a cartoon of the other's first cartoon — Saskia's was a re-rendering of <em>PARDONS, MA CHAUVE-SOURIS</em> in her own clean line work; Theo's was a re-rendering of <em>WHAT IS THE HUG, IF NOT A HUG?</em> in his cross-hatched workshop technique. They exchanged sketchpads. They looked at each other's renderings. They laughed at approximately the same moment. Theo's father, who is by professional habit a careful observer of his son's reactions, has on the matter filed in writing that Theo's laugh on this occasion was <em>the laugh I have, in eleven years, been waiting to hear him laugh.</em></p>
+          <p>The Pandas finished eleventh in the Tag, by the official tournament results, for the eighth consecutive year. Saskia and Theo watched the Pandas' final-round-of-elimination match together from a temporary press-box-adjacent grandstand the tournament had, by Reno hospitality tradition, set aside for accredited youth-edition contributors. They drew, jointly on the back of a single Tag programme, a cartoon depicting the Pandas finishing eleventh with their characteristic dignity. The cartoon is now in the Foundation's archive box ST-Y42-Reno-001. The original programme is, by the Reno hosting committee's standing post-tournament records protocol, also archived. The two children parted at the Reno railway station the following Sunday with — by both fathers' standing observation — no fanfare and no exchange of further dramatic gesture, having spent four days drawing together at every available moment and having, by Beatrice's quiet read on the train back to Quebec, become each other's principal collaborator for the foreseeable future. Yu Cobblepad's third one-line note to both families, sent jointly within two weeks: <em>the joint cartoon is, on the matter, kind. it is also, in due course, the funniest thing I have seen in a season. we are, in turn, grateful. — Yu, Portland.</em></p>
+          <div class="signoff">— Foundation Archive, Stories Cabinet supplementary file · the joint cartoon and the original programme are both held in archive box ST-Y42-Reno-001 · printed with both children's, both families', the Reno hosting committee's, and Yu Cobblepad's permission</div>
         </article>
       </details>
 
@@ -11264,6 +11496,39 @@ const TEAMS = [
     lore: "From the Yucatan jungle southeast of what the Old Ones called Cancun. The Quetzals are the League's only two-color-emerald-and-crimson team — their plumage is so distinctive in flight that opposing teams have, on three occasions, claimed it constituted a 'visual obstruction' under League rules. The Caucus dismissed each complaint. Captain Cintzli of the Yucatan canopy is the smallest active knight in the League by mass and the highest-aerial-shot-accuracy Sniper in the League by a margin no other has approached. Her personal rafter-nest at Yucatan Jungle-Canopy Hall is not registered as terrain (and never will be — see the Caucus's three repeated declinations on the matter). Cintzli speaks four languages, three of which she refuses to translate. The Quetzals have not, as of Year 36, lost a knight to permadeath.", chants: ["EMERALD! CRIMSON!", "BRIGHT WINGS!", "QUETZALS SEE FIRST!"] },
 ];
 const TEAM_BY_ID = Object.fromEntries(TEAMS.map(t => [t.id, t]));
+
+// === v37.32: safeTeam(id) — defensive lookup ===
+// Returns the team object for `id`, or a placeholder team object if `id`
+// isn't in the current TEAMS pool. Used by renderers to avoid crashing on
+// stale save data, divergent custom-team configs, or removed teams.
+// The placeholder has all the fields renderers commonly read so existing
+// `team.short`, `team.emoji`, `team.color`, `team.name` accesses don't
+// throw. Logs the missing id once per id so the underlying bracket-corruption
+// issue surfaces in the console without spamming.
+function safeTeam(id) {
+  const t = TEAM_BY_ID[id];
+  if (t) return t;
+  if (typeof window !== "undefined") {
+    if (!window._missingTeamWarned) window._missingTeamWarned = {};
+    if (!window._missingTeamWarned[id]) {
+      window._missingTeamWarned[id] = true;
+      console.warn("[v37.32] safeTeam: team id '" + id + "' is not in TEAM_BY_ID. Returning placeholder.");
+    }
+  }
+  return {
+    id: id || "?",
+    short: "?",
+    name: "(unknown team: " + (id || "?") + ")",
+    emoji: "❓",
+    color: "#666666",
+    motto: "",
+    lore: "",
+    chants: [],
+    founded: 0,
+    _placeholder: true,
+  };
+}
+if (typeof window !== "undefined") window.safeTeam = safeTeam;
 
 /* ============================================================
    v28.29: TEAM_PROFILES — canonical lore metadata per team.
@@ -25884,11 +26149,34 @@ function renderTeamPanel(side) {
   if (!am) return;
   const teamId = side === "A" ? am.teamA : am.teamB;
   const team = TEAM_BY_ID[teamId];
-  const players = LEAGUE.rosters[teamId];
+  const players = LEAGUE.rosters[teamId] || [];
+
+  // === v37.31: defensive fallback for undefined team ===
+  // TEAM_BY_ID[teamId] can be undefined if the active bracket references a
+  // teamId that isn't in the current TEAMS array (corrupt/stale save, custom
+  // team that failed normalization, schema-mismatch load). Previously this
+  // crashed the renderer at team.emoji and broke every subsequent call —
+  // including the Lore tab buttons and switchTab. Now we render a placeholder
+  // panel and log the offending id once, so the user can see the issue and
+  // recover (e.g. by Reset League → Reset Bots Only) without a hard crash.
+  if (!team) {
+    if (!window._missingTeamWarned) window._missingTeamWarned = {};
+    if (!window._missingTeamWarned[teamId]) {
+      window._missingTeamWarned[teamId] = true;
+      console.warn("[v37.31] renderTeamPanel: team id '" + teamId + "' is not in TEAM_BY_ID. Bracket may reference a removed team.");
+    }
+    const eEl = $("#team" + side + "emoji"); if (eEl) eEl.textContent = "❓";
+    const nEl = $("#team" + side + "name");  if (nEl) nEl.textContent = "(unknown team: " + (teamId || "?") + ")";
+    const rEl = $("#team" + side + "record"); if (rEl) rEl.textContent = "—";
+    const sEl = $("#team" + side + "style");  if (sEl) sEl.textContent = "";
+    const aEl = $("#team" + side + "alive");  if (aEl) { aEl.textContent = "—"; aEl.className = "alive-count"; }
+    const lEl = $("#team" + side + "list");   if (lEl) lEl.innerHTML = "";
+    return;
+  }
 
   $("#team" + side + "emoji").textContent = team.emoji;
   $("#team" + side + "name").textContent = team.name;
-  const rec = LEAGUE.records[teamId];
+  const rec = LEAGUE.records[teamId] || { wins: 0, losses: 0, championships: 0 };
   $("#team" + side + "record").textContent =
     `${rec.wins}–${rec.losses} · ${rec.championships} 🏆`;
 
@@ -26171,26 +26459,49 @@ function renderLadder() {
     display.appendChild(col);
   }
 
-  // Champion banner (only shown when final is resolved)
+  // === v37.33: hardened champion-banner block ===
+  // The previous version dereferenced `display.parentNode.querySelector(...)`
+  // without a null check. In normal browser conditions display has a parent,
+  // but in a Perchance iframe context — especially right after a save import
+  // when the document might be in a brief restyle / re-render state, or when
+  // the Ladder tab DOM hasn't fully attached yet — `display.parentNode` can
+  // be null. That triggered "Cannot read properties of null (reading
+  // 'querySelector')" which Perchance wraps as an "error in lists or HTML"
+  // banner. The user reasonably reads that as a crash.
+  //
+  // Hardened path: use safeTeam() for the lookup, optional-chain the parent
+  // dereferences, defensively check insertAdjacentElement target, and skip
+  // banner rendering quietly if anything's missing.
   const finalMatch = LEAGUE.bracket.final;
   if (finalMatch && finalMatch.winner) {
-    const champTeam = TEAM_BY_ID[finalMatch.winner];
-    if (champTeam) {
+    const champTeam = (typeof safeTeam === "function") ? safeTeam(finalMatch.winner) : TEAM_BY_ID[finalMatch.winner];
+    if (champTeam && !champTeam._placeholder) {
       const banner = document.createElement("div");
       banner.className = "ladder-champion";
       banner.innerHTML = `<span class="em">${champTeam.emoji}</span><b>${champTeam.name}</b> — Season ${LEAGUE.season} Champions`;
-      // Append AFTER the display, not inside it (so it spans full width below the columns)
+      // Defensive parent lookup — works even if display has been detached.
       const wrapParent = display.parentNode;
-      // Remove any prior banner first
-      const prior = wrapParent.querySelector(".ladder-champion");
-      if (prior) prior.remove();
-      // Insert after the display element
-      display.insertAdjacentElement("afterend", banner);
+      if (wrapParent) {
+        // Remove any prior banner first
+        const prior = wrapParent.querySelector(".ladder-champion");
+        if (prior && typeof prior.remove === "function") prior.remove();
+        // Insert after the display element. insertAdjacentElement requires a
+        // parent; we just verified one exists, but defend anyway.
+        if (typeof display.insertAdjacentElement === "function") {
+          try {
+            display.insertAdjacentElement("afterend", banner);
+          } catch (e) {
+            // Last-resort fallback: append into wrapParent rather than after display
+            try { wrapParent.appendChild(banner); } catch {}
+          }
+        }
+      }
+      // If wrapParent is null, silently skip banner — better no banner than crashed import
     }
   } else {
     // Remove any stale champion banner
     const prior = display.parentNode?.querySelector(".ladder-champion");
-    if (prior) prior.remove();
+    if (prior && typeof prior.remove === "function") prior.remove();
   }
 }
 window.renderLadder = renderLadder;
@@ -26284,8 +26595,11 @@ function renderArenaHeader() {
   const showFormations = (m.phase === "round" || m.phase === "preRound") && fA && fB;
   const fmtA = showFormations ? ` (${fA})` : "";
   const fmtB = showFormations ? ` (${fB})` : "";
+  // === v37.32: safeTeam-defended access ===
+  const _aT = (typeof safeTeam === "function") ? safeTeam(m.teamAId) : (TEAM_BY_ID[m.teamAId] || { short: "?", emoji: "❓" });
+  const _bT = (typeof safeTeam === "function") ? safeTeam(m.teamBId) : (TEAM_BY_ID[m.teamBId] || { short: "?", emoji: "❓" });
   matchupEl.textContent =
-    `${TEAM_BY_ID[m.teamAId].emoji} ${TEAM_BY_ID[m.teamAId].short}${fmtA} vs${fmtB} ${TEAM_BY_ID[m.teamBId].short} ${TEAM_BY_ID[m.teamBId].emoji}${biomeBadge}`;
+    `${_aT.emoji} ${_aT.short}${fmtA} vs${fmtB} ${_bT.short} ${_bT.emoji}${biomeBadge}`;
   const seconds = Math.floor((m.roundFrame || 0) * COMBAT.frameMs / 1000);
   clockEl.textContent = `R${m.currentRoundIndex}/${m.bestOf} ${String(Math.floor(seconds/60)).padStart(2,"0")}:${String(seconds%60).padStart(2,"0")}`;
   renderPhasePill();
@@ -26699,6 +27013,30 @@ function renderBetTab() {
     return;
   }
   const aId = am.teamA, bId = am.teamB;
+  // === v37.32: defensive bail if either team is missing from current pool ===
+  // Same defensive pattern as renderTeamPanel. Without this, bad-save data
+  // crashes the bet-tab renderer on boot (TypeError on undefined.short),
+  // which in turn breaks renderAll entirely. Now we render an empty bet
+  // tab instead of crashing.
+  if (!TEAM_BY_ID[aId] || !TEAM_BY_ID[bId]) {
+    if (!window._missingTeamWarned) window._missingTeamWarned = {};
+    const badId = !TEAM_BY_ID[aId] ? aId : bId;
+    if (!window._missingTeamWarned[badId]) {
+      window._missingTeamWarned[badId] = true;
+      console.warn("[v37.32] renderBetTab: team id '" + badId + "' missing from TEAM_BY_ID. Bet tab disabled until bracket is fixed.");
+    }
+    subEl.textContent = "Bet tab unavailable — match references an unknown team. Try Reset League → keep achievements.";
+    $("#betMarketTeamRows").innerHTML = "";
+    $("#betMarketRoundRows").innerHTML = "";
+    $("#betMarketPlayerRows").innerHTML = "";
+    if ($("#betMarketFirstKillRows")) $("#betMarketFirstKillRows").innerHTML = "";
+    if ($("#betMarketTotalCasRows")) $("#betMarketTotalCasRows").innerHTML = "";
+    if ($("#betMarketRoundsRows")) $("#betMarketRoundsRows").innerHTML = "";
+    $("#betPagePlace").disabled = true;
+    $("#betSelectionLabel").textContent = "Bet tab unavailable";
+    renderBetHistory();
+    return;
+  }
   const m = LEAGUE.match;
   const phase = m?.phase || "preRound";
 
@@ -27004,23 +27342,40 @@ function renderStore() {
 }
 
 function renderAll() {
-  renderHeader();
-  renderTeamPanel("A");
-  renderTeamPanel("B");
-  renderBracketStrip();
-  // v28.28: render the dedicated Ladder tab's full bracket display.
-  // Replaces the cramped, vertically-stacking bracket-strip on Game tab.
-  if (typeof renderLadder === "function") renderLadder();
-  renderRoundStrip();
-  renderStandings();
-  renderArenaHeader();
-  if (typeof renderScorebug === "function") renderScorebug();
-  renderFeed();
-  renderCommentary();
-  renderBetSummaryRail();
-  renderBetTab();
-  renderStore();
-  renderTicker();
+  // === v37.32: try/catch wrapping ===
+  // Each child renderer is wrapped so a single broken renderer (typically
+  // from corrupt save data referencing a removed team) doesn't cascade to
+  // the rest of the UI. Logged-once-per-renderer to surface the issue
+  // without spamming. The boot path completes regardless; the user can
+  // see the rest of the UI and use Reset League → keep achievements to
+  // recover.
+  if (!window._renderErrorWarned) window._renderErrorWarned = {};
+  function _safeRender(fnName, fn) {
+    if (typeof fn !== "function") return;
+    try {
+      fn();
+    } catch (e) {
+      if (!window._renderErrorWarned[fnName]) {
+        window._renderErrorWarned[fnName] = true;
+        console.warn("[v37.32] " + fnName + " threw during renderAll: " + (e && e.message ? e.message : e));
+      }
+    }
+  }
+  _safeRender("renderHeader", renderHeader);
+  _safeRender("renderTeamPanel(A)", () => renderTeamPanel("A"));
+  _safeRender("renderTeamPanel(B)", () => renderTeamPanel("B"));
+  _safeRender("renderBracketStrip", renderBracketStrip);
+  if (typeof renderLadder === "function") _safeRender("renderLadder", renderLadder);
+  _safeRender("renderRoundStrip", renderRoundStrip);
+  _safeRender("renderStandings", renderStandings);
+  _safeRender("renderArenaHeader", renderArenaHeader);
+  if (typeof renderScorebug === "function") _safeRender("renderScorebug", renderScorebug);
+  _safeRender("renderFeed", renderFeed);
+  _safeRender("renderCommentary", renderCommentary);
+  _safeRender("renderBetSummaryRail", renderBetSummaryRail);
+  _safeRender("renderBetTab", renderBetTab);
+  _safeRender("renderStore", renderStore);
+  _safeRender("renderTicker", renderTicker);
 }
 
 function renderTicker() {
@@ -27034,7 +27389,9 @@ function renderTicker() {
   const m = LEAGUE.match;
   let scoresHTML = "";
   if (m && m.teamAId) {
-    const ta = TEAM_BY_ID[m.teamAId], tb = TEAM_BY_ID[m.teamBId];
+    // === v37.32: safeTeam-defended access ===
+    const ta = (typeof safeTeam === "function") ? safeTeam(m.teamAId) : (TEAM_BY_ID[m.teamAId] || { short: "?", emoji: "❓", color: "#666" });
+    const tb = (typeof safeTeam === "function") ? safeTeam(m.teamBId) : (TEAM_BY_ID[m.teamBId] || { short: "?", emoji: "❓", color: "#666" });
     const liveBadge = m.phase === "round" ? `<span class="live">●LIVE</span>` : "";
     scoresHTML += `
       <div class="ticker-score-pill">${liveBadge}
@@ -28365,6 +28722,17 @@ function showBracket() {
    ============================================================ */
 const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries, personalities
 
+// === v37.34: build-identification stamp ===
+// Prints once on script load. If the user reports crashes and this line is
+// NOT in their console, they're running a stale-cached build (their browser
+// or the Perchance generator-iframe is serving an old version, regardless of
+// what the source editor shows). Cache-clear (Ctrl+Shift+R / Cmd+Shift+R)
+// usually resolves it.
+try {
+  console.log("%c[Float Knights] build v37.34 loaded — schema v" + SAVE_SCHEMA_VERSION + " — " + new Date().toISOString(),
+              "color:#f7c948;font-weight:bold;");
+} catch (e) { /* console may not be available in some sandboxes */ }
+
 function serializeLeague() {
   const cleanRosters = {};
   for (const tid of Object.keys(LEAGUE.rosters)) {
@@ -28528,22 +28896,50 @@ function deserializeLeague(jsonStr) {
   LEAGUE.bracket = data.bracket || null;
   LEAGUE.currentSlot = data.currentSlot || null;
 
-  // If the loaded bracket references teams that don't exist in the current
-  // TEAMS pool, the save is from a divergent fork — rebuild the bracket
-  // from current TEAMS rather than crash on missing references mid-match.
-  if (LEAGUE.bracket && LEAGUE.bracket._order) {
-    const currentTeamIds = new Set(TEAMS.map(t => t.id));
-    let bracketHasGhostTeams = false;
-    for (const slotKey of LEAGUE.bracket._order) {
+  // === v37.32: comprehensive team-id validation ===
+  // If the loaded bracket / currentSlot / match reference teams that don't
+  // exist in the current TEAMS pool, the save is from a divergent fork
+  // (custom-team config drift, schema-mismatch load, etc.) — rebuild the
+  // bracket and clear the live match rather than crash on missing
+  // references mid-render.
+  //
+  // The previous v37.30 implementation only walked bracket._order. That
+  // missed the cases where (a) _order is undefined but slots exist
+  // anyway, (b) currentSlot points at a missing slot, (c) a deserialized
+  // LEAGUE.match references a removed team. All three crashed at boot
+  // through renderAll when a bad save was loaded from localStorage.
+  const currentTeamIds = new Set(TEAMS.map(t => t.id));
+  let bracketHasGhostTeams = false;
+  if (LEAGUE.bracket) {
+    // Walk every key in the bracket object — _order may not exist on
+    // partial saves. Slot keys are bracket round labels ("qf1", "sf1", etc).
+    for (const slotKey of Object.keys(LEAGUE.bracket)) {
+      if (slotKey === "_order") continue; // skip the order array itself
       const slot = LEAGUE.bracket[slotKey];
-      if (slot) {
-        if (slot.teamA && !currentTeamIds.has(slot.teamA)) { bracketHasGhostTeams = true; break; }
-        if (slot.teamB && !currentTeamIds.has(slot.teamB)) { bracketHasGhostTeams = true; break; }
-      }
+      if (!slot || typeof slot !== "object") continue;
+      if (slot.teamA && !currentTeamIds.has(slot.teamA)) { bracketHasGhostTeams = true; break; }
+      if (slot.teamB && !currentTeamIds.has(slot.teamB)) { bracketHasGhostTeams = true; break; }
+      if (slot.winner && !currentTeamIds.has(slot.winner)) { bracketHasGhostTeams = true; break; }
     }
-    if (bracketHasGhostTeams) {
-      console.warn("Loaded bracket references teams not in current pool; rebuilding bracket from current TEAMS.");
-      buildBracket();
+  }
+  // currentSlot must point at a real slot in the bracket
+  if (LEAGUE.currentSlot && (!LEAGUE.bracket || !LEAGUE.bracket[LEAGUE.currentSlot])) {
+    bracketHasGhostTeams = true;
+  }
+  if (bracketHasGhostTeams) {
+    console.warn("[v37.32] Loaded bracket references teams not in current pool, or currentSlot is invalid; rebuilding bracket.");
+    LEAGUE.currentSlot = null;
+    LEAGUE.match = null;
+    buildBracket();
+  }
+  // If LEAGUE.match (the live match state) references a missing team,
+  // drop it. The renderer will fall through to "no active match" cleanly.
+  if (LEAGUE.match) {
+    const aId = LEAGUE.match.teamAId;
+    const bId = LEAGUE.match.teamBId;
+    if ((aId && !currentTeamIds.has(aId)) || (bId && !currentTeamIds.has(bId))) {
+      console.warn("[v37.32] LEAGUE.match references a removed team; clearing live match state.");
+      LEAGUE.match = null;
     }
   }
 
@@ -28682,6 +29078,145 @@ async function pushSave() {
   }
 }
 
+/* === v37.31: Local file Export/Import (bypasses uploadPlugin) ===
+   Works offline, doesn't require the Perchance upload plugin to be wired,
+   and produces a portable .json file the user can email to themselves,
+   drop in cloud storage, etc. Same schema as the upload-based push/pull. */
+function exportSaveToFile() {
+  try {
+    const json = serializeLeague();
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const name = ($("#syncName") && $("#syncName").value.trim()) || "float-knights";
+    const filename = "float-knights-" + name + "-" + stamp + ".json";
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      try { document.body.removeChild(a); } catch {}
+      URL.revokeObjectURL(url);
+    }, 0);
+    const sizeKb = (json.length / 1024).toFixed(1);
+    setSyncStatus("Exported " + filename + " (" + sizeKb + " KB).", "ok");
+  } catch (e) {
+    setSyncStatus("Export failed: " + (e.message || e), "err");
+  }
+}
+
+function importSaveFromFile(file) {
+  // === v37.34: per-step diagnostic logging ===
+  // Every step logs its entry/exit with a [v37.34 import] prefix so users
+  // can copy the relevant console lines if it crashes. The last logged step
+  // is the step that ran successfully; the next step (not logged) is the
+  // one that threw.
+  const _lg = (msg, data) => {
+    try {
+      if (data !== undefined) console.log("[v37.34 import] " + msg, data);
+      else                    console.log("[v37.34 import] " + msg);
+    } catch (e) {}
+  };
+  _lg("step 1: importSaveFromFile() called");
+  if (!file) {
+    setSyncStatus("No file selected", "err");
+    _lg("step 1a: no file, aborting");
+    return;
+  }
+  _lg("step 2: file received", { name: file.name, size: file.size, type: file.type });
+  const reader = new FileReader();
+  reader.onerror = () => {
+    setSyncStatus("File read failed", "err");
+    _lg("step 3a: FileReader error");
+  };
+  reader.onload = () => {
+    _lg("step 3: FileReader.onload fired");
+    const text = String(reader.result || "");
+    _lg("step 4: read text length=" + text.length);
+    if (!text.trim()) {
+      setSyncStatus("File was empty", "err");
+      _lg("step 4a: file empty, aborting");
+      return;
+    }
+    setSyncStatus("Loading from file…");
+    try {
+      _lg("step 5: peeking schema version");
+      let peekVersion = null, peekGameVersion = null, peekSavedAt = null;
+      try {
+        const peek = JSON.parse(text);
+        peekVersion = peek.v;
+        peekGameVersion = peek.gameVersion;
+        peekSavedAt = peek.savedAt;
+        _lg("step 5a: peek OK", { v: peekVersion, gameVersion: peekGameVersion, savedAt: peekSavedAt });
+      } catch (e) {
+        _lg("step 5b: peek JSON.parse failed: " + (e && e.message));
+      }
+      if (peekVersion != null && peekVersion < SAVE_SCHEMA_VERSION) {
+        const fromGame = peekGameVersion ? " (from " + peekGameVersion + ")" : "";
+        setSyncStatus(
+          "This file is from an older League format" + fromGame + " (schema v" +
+          peekVersion + " → current is v" + SAVE_SCHEMA_VERSION + "). " +
+          "Old saves are not compatible. Reset League and start fresh.",
+          "err"
+        );
+        _lg("step 5c: schema too old, aborting");
+        return;
+      }
+      _lg("step 6: calling deserializeLeague()");
+      deserializeLeague(text);
+      _lg("step 7: deserializeLeague() returned. LEAGUE state:", {
+        season: LEAGUE.season, bits: LEAGUE.bits,
+        bracketKeys: LEAGUE.bracket ? Object.keys(LEAGUE.bracket) : null,
+        currentSlot: LEAGUE.currentSlot,
+        rosterCount: Object.keys(LEAGUE.rosters || {}).length
+      });
+      LEAGUE.match = null;
+      if (LEAGUE.currentSlot) {
+        _lg("step 8a: currentSlot set, calling startMatch()");
+        startMatch();
+        _lg("step 8b: startMatch() returned");
+      } else if (LEAGUE.bracket && LEAGUE.bracket.final && LEAGUE.bracket.final.winner
+               && !LEAGUE.match && typeof scheduleAutoAdvance === "function"
+               && typeof beginNextSeason === "function") {
+        _lg("step 8c: post-final state, scheduling auto-advance");
+        // === v37.34: wrap the deferred callback so a crash in
+        // beginNextSeason() doesn't break the game silently after the
+        // countdown elapses.
+        scheduleAutoAdvance("season", () => {
+          try {
+            _lg("step (deferred): scheduleAutoAdvance fired, calling beginNextSeason()");
+            beginNextSeason();
+            _lg("step (deferred): beginNextSeason() returned, calling renderAll()");
+            renderAll();
+            _lg("step (deferred): renderAll() returned");
+          } catch (err) {
+            console.warn("[v37.34] deferred season advance threw: " + (err && err.message ? err.message : err));
+            try { setSyncStatus("Season advance failed after import: " + (err && err.message), "err"); } catch (_) {}
+          }
+        });
+        _lg("step 8d: scheduleAutoAdvance() queued");
+      } else {
+        _lg("step 8e: no currentSlot, no final-resolved post-state — skipping season advance");
+      }
+      _lg("step 9: calling renderAll()");
+      renderAll();
+      _lg("step 10: renderAll() returned");
+      const ageMsg = peekSavedAt ? (" · saved " + _formatRelativeTime(peekSavedAt)) : "";
+      const verMsg = peekGameVersion ? (" · " + peekGameVersion) : "";
+      setSyncStatus("Imported successfully" + verMsg + ageMsg + " · (build: v37.34).", "ok");
+      _lg("step 11: import flow complete");
+    } catch (e) {
+      // === v37.34: log full error context to console for diagnosis ===
+      console.error("[v37.34 import] caught exception in import flow:", e);
+      console.error("[v37.34 import] error stack:\n" + (e && e.stack ? e.stack : "(no stack)"));
+      setSyncStatus("Import failed: " + (e && e.message ? e.message : e) + " · (build: v37.34). If on an old build, refresh page (Ctrl+Shift+R / Cmd+Shift+R) to clear cache. Open DevTools console for full diagnostic.", "err");
+    }
+  };
+  _lg("step 2a: starting reader.readAsText()");
+  reader.readAsText(file);
+}
+
 async function pullSave() {
   const url = $("#syncCode").value.trim();
   if (!url) {
@@ -28729,12 +29264,24 @@ async function pullSave() {
     try { localStorage.setItem("fk_syncUrl", url); } catch {}
     LEAGUE.match = null;
     if (LEAGUE.currentSlot) startMatch();
+    // === v37.33: auto-recover from "frozen post-final" save states ===
+    // Same path as importSaveFromFile — a cloud-loaded save can also be in
+    // the between-season-resolved-and-beginNextSeason state. Schedule the
+    // next-season action so the game continues rather than freezing.
+    else if (LEAGUE.bracket && LEAGUE.bracket.final && LEAGUE.bracket.final.winner
+             && !LEAGUE.match && typeof scheduleAutoAdvance === "function"
+             && typeof beginNextSeason === "function") {
+      scheduleAutoAdvance("season", () => {
+        beginNextSeason();
+        renderAll();
+      });
+    }
     renderAll();
 
     // Build a friendly success message
     const ageMsg = peekSavedAt ? (" · saved " + _formatRelativeTime(peekSavedAt)) : "";
     const verMsg = peekGameVersion ? (" · " + peekGameVersion) : "";
-    setSyncStatus("Loaded successfully" + verMsg + ageMsg + ".", "ok");
+    setSyncStatus("Loaded successfully" + verMsg + ageMsg + " · (build: v37.34).", "ok");
   } catch (e) {
     setSyncStatus("Load failed: " + (e.message || e), "err");
   }
@@ -28770,14 +29317,60 @@ function bindEvents() {
   // speed buttons (4× to fast-forward) and AUTOPLAY toggle.
 
   $("#btnReset").addEventListener("click", () => {
-    if (!confirm("Reset the entire league? All rosters, history, bits, and saved progress will be wiped.")) return;
+    // === v37.31: tiered reset ===
+    // Achievements and bits are career-record state — they should survive a
+    // routine "I want a fresh bracket" reset. The button now offers two
+    // tiers: a default "soft" reset (rosters/bracket/history wiped, but
+    // achievements + bits preserved); and a "hard" wipe (the old behavior)
+    // for users who really do want a true clean slate.
+    //
+    // We use a two-step confirm: first asks if you want to reset; second
+    // asks (only if you said yes) whether to also wipe achievements + bits.
+    // Default to NO on the second prompt so the safe path is one extra click
+    // away from total destruction.
+    if (!confirm(
+      "Reset the league?\n\n" +
+      "• Rosters and bracket are reseeded\n" +
+      "• Match history and feed are cleared\n" +
+      "• Achievements and bits are KEPT\n\n" +
+      "Click OK to proceed, Cancel to keep the current league."
+    )) return;
+
+    const wipeEverything = confirm(
+      "Also wipe achievements and bits?\n\n" +
+      "OK = wipe everything (start completely fresh)\n" +
+      "Cancel = keep your achievements and bits balance (recommended)"
+    );
+
+    // Snapshot career-record state before clearLocal nukes the persisted save.
+    const preservedBits = (typeof LEAGUE !== "undefined" && typeof LEAGUE.bits === "number") ? LEAGUE.bits : 0;
+    const preservedAchievements = (typeof LEAGUE !== "undefined" && LEAGUE.achievements)
+      ? JSON.parse(JSON.stringify(LEAGUE.achievements))
+      : { teams: {}, global: {} };
+    const preservedJanitorTips = (typeof LEAGUE !== "undefined" && typeof LEAGUE.janitorTips === "number") ? LEAGUE.janitorTips : 0;
+    const preservedCleanupLog = (typeof LEAGUE !== "undefined" && LEAGUE.cleanupLog)
+      ? JSON.parse(JSON.stringify(LEAGUE.cleanupLog))
+      : null;
+
     if (typeof clearLocal === "function") clearLocal();
     initLeague();
     LEAGUE.match = null;
     FEED.length = 0;
-    feed("season", "🚨 League reset. New season begins.");
+
+    if (!wipeEverything) {
+      // Restore the career-record state initLeague zeroed out.
+      LEAGUE.bits = preservedBits;
+      LEAGUE.achievements = preservedAchievements;
+      LEAGUE.janitorTips = preservedJanitorTips;
+      if (preservedCleanupLog) LEAGUE.cleanupLog = preservedCleanupLog;
+      feed("season", "🚨 League reset. Achievements (" + preservedBits + " bits) preserved. New season begins.");
+    } else {
+      feed("season", "🚨 League reset. Everything wiped. New season begins.");
+    }
+
     startMatch();
     renderAll();
+    if (typeof saveLocal === "function") saveLocal(); // persist preserved state immediately
   });
 
   // === v28.19: Broadcast View handlers wired inline ===
@@ -28849,6 +29442,19 @@ function bindEvents() {
 
   // Sync
   $("#btnPush").addEventListener("click", pushSave);
+  // === v37.31: file import/export buttons ===
+  const _btnExport = document.getElementById("btnExportFile");
+  if (_btnExport) _btnExport.addEventListener("click", exportSaveToFile);
+  const _btnImport = document.getElementById("btnImportFile");
+  const _importInput = document.getElementById("importFileInput");
+  if (_btnImport && _importInput) {
+    _btnImport.addEventListener("click", () => _importInput.click());
+    _importInput.addEventListener("change", (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (f) importSaveFromFile(f);
+      e.target.value = ""; // allow re-selecting the same file later
+    });
+  }
   $("#btnPull").addEventListener("click", pullSave);
 
   // Restore last sync URL/name from localStorage
@@ -32086,20 +32692,33 @@ function loop(ts) {
   loop._drawAcc = (loop._drawAcc || 0) + cappedDt;
   if (loop._drawAcc >= targetFrameMs) {
     loop._drawAcc = loop._drawAcc % targetFrameMs;  // preserve remainder
-    drawArena();
-    if (typeof applyShake === "function") applyShake();
-    // Lightweight UI updates each frame
-    renderArenaHeader();
+    // === v37.33: per-frame renderers wrapped in try/catch ===
+    // Same pattern as renderAll's _safeRender. A single bad renderer
+    // (e.g. one that hits corrupt save data) cannot break the entire
+    // animation loop anymore — we log once per renderer and continue.
+    if (!window._loopRenderErrorWarned) window._loopRenderErrorWarned = {};
+    function _loopSafe(fnName, fn) {
+      try { fn(); }
+      catch (e) {
+        if (!window._loopRenderErrorWarned[fnName]) {
+          window._loopRenderErrorWarned[fnName] = true;
+          console.warn("[v37.33] " + fnName + " threw in loop(): " + (e && e.message ? e.message : e));
+        }
+      }
+    }
+    _loopSafe("drawArena", drawArena);
+    if (typeof applyShake === "function") _loopSafe("applyShake", applyShake);
+    _loopSafe("renderArenaHeader", renderArenaHeader);
     // v28.24: scorebug must update per-frame so the clock ticks live.
     // Cheap when broadcast view is off (early-returns). When on, it
     // rebuilds the inline-styled innerHTML — small enough at ~60fps.
-    if (typeof renderScorebug === "function") renderScorebug();
+    if (typeof renderScorebug === "function") _loopSafe("renderScorebug", renderScorebug);
     // Throttled full UI render (every ~250ms)
     if (!loop._lastFull || ts - loop._lastFull > 250) {
       loop._lastFull = ts;
-      renderTeamPanel("A");
-      renderTeamPanel("B");
-      renderHeader();
+      _loopSafe("renderTeamPanel(A)", () => renderTeamPanel("A"));
+      _loopSafe("renderTeamPanel(B)", () => renderTeamPanel("B"));
+      _loopSafe("renderHeader", renderHeader);
     }
   }
 
