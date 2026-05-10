@@ -5887,7 +5887,7 @@
             <button id="btnExportFile">📥 Export to File</button>
             <button id="btnImportFile">📤 Import from File</button>
           </div>
-          <input type="file" id="importFileInput" accept="application/json,.json,text/plain,.txt" style="display:none" />
+          <input type="file" id="importFileInput" accept="application/json,.json,text/plain,.txt,.fkz,application/gzip" style="display:none" />
         </div>
         <div style="font-size: 10px; color: var(--mute); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--bg-2); line-height: 1.4;">
           <b style="color: var(--gold);">Schema:</b> v13 (v28.13 Continental Expansion).
@@ -30696,13 +30696,55 @@ async function pushSave() {
    Works offline, doesn't require the Perchance upload plugin to be wired,
    and produces a portable .json file the user can email to themselves,
    drop in cloud storage, etc. Same schema as the upload-based push/pull. */
-function exportSaveToFile() {
+/* === v37.52: helper — wrap a Uint8Array of gzip bytes in the FKZ1
+   container ("FKZ1" magic + gzip-bytes). Mirrors the structure of the
+   v37.51 cloud crypto container but without salt/IV/encryption. */
+function _fkBuildGzipContainer(gzipBytes) {
+  const total = 4 + gzipBytes.length;
+  const buf = new Uint8Array(total);
+  buf[0] = 0x46; buf[1] = 0x4B; buf[2] = 0x5A; buf[3] = 0x31;  // "FKZ1"
+  buf.set(gzipBytes, 4);
+  return buf;
+}
+
+/* === v37.52: detect whether a Uint8Array is an FKZ1-wrapped gzip save. === */
+function _fkLooksGzipped(bytes) {
+  if (!bytes || bytes.length < 4) return false;
+  return bytes[0] === 0x46 && bytes[1] === 0x4B && bytes[2] === 0x5A && bytes[3] === 0x31;
+}
+
+async function exportSaveToFile() {
   try {
     const json = serializeLeague();
     const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
     const name = ($("#syncName") && $("#syncName").value.trim()) || "float-knights";
-    const filename = "float-knights-" + name + "-" + stamp + ".json";
-    const blob = new Blob([json], { type: "application/json" });
+    const rawKb = (json.length / 1024).toFixed(1);
+
+    // === v37.52: gzip-compress when CompressionStream available ===
+    // No encryption — the file lives on the user's own device, the
+    // cloud-style threat model doesn't apply. Just save bytes.
+    let blob, filename, statusMsg;
+    if (typeof CompressionStream === "function" && typeof _fkGzip === "function") {
+      try {
+        const gzipBytes = await _fkGzip(json);
+        const container = _fkBuildGzipContainer(gzipBytes);
+        const compKb = (container.length / 1024).toFixed(1);
+        const reduction = Math.round((1 - container.length / json.length) * 100);
+        filename = "float-knights-" + name + "-" + stamp + ".fkz";
+        blob = new Blob([container], { type: "application/octet-stream" });
+        statusMsg = "Exported " + filename + " (" + compKb + " KB compressed from " + rawKb + " KB · " + reduction + "% smaller).";
+      } catch (e) {
+        if (typeof console !== "undefined") console.warn("[v37.52] gzip export failed, falling back to plain JSON:", e);
+        filename = "float-knights-" + name + "-" + stamp + ".json";
+        blob = new Blob([json], { type: "application/json" });
+        statusMsg = "Exported " + filename + " (" + rawKb + " KB · plain · gzip failed).";
+      }
+    } else {
+      filename = "float-knights-" + name + "-" + stamp + ".json";
+      blob = new Blob([json], { type: "application/json" });
+      statusMsg = "Exported " + filename + " (" + rawKb + " KB · plain · no gzip support).";
+    }
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -30713,8 +30755,7 @@ function exportSaveToFile() {
       try { document.body.removeChild(a); } catch {}
       URL.revokeObjectURL(url);
     }, 0);
-    const sizeKb = (json.length / 1024).toFixed(1);
-    setSyncStatus("Exported " + filename + " (" + sizeKb + " KB).", "ok");
+    setSyncStatus(statusMsg, "ok");
   } catch (e) {
     setSyncStatus("Export failed: " + (e.message || e), "err");
   }
@@ -30744,13 +30785,50 @@ function importSaveFromFile(file) {
     setSyncStatus("File read failed", "err");
     _lg("step 3a: FileReader error");
   };
-  reader.onload = () => {
+  // === v37.52: read as ArrayBuffer so we can sniff magic bytes before text-decoding ===
+  reader.onload = async () => {
     _lg("step 3: FileReader.onload fired");
-    const text = String(reader.result || "");
-    _lg("step 4: read text length=" + text.length);
-    if (!text.trim()) {
+    const ab = reader.result;
+    if (!ab || (ab.byteLength === 0)) {
       setSyncStatus("File was empty", "err");
-      _lg("step 4a: file empty, aborting");
+      _lg("step 3b: empty file");
+      return;
+    }
+    const bytes = new Uint8Array(ab);
+    _lg("step 4: read " + bytes.length + " bytes");
+
+    // === v37.52: detect FKZ1 gzip container; decompress if so ===
+    let text;
+    if (_fkLooksGzipped && _fkLooksGzipped(bytes)) {
+      _lg("step 4a: FKZ1 magic detected, decompressing");
+      if (typeof DecompressionStream !== "function" || typeof _fkGunzip !== "function") {
+        setSyncStatus("This file is gzipped, but this browser lacks DecompressionStream (need Chrome 80+, Firefox 113+, Safari 16.4+).", "err");
+        _lg("step 4b: no DecompressionStream, aborting");
+        return;
+      }
+      try {
+        // Strip the 4-byte FKZ1 magic before passing to _fkGunzip
+        text = await _fkGunzip(bytes.slice(4));
+        _lg("step 4c: decompressed to " + text.length + " chars");
+      } catch (e) {
+        setSyncStatus("Failed to decompress file: " + (e && e.message ? e.message : "unknown error"), "err");
+        _lg("step 4d: gunzip failed: " + (e && e.message));
+        return;
+      }
+    } else {
+      // Legacy plain-JSON .json file — decode bytes as UTF-8 text
+      try {
+        text = new TextDecoder().decode(bytes);
+      } catch (e) {
+        setSyncStatus("Could not decode file as UTF-8 text", "err");
+        _lg("step 4e: TextDecoder failed: " + (e && e.message));
+        return;
+      }
+    }
+
+    if (!text.trim()) {
+      setSyncStatus("File was empty after decoding", "err");
+      _lg("step 4f: text empty after decode, aborting");
       return;
     }
     setSyncStatus("Loading from file…");
@@ -30828,7 +30906,7 @@ function importSaveFromFile(file) {
     }
   };
   _lg("step 2a: starting reader.readAsText()");
-  reader.readAsText(file);
+  reader.readAsArrayBuffer(file);  // v37.52: ArrayBuffer so we can sniff magic bytes
 }
 
 async function pullSave() {
@@ -35626,17 +35704,43 @@ try {
   }
 } catch {}
 
-function saveLocal() {
+/* === v37.53: serialize → gzip → base64 → setItem ===
+   Helper extracted so saveLocal and flushSaveLocal share identical
+   write semantics. Async because CompressionStream is async. Falls
+   back to plain JSON if CompressionStream is unavailable (older
+   browsers — Chrome <80, Firefox <113, Safari <16.4). The fallback
+   path is bit-identical to pre-v37.53 saveLocal output, so legacy
+   loaders see no difference. */
+async function _writeLocalSave() {
+  const json = serializeLeague();
+  let stored;
+  if (typeof CompressionStream === "function" && typeof _fkGzip === "function" && typeof _fkBuildGzipContainer === "function" && typeof _fkBytesToBase64 === "function") {
+    try {
+      const gz = await _fkGzip(json);
+      const container = _fkBuildGzipContainer(gz);
+      stored = _fkBytesToBase64(container);
+    } catch (e) {
+      // Compression blew up — fall back to plain JSON so the save
+      // still happens. The user never loses state to a compression bug.
+      if (typeof console !== "undefined") console.warn("[v37.53] gzip save failed, writing plain JSON:", e);
+      stored = json;
+    }
+  } else {
+    // Older browser without CompressionStream — write plain JSON
+    stored = json;
+  }
+  localStorage.setItem(LOCAL_SAVE_KEY, stored);
+  if (LEAGUE) LEAGUE._lastSavedAt = Date.now();
+  if (typeof _refreshSaveIndicator === "function") _refreshSaveIndicator();
+}
+
+async function saveLocal() {
   // Debounce — don't write more than once per 800ms during burst events
   if (_localSaveTimer) return;
-  _localSaveTimer = setTimeout(() => {
+  _localSaveTimer = setTimeout(async () => {
     _localSaveTimer = null;
     try {
-      const json = serializeLeague();
-      localStorage.setItem(LOCAL_SAVE_KEY, json);
-      // v37.41: record last-save time + refresh indicator pill
-      if (LEAGUE) LEAGUE._lastSavedAt = Date.now();
-      if (typeof _refreshSaveIndicator === "function") _refreshSaveIndicator();
+      await _writeLocalSave();
     } catch (e) {
       console.warn("localStorage save failed:", e);
     }
@@ -35647,33 +35751,52 @@ function saveLocal() {
    visibilitychange handler (so closing the tab/browser doesn't lose
    the up-to-800ms of state still in the debounce timer) and by
    clicking the #saveIndicator pill. */
-function flushSaveLocal() {
+async function flushSaveLocal() {
   if (_localSaveTimer) {
     clearTimeout(_localSaveTimer);
     _localSaveTimer = null;
   }
   try {
-    const json = serializeLeague();
-    localStorage.setItem(LOCAL_SAVE_KEY, json);
-    if (LEAGUE) LEAGUE._lastSavedAt = Date.now();
-    if (typeof _refreshSaveIndicator === "function") _refreshSaveIndicator();
+    await _writeLocalSave();
   } catch (e) {
     console.warn("flushSaveLocal failed:", e);
   }
 }
 window.flushSaveLocal = flushSaveLocal;
 
-function loadLocal() {
+async function loadLocal() {
   try {
-    const json = localStorage.getItem(LOCAL_SAVE_KEY);
-    if (!json) return false;
+    const stored = localStorage.getItem(LOCAL_SAVE_KEY);
+    if (!stored) return false;
+
+    // === v37.53: sniff format — plain JSON starts with "{", FKZ1
+    // base64 starts with "RktaM" (= base64 of "FKZ1" first chars).
+    // We don't need that level of precision — any non-"{" first char
+    // is presumed compressed.
+    let json;
+    if (stored.charAt(0) === "{") {
+      // Legacy plain-JSON save (pre-v37.53) or fallback path
+      json = stored;
+    } else {
+      // Assumed FKZ1 base64. Decode → check magic → decompress.
+      if (typeof _fkBase64ToBytes !== "function" || typeof _fkLooksGzipped !== "function" || typeof _fkGunzip !== "function") {
+        throw new Error("compressed save detected but gzip helpers unavailable");
+      }
+      const bytes = _fkBase64ToBytes(stored);
+      if (!_fkLooksGzipped(bytes)) {
+        throw new Error("stored value is neither plain JSON nor FKZ1");
+      }
+      json = await _fkGunzip(bytes.slice(4));  // strip 4-byte FKZ1 magic
+    }
+
     deserializeLeague(json);
     return true;
   } catch (e) {
-    // deserializeLeague throws on incompatible schemas. Silently discard
-    // the broken save — the user gets a fresh League on this boot and
-    // future saves overwrite the corrupt entry.
-    console.warn("[v28.13] localStorage save was incompatible, starting fresh:", e.message || e);
+    // deserializeLeague (or our new decode pipeline) throws on incompatible
+    // schemas / corrupt data. Silently discard the broken save — the user
+    // gets a fresh League on this boot and future saves overwrite the
+    // corrupt entry.
+    console.warn("[v37.53] localStorage save was unreadable, starting fresh:", e.message || e);
     try { localStorage.removeItem(LOCAL_SAVE_KEY); } catch {}
     return false;
   }
@@ -35686,10 +35809,10 @@ function clearLocal() {
 // Expose so the simulation layer can call after every state change
 window.saveLocal = saveLocal;
 
-function boot() {
+async function boot() {
   bindEvents();
   let restored = false;
-  try { restored = loadLocal(); } catch {}
+  try { restored = await loadLocal(); } catch {}
   // v28.28: re-sync settings UI from loaded config. bindEvents/bindSettings
   // ran before loadLocal and read default values; this re-population pushes
   // the actual saved values into the selectors, sliders, and checkboxes.
