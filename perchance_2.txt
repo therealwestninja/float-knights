@@ -12676,6 +12676,36 @@ const COMBAT = {
   // currently wielding a ranged weapon, swap to a melee fallback profile.
   // Distance below which the swap triggers.
   meleeSwitchRange: 60,
+  // === v37.62 crowd cheer intensity table ===
+  // Per-event intensity multipliers for triggerCrowdCheer. Higher values
+  // produce visibly bigger reactions (fan bob amplitude, chip flash
+  // strength, corner sign jump height). Duration is in frames at 20fps.
+  cheerIntensityKill: 1.0,
+  cheerIntensityGrenade: 1.0,
+  cheerIntensityFirstBlood: 1.5,
+  cheerIntensityCorePit: 2.0,
+  cheerIntensityRoundWin: 3.0,
+  cheerIntensityMatchWin: 4.0,
+  cheerDurationDefault: 30,
+  cheerDurationRoundWin: 60,
+  cheerDurationMatchWin: 90,
+  // === v37.59 hitbox audit — Tier 3 constants ===
+  // Single source of truth for hit geometry. Previously: hardcoded 11
+  // in tickProjectiles and local const HIT_RADIUS=14 in tryDodgeProjectile.
+  // The audit found these were inconsistent; this constant unifies them.
+  // 13 splits the difference: bullets that visually graze the knight
+  // actually connect (more intuitive than 11), but center-mass shots
+  // aren't auto-hits and edge-grazes can still miss (more honest than
+  // the visible 30px torso width).
+  hitRadius: 13,
+  // Suppression flinch — when a projectile passes within `flinchMult * rx`
+  // of an enemy without hitting, that enemy has a chance to flinch.
+  flinchMult: 1.5,
+  flinchChance: 0.30,
+  flinchFrames: 10,
+  // Back-hit damage multiplier (Tier 3.A — melee facing matters)
+  backHitDmgMult: 0.50,
+  // === end v37.59 constants ===
   // === end v28 constants ===
   arenaW: 1280,         // 16:9 field, wider than v28 (960) so spawning teams
   arenaH: 720,          // can't shoot across the field at start. Spawn-to-spawn
@@ -17199,6 +17229,11 @@ function tickMatch() {
       }
       if (p.attackedByExpires > 0) p.attackedByExpires--;
       else p.attackedBy = null;
+      // === v37.59: suppression flinch tick (Tier 3.D) ===
+      // Decrement per frame. While suppressedFrames > 0, the bot has a
+      // 50% chance to skip movement frames AND moves at 70% speed
+      // (handled in moveAlong below).
+      if (p.suppressedFrames > 0) p.suppressedFrames--;
 
       // Low-HP item trigger
       if (p.item && !p.itemUsed && p.item.trigger === "lowHP") {
@@ -17919,6 +17954,13 @@ const TEAM_AI = (function() {
           if (allies.some(a => a.alive && a.id === e.target)) {
             util += pers.protectAllyBonus;
           }
+        // === v37.62: power-core capture triggers a team-attributed cheer ===
+        triggerCrowdCheer(m, {
+          x: pc.x, y: pc.y,
+          teamId: p.teamId,
+          radius: 320,
+          intensity: COMBAT.cheerIntensityCorePit,
+        });
         }
       }
       if (util > bestUtility) { bestUtility = util; bestTarget = e; }
@@ -18674,7 +18716,7 @@ const MODE_AI = (function() {
         p._tag_aim_x = fx;
         p._tag_aim_y = fy;
         p.attackedBy = null;
-        if (d < (COMBAT.meleeSwitchRange || 60)) {
+        if (d < _meleeSwitchRangeFor(p)) {  // v37.59: per-weapon switch range
           p.aiState = "MELEE";
         } else {
           p.aiState = "TAG_HUNT";
@@ -18940,7 +18982,7 @@ function decideAIState(p, enemyAlive, m) {
   }
 
   // === MELEE override — point-blank ranged bot swap to fallback ===
-  if (ranged && nearestD < (COMBAT.meleeSwitchRange || 60)) {
+  if (ranged && nearestD < _meleeSwitchRangeFor(p)) {  // v37.59: per-weapon switch range
     p.aiState = "MELEE";
     p.target = nearest;
     return;
@@ -19170,7 +19212,13 @@ function tryDodgeProjectile(p, m, effSpd) {
   if (p.position === "sniper") dodgeSkill *= 0.55; // was 0.45 — sniper still dodges less but more than v28.3
   if (p.position === "healer" || p.position === "grenadier") dodgeSkill *= 0.90;
 
-  const HIT_RADIUS = 14;
+  // === v37.59: dodge uses real hit profile (Tier 3.C) ===
+  // Old: hardcoded HIT_RADIUS=14 + 8px envelope = 22px (didn't match the
+  // actual sim hit radius of 11). Now: use the knight's own _hitProfile
+  // (varies by position — tanks bigger, speeds smaller) + 6px envelope.
+  // Result: bots dodge actual threats, not bullets that wouldn't have hit.
+  const profile = _hitProfile(p);
+  const dodgeEnvelope = profile.rx + 6;
   let bestThreat = null, bestEta = Infinity;
 
   for (const pr of m.projectiles) {
@@ -19183,7 +19231,7 @@ function tryDodgeProjectile(p, m, effSpd) {
     const cx = pr.x + pr.vx * t;
     const cy = pr.y + pr.vy * t;
     const closest = Math.hypot(p.x - cx, p.y - cy);
-    if (closest > HIT_RADIUS + 8) continue;  // wider detection envelope
+    if (closest > dodgeEnvelope) continue;  // tighter, accurate envelope
     if (t < bestEta) { bestEta = t; bestThreat = pr; }
   }
 
@@ -19749,11 +19797,39 @@ function detonateGrenade(pr, m) {
   // Single emoji float for kill-feed-style readability
   m.floats.push({ x: pr.x, y: pr.y - 8, text: "💥 BOOM", life: 22, color: "#f7c948" });
   if (typeof triggerShake === "function") triggerShake(12);
-  // Trigger crowd cheer at the explosion site too
-  m._crowdCheer = {
+  // === v37.62: crowd cheer with scoring team attribution ===
+  triggerCrowdCheer(m, {
     x: pr.x, y: pr.y,
-    frame: m.frame || 0,
+    teamId: pr.teamId,
     radius: 240,
+    intensity: COMBAT.cheerIntensityGrenade,
+  });
+}
+
+/* === v37.62: triggerCrowdCheer — single canonical setter ===
+   Replaces ad-hoc m._crowdCheer = {...} writes. Centralizes the
+   shape: position (x, y), the SCORING team's id, an intensity
+   multiplier (1.0 baseline up to 4.0 match-win), and an optional
+   custom duration in frames (defaults to COMBAT.cheerDurationDefault).
+
+   Consumers (drawCrowd fan-bob loop, field-edge chip flash, v37.61
+   corner mascot signs) read these fields. teamId may be null for
+   neutral events; intensity defaults to 1.0; duration defaults to 30.
+
+   Defensive: silently no-ops if m is missing. Always stamps the
+   current frame. Existing radius-based legacy behavior is preserved
+   when callers supply x/y/radius. ============================================ */
+function triggerCrowdCheer(m, opts) {
+  if (!m) return;
+  opts = opts || {};
+  m._crowdCheer = {
+    x: opts.x != null ? opts.x : (COMBAT.arenaW || 1280) / 2,
+    y: opts.y != null ? opts.y : (COMBAT.arenaH || 720) / 2,
+    teamId: opts.teamId || null,
+    intensity: opts.intensity != null ? opts.intensity : 1.0,
+    radius: opts.radius != null ? opts.radius : 240,
+    duration: opts.duration != null ? opts.duration : (COMBAT.cheerDurationDefault || 30),
+    frame: m.frame || 0,
   };
 }
 
@@ -20420,6 +20496,15 @@ const _ACTIVE_ENGAGE_STATES = new Set([
 ]);
 
 function moveAlong(p, ang, speed) {
+  // === v37.59: suppression speed reduction (Tier 3.D) ===
+  // While suppressed (recently took a near-miss), reduce effective speed
+  // 30% AND 50% chance to land on the original spot (movement skipped).
+  // The skip-roll uses SIM_RNG so reseeded matches reproduce. Keeps
+  // facing updates intact (downstream code may depend on them).
+  if (p.suppressedFrames > 0) {
+    speed = speed * 0.70;
+    if (SIM_RNG.next() < 0.50) speed = 0;
+  }
   const startX = p.x, startY = p.y;
   let nx = p.x + Math.cos(ang) * speed;
   let ny = p.y + Math.sin(ang) * speed;
@@ -20539,8 +20624,18 @@ function segmentHitsRect(x0, y0, x1, y1, rx, ry, rw, rh) {
 // Does the line from a→b cross any terrain block?
 function hasLineOfSight(ax, ay, bx, by, terrain) {
   if (!terrain || !terrain.length) return true;
+  // === v37.59: cover-inflation (Tier 3.E) ===
+  // Inflate each terrain rect by COMBAT.hitRadius on all sides before
+  // the LOS check. A knight whose center is within hitRadius of cover
+  // is now correctly considered "behind cover" — previously you could
+  // press against a column with half your body in cover and still be
+  // visible to enemies because your CENTER was outside the rect.
+  // The inflation makes cover work as it visually appears.
+  const pad = COMBAT.hitRadius || 13;
   for (const t of terrain) {
-    if (segmentHitsRect(ax, ay, bx, by, t.x, t.y, t.size, t.size)) return false;
+    if (segmentHitsRect(ax, ay, bx, by,
+                        t.x - pad, t.y - pad,
+                        t.size + pad * 2, t.size + pad * 2)) return false;
   }
   return true;
 }
@@ -20644,6 +20739,53 @@ function fireAttack(attacker, target, m) {
   m.floats.push({ x: attacker.x, y: attacker.y - 2, text: "•", life: 6, color: "#ffd96b" });
 }
 
+/* === v37.59: position-aware body-shape hitbox ===
+   Returns {rx, ry} — the ellipse half-axes used for hit detection on
+   this knight. Position-aware so visible silhouette matches collision:
+
+     - tank/brawl: WIDE chunky body  → rx=15, ry=11 (matches tank torsoW=18)
+     - speed:      NARROW agile body → rx=11, ry=12 (matches speed torsoW=13)
+     - default:    standard          → rx=13, ry=11 (matches default torsoW=15)
+
+   These align roughly with the v37.57/v37.58 sprite torso widths, so
+   the visible body and the collision body are now coherent.
+
+   Used by tickProjectiles (hit check), tryDodgeProjectile (threat
+   envelope), and drawHitboxes (debug overlay).
+   ============================================================ */
+function _hitProfile(p) {
+  if (!p || !p.position) return { rx: COMBAT.hitRadius, ry: COMBAT.hitRadius };
+  if (p.position === "tank" || p.position === "brawl") return { rx: 15, ry: 11 };
+  if (p.position === "speed") return { rx: 11, ry: 12 };
+  return { rx: 13, ry: 11 };
+}
+
+/* === v37.59: per-weapon melee-switch range (Tier 3.F) ===
+   The old global COMBAT.meleeSwitchRange = 60 caused healers (wand
+   range 90) to "switch to melee fallback" at 60px — well inside their
+   heal-beam range. Result: healers panicked and stopped healing too
+   early when an enemy approached.
+
+   New formula: max(30, min(60, weapon.range * 0.4))
+     - Sniper railgun (460): switches at 60 (60 < 460*0.4=184)
+     - Healer wand (90):     switches at 36 (90 * 0.4 = 36 — true melee)
+     - Speed laser (230):    switches at 60 (60 < 92)
+     - Grenadier (220):      switches at 60 (60 < 88)
+     - Repeater striker (240): switches at 60
+     - Scattergun brawl (110): switches at 44 (110 * 0.4 = 44)
+       (the scattergun is a short-range weapon — closer melee threshold
+       is correct; it can fire reasonably down to 30-40 anyway)
+
+   Healer + scattergun specifically benefit. Other ranged weapons
+   unaffected. */
+function _meleeSwitchRangeFor(p) {
+  const wpn = p && p.weapon;
+  const fallback = (COMBAT.meleeSwitchRange || 60);
+  if (!wpn || !wpn.range) return fallback;
+  if (wpn.range <= 30) return fallback;  // already a melee weapon — moot
+  return Math.max(30, Math.min(fallback, wpn.range * 0.4));
+}
+
 /* ============================================================
    PROJECTILE PHYSICS — fly along path, collide with first enemy
    ============================================================ */
@@ -20696,13 +20838,40 @@ function tickProjectiles(m) {
       }
     }
 
-    // Direct hit (only for non-grenade projectiles — grenades are AoE-only)
+    // === v37.59: ellipse hit check + suppression flinch (Tier 3.B + 3.D) ===
+    // Each enemy now has a body-shape ellipse via _hitProfile. The hit
+    // check is `dx²/rx² + dy²/ry² < 1` (one extra multiply vs the old
+    // circle test). On NEAR-MISS (within flinchMult × rx but not hit),
+    // the enemy has a flinchChance to be suppressed for flinchFrames.
+    // Snipers and tanks are immune to flinch (sniper poise / tank
+    // discipline — lore-aligned).
     if (!pr.isGrenade) {
       let hit = null;
       for (const e of enemies(pr.teamId)) {
         if (!e.alive) continue;
         const dx = e.x - pr.x, dy = e.y - pr.y;
-        if (dx*dx + dy*dy < 11*11) { hit = e; break; }
+        const profile = _hitProfile(e);
+        // Ellipse hit: dx²/rx² + dy²/ry² < 1
+        const normalized = (dx * dx) / (profile.rx * profile.rx) +
+                           (dy * dy) / (profile.ry * profile.ry);
+        if (normalized < 1) {
+          hit = e;
+          break;
+        }
+        // Near-miss suppression check — only if no hit yet (a hit takes
+        // precedence; you don't flinch from the bullet that killed you,
+        // you flinch from the bullets that nearly killed you).
+        if (e.position !== "sniper" && e.position !== "tank") {
+          // Use the bigger radius (rx) and the flinchMult envelope.
+          // Distance check is circular (cheaper than ellipse) since
+          // we only need an approximate "did this come close" test.
+          const flinchEnvelope = profile.rx * COMBAT.flinchMult;
+          if (dx * dx + dy * dy < flinchEnvelope * flinchEnvelope) {
+            if (SIM_RNG.next() < COMBAT.flinchChance) {
+              e.suppressedFrames = COMBAT.flinchFrames;
+            }
+          }
+        }
       }
       if (hit) {
         const attacker = (m.teamAplayers.concat(m.teamBplayers)).find(x => x.id === pr.fromId);
@@ -20850,7 +21019,7 @@ function updateKillStreak(attacker, defender, m) {
   if (defender.career.currentStreak >= 5) {
     feed("kill", `💔 ${attacker.name} ENDS ${defender.name}'s ${defender.career.currentStreak}-kill streak.`);
     if (typeof window !== "undefined" && window.toast) {
-      window.toast(`<b>${attacker.name}</b> ends ${defender.name}'s ${defender.career.currentStreak}-streak`, "warn", { ico: "💔", ttl: 7000 });
+      window.toast(`<b>${escapeHTML(attacker.name)}</b> ends ${escapeHTML(defender.name)}'s ${defender.career.currentStreak}-streak`, "warn", { ico: "💔", ttl: 7000 });
     }
   }
   defender.career.currentStreak = 0;
@@ -20949,18 +21118,24 @@ function handleKO(attacker, defender, m) {
     }
   }
 
-  // === v28.4: trigger stadium crowd cheer ===
-  // Sets a transient flag the renderer reads to bounce fans near the
-  // kill location for ~30 frames. Honored regardless of disableCrowd
-  // (the setter is cheap; the renderer checks the toggle).
+  // === v28.4 / v37.62: trigger stadium crowd cheer ===
+  // The scoring team is the ATTACKER's team (defender just got eliminated).
+  // First-blood detection uses m.firstKillTeam — if it was just set THIS
+  // tick (current attacker is the first-blood team), bump intensity 1.5×.
   // === v37.16: Caucus edict "crowd_boost" extends the cheer radius ===
   const _cheerRadius = (LEAGUE.activeRuleTweak && LEAGUE.activeRuleTweak.effect === "crowd_boost") ? 320 : 200;
-  m._crowdCheer = {
+  // wasFirstKill captured pre-set state earlier in this function; if it was
+  // this kill that flipped first-blood, we boost the cheer.
+  const _cheerIntensity = (typeof wasFirstKill !== "undefined" && wasFirstKill)
+    ? COMBAT.cheerIntensityFirstBlood
+    : COMBAT.cheerIntensityKill;
+  triggerCrowdCheer(m, {
     x: defender.x,
     y: defender.y,
-    frame: m.frame || 0,
+    teamId: attacker && attacker.teamId,
     radius: _cheerRadius,
-  };
+    intensity: _cheerIntensity,
+  });
 
   const isPermadeath = defender.lives <= 0;
   // Pull the most recent damage event's crit flag — applyDamage stamped it
@@ -21065,7 +21240,7 @@ function handleKO(attacker, defender, m) {
     const careerStreak = defender.career.longestStreak || 0;
     const careerMatchesWon = defender.career.matchesWon || 0;
     const careerLine = `${careerKills}K · longest streak ${careerStreak} · ${careerSeasons} season${careerSeasons === 1 ? "" : "s"}`;
-    feed("kill", `⚰ <b>${defender.name}</b> perma-dies — ${careerLine}.`);
+    feed("kill", `⚰ <b>${escapeHTML(defender.name)}</b> perma-dies — ${escapeHTML(careerLine)}.`);
     // === v37.44: detect followed-knight status — used by the legend
     // and non-legend toast branches below to fire a single, richer toast
     // when a followed knight perma-dies. (The old v37.40 standalone
@@ -21132,7 +21307,7 @@ function handleKO(attacker, defender, m) {
       // the tab between this and finalizeMatch
       if (typeof saveLocal === "function") saveLocal();
 
-      feed("kill", `⭐ <b>${defender.name}</b> enters the League Legends — ${defender.name}'s career: ${careerLine}.`);
+      feed("kill", `⭐ <b>${escapeHTML(defender.name)}</b> enters the League Legends — ${escapeHTML(defender.name)}'s career: ${escapeHTML(careerLine)}.`);
       // === v37.44: single toast — extra ⭐ emphasis if the legend was followed ===
       if (typeof window !== "undefined" && window.toast) {
         const tShort = TEAM_BY_ID[defender.teamId]?.short || "?";
@@ -21275,11 +21450,37 @@ function resolveAttack(attacker, defender, m) {
     return;
   }
 
+  // === v37.59: melee facing / back-hit (Tier 3.A) ===
+  // Compute whether attacker is BEHIND defender. p.facing is +1 (east)
+  // or -1 (west); attacker is "behind" if defender's facing and the
+  // direction-from-defender-to-attacker have OPPOSITE signs.
+  // Example: defender faces east (+1), attacker is west (attacker.x <
+  // defender.x, so dxFromDefender < 0) → opposite signs → back hit.
+  // Tanks: when DEALING the back-hit, this check still applies (they're
+  // just as capable of flanking). When RECEIVING a back-hit, tanks are
+  // ALSO subject to the penalty — they're slow to turn, so they earn
+  // the punishment. Net effect: brawls and strikers have offensive
+  // incentive to flank; tanks have defensive incentive to keep their
+  // facing toward the threat.
+  const dxFromDefender = attacker.x - defender.x;
+  const isBackHit = (defender.facing || 1) * dxFromDefender < 0;
+
   const rng = R(1 - COMBAT.rngSpread, 1 + COMBAT.rngSpread);
   const isCrit = SIM_RNG.next() < effCrit;
-  const raw = effDmg * rng * (isCrit ? COMBAT.critMult : 1.0);
+  const baseRaw = effDmg * rng * (isCrit ? COMBAT.critMult : 1.0);
+  // Apply back-hit multiplier BEFORE armor (so tanks still get armor
+  // benefit even when flanked — armor isn't directional in this game)
+  const raw = baseRaw * (isBackHit ? COMBAT.backHitDmgMult : 1.0);
   const reduction = effDef / (effDef + COMBAT.defDenom);
   const dmg = Math.max(1, Math.round(raw * (1 - reduction)));
+
+  // Visible signal — "BACK HIT" float so the new mechanic is discoverable
+  if (isBackHit && m && m.floats) {
+    m.floats.push({
+      x: defender.x, y: defender.y - 14,
+      text: "BACK HIT", life: 30, color: "#f7878a",
+    });
+  }
 
   // Track attacker-of-record (mercy state)
   defender.attackedBy = attacker.id;
@@ -21482,6 +21683,14 @@ function finalizeRound(forfeit) {
 
     if (typeof saveLocal === "function") saveLocal();
   feed("match", `🏁 Round ${m.currentRoundIndex} won by ${TEAM_BY_ID[roundWinnerId].emoji} ${TEAM_BY_ID[roundWinnerId].short} (${m.roundsWonA}–${m.roundsWonB} match score).`);
+    // === v37.62: round-win triggers a sustained team-attributed cheer ===
+    triggerCrowdCheer(m, {
+      x: COMBAT.arenaW / 2, y: COMBAT.arenaH / 2,
+      teamId: roundWinnerId,
+      radius: Math.max(COMBAT.arenaW, COMBAT.arenaH),  // entire stadium
+      intensity: COMBAT.cheerIntensityRoundWin,
+      duration: COMBAT.cheerDurationRoundWin,
+    });
   }
 
   // Check for match end. Match ends if a team hits roundsToWin OR forfeits
@@ -21573,6 +21782,17 @@ function finalizeMatch(matchDraw) {
   const winnerId = m.roundsWonA > m.roundsWonB ? m.teamAId : m.teamBId;
   const loserId = winnerId === m.teamAId ? m.teamBId : m.teamAId;
   m.winnerId = winnerId;
+  // === v37.62: match-win triggers the longest, biggest crowd cheer ===
+  // Intensity 4.0 (biggest in the table) at center field, 90-frame
+  // duration (3× the default kill cheer) so the celebration carries
+  // through the post-match flow.
+  triggerCrowdCheer(m, {
+    x: COMBAT.arenaW / 2, y: COMBAT.arenaH / 2,
+    teamId: winnerId,
+    radius: Math.max(COMBAT.arenaW, COMBAT.arenaH),
+    intensity: COMBAT.cheerIntensityMatchWin,
+    duration: COMBAT.cheerDurationMatchWin,
+  });
 
   for (const p of [...m.teamAplayers, ...m.teamBplayers]) {
     p.career.matchesPlayed++;
@@ -21652,7 +21872,7 @@ function finalizeMatch(matchDraw) {
       });
       feed("item", `📉 ${d.gear.displayName || d.gear.name} (${d.gear.scavengedCount}× scavenged) was LOST on the field.`);
       if (typeof window !== "undefined" && window.toast) {
-        window.toast(`<b>${d.gear.displayName || d.gear.name}</b> lost on the field after ${d.gear.scavengedCount} scavenges`, "warn", { ico: "📉", ttl: 7000 });
+        window.toast(`<b>${escapeHTML(d.gear.displayName || d.gear.name)}</b> lost on the field after ${d.gear.scavengedCount} scavenges`, "warn", { ico: "📉", ttl: 7000 });
       }
     }
   }
@@ -21873,7 +22093,7 @@ function beginNextSeason() {
         const team = TEAM_BY_ID[teamId];
         const style = AI_PATHING_STYLES[styleId];
         if (!team || !style) continue;
-        feed("season", `📋 ${team.short} adopts <em>${style.label}</em> for Year ${27 + LEAGUE.season}.`);
+        feed("season", `📋 ${escapeHTML(team.short)} adopts <em>${escapeHTML(style.label)}</em> for Year ${27 + LEAGUE.season}.`);
         count++;
       }
     }
@@ -24503,6 +24723,236 @@ function _buildCrowdCache() {
   _crowdCache = { W, H, fans };
 }
 
+/* === v37.61: stadium corner art cache + helpers ===
+   Builds the four corner elements (top-L/R team banners, bottom-L/R
+   mascot crowd signs) onto offscreen canvases. Cache key includes the
+   biome brand color so palette swaps invalidate cleanly. drawCrowd
+   then composites them in via a single drawImage per corner per frame.
+   ============================================================ */
+let _crowdCornerCache = null;
+
+const CORNER_BANNER_W = 230;
+const CORNER_BANNER_H = 110;
+const CORNER_SIGN_W = 180;
+const CORNER_SIGN_H = 150;
+
+/* Build a team-name banner (top corner) onto an offscreen canvas. */
+function _buildTeamBanner(team, isHome) {
+  const cv = document.createElement("canvas");
+  cv.width = CORNER_BANNER_W;
+  cv.height = CORNER_BANNER_H;
+  const cx = cv.getContext("2d");
+  if (!team) return cv;
+
+  // === Outer dark glass plate (the banner backing) ===
+  // Visiting team gets a slightly cooler/desaturated treatment so the
+  // home banner reads as "ours" at a glance.
+  cx.fillStyle = isHome ? "rgba(20, 22, 28, 0.94)" : "rgba(18, 20, 26, 0.88)";
+  cx.fillRect(0, 0, CORNER_BANNER_W, CORNER_BANNER_H);
+
+  // === Team color stripe along the left edge (12px wide) ===
+  // Strong color signature even at glance. For visiting team, mirror to
+  // the right edge so the "stripe points to the field" mirroring reads.
+  cx.fillStyle = team.color || "#f7c948";
+  if (isHome) {
+    cx.fillRect(0, 0, 12, CORNER_BANNER_H);
+  } else {
+    cx.fillRect(CORNER_BANNER_W - 12, 0, 12, CORNER_BANNER_H);
+  }
+
+  // === Inner highlight stripe (1px) on the team color ===
+  // Sells the dimensional "metallic plate" read.
+  cx.fillStyle = "rgba(255, 255, 255, 0.32)";
+  if (isHome) {
+    cx.fillRect(11, 0, 1, CORNER_BANNER_H);
+  } else {
+    cx.fillRect(CORNER_BANNER_W - 12, 0, 1, CORNER_BANNER_H);
+  }
+
+  // === Top accent line (gold) — separates the title block from below ===
+  cx.fillStyle = "rgba(247, 201, 72, 0.85)";
+  cx.fillRect(isHome ? 12 : 0, 0, CORNER_BANNER_W - 12, 2);
+
+  // === Big emoji (3.5em equivalent, drawn left-aligned for home,
+  //     right-aligned for visiting). Position chosen so the emoji doesn't
+  //     overlap the color stripe.
+  cx.font = "44px ui-sans-serif, system-ui, sans-serif";
+  cx.textBaseline = "middle";
+  if (isHome) {
+    cx.textAlign = "left";
+    cx.fillText(team.emoji || "❓", 22, 36);
+  } else {
+    cx.textAlign = "right";
+    cx.fillText(team.emoji || "❓", CORNER_BANNER_W - 22, 36);
+  }
+
+  // === Team name in stencil-style — bold uppercase, white ===
+  cx.font = "bold 14px ui-sans-serif, system-ui, sans-serif";
+  cx.fillStyle = "#fefcf0";
+  if (isHome) {
+    cx.textAlign = "left";
+    cx.fillText((team.name || "").toUpperCase(), 76, 24);
+  } else {
+    cx.textAlign = "right";
+    cx.fillText((team.name || "").toUpperCase(), CORNER_BANNER_W - 76, 24);
+  }
+
+  // === Short code in team color (the "brand" line — FOX, BVR, etc.) ===
+  cx.font = "bold 18px ui-monospace, Menlo, Consolas, monospace";
+  cx.fillStyle = team.color || "#f7c948";
+  if (isHome) {
+    cx.textAlign = "left";
+    cx.fillText(team.short || "—", 76, 48);
+  } else {
+    cx.textAlign = "right";
+    cx.fillText(team.short || "—", CORNER_BANNER_W - 76, 48);
+  }
+
+  // === Motto in italic mute ===
+  cx.font = "italic 11px ui-sans-serif, system-ui, sans-serif";
+  cx.fillStyle = "rgba(220, 220, 230, 0.78)";
+  if (isHome) {
+    cx.textAlign = "left";
+    cx.fillText(team.motto || "", 22, 70);
+  } else {
+    cx.textAlign = "right";
+    cx.fillText(team.motto || "", CORNER_BANNER_W - 22, 70);
+  }
+
+  // === Bottom strip — "HOME" / "VISITING" + founded year ===
+  cx.fillStyle = isHome ? "rgba(247, 201, 72, 0.18)" : "rgba(150, 170, 220, 0.15)";
+  cx.fillRect(isHome ? 12 : 0, CORNER_BANNER_H - 22, CORNER_BANNER_W - 12, 22);
+
+  cx.font = "bold 10px ui-monospace, Menlo, Consolas, monospace";
+  cx.fillStyle = isHome ? "#f7c948" : "#a0b8e0";
+  if (isHome) {
+    cx.textAlign = "left";
+    cx.fillText("HOME", 22, CORNER_BANNER_H - 11);
+    cx.textAlign = "right";
+    cx.fillStyle = "rgba(220, 220, 230, 0.65)";
+    cx.fillText("Y" + (team.founded ? team.founded - 1990 : "??"), CORNER_BANNER_W - 8, CORNER_BANNER_H - 11);
+  } else {
+    cx.textAlign = "right";
+    cx.fillText("VISITING", CORNER_BANNER_W - 22, CORNER_BANNER_H - 11);
+    cx.textAlign = "left";
+    cx.fillStyle = "rgba(220, 220, 230, 0.65)";
+    cx.fillText("Y" + (team.founded ? team.founded - 1990 : "??"), 8, CORNER_BANNER_H - 11);
+  }
+
+  return cv;
+}
+
+/* Build a mascot crowd-sign — a giant species head on a sign-frame, with
+   stick-arms reaching up from the crowd as if held aloft. */
+function _buildMascotSign(team) {
+  const cv = document.createElement("canvas");
+  cv.width = CORNER_SIGN_W;
+  cv.height = CORNER_SIGN_H;
+  const cx = cv.getContext("2d");
+  if (!team) return cv;
+
+  // === Stick arms reaching up from below (drawn first so the sign covers them) ===
+  // Two arms angled inward toward where they grip the sign's bottom edge.
+  // Slightly cartoonish — thin lines with rounded "fist" caps.
+  cx.strokeStyle = "rgba(40, 30, 25, 0.9)";
+  cx.lineWidth = 3;
+  cx.lineCap = "round";
+  // Left arm — coming from lower-left, gripping bottom-left of sign
+  cx.beginPath();
+  cx.moveTo(40, CORNER_SIGN_H - 4);
+  cx.quadraticCurveTo(48, CORNER_SIGN_H - 22, 52, CORNER_SIGN_H - 32);
+  cx.stroke();
+  // Right arm — coming from lower-right
+  cx.beginPath();
+  cx.moveTo(CORNER_SIGN_W - 40, CORNER_SIGN_H - 4);
+  cx.quadraticCurveTo(CORNER_SIGN_W - 48, CORNER_SIGN_H - 22, CORNER_SIGN_W - 52, CORNER_SIGN_H - 32);
+  cx.stroke();
+  // Fist dots — rounded caps where arms meet sign
+  cx.fillStyle = "rgba(40, 30, 25, 0.95)";
+  cx.beginPath();
+  cx.arc(52, CORNER_SIGN_H - 32, 3.5, 0, Math.PI * 2);
+  cx.arc(CORNER_SIGN_W - 52, CORNER_SIGN_H - 32, 3.5, 0, Math.PI * 2);
+  cx.fill();
+
+  // === Sign frame — wooden/cardboard look, framed in team color ===
+  // The "sign" is a rounded-rect plate with slight tilt cue (drop shadow).
+  const signX = 16;
+  const signY = 8;
+  const signW = CORNER_SIGN_W - 32;
+  const signH = CORNER_SIGN_H - 44;
+
+  // Drop shadow (subtle, sells lift-from-below)
+  cx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  cx.fillRect(signX + 3, signY + 3, signW, signH);
+
+  // Sign backing — warm cardboard color, suggests handmade
+  cx.fillStyle = "#e8d4a8";
+  cx.fillRect(signX, signY, signW, signH);
+
+  // Inner team-color border (4px)
+  cx.strokeStyle = team.color || "#f7c948";
+  cx.lineWidth = 4;
+  cx.strokeRect(signX + 4, signY + 4, signW - 8, signH - 8);
+
+  // Inner sign panel — lighter cream interior where the head sits
+  cx.fillStyle = "#f4e8c8";
+  cx.fillRect(signX + 8, signY + 8, signW - 16, signH - 16);
+
+  // === MASCOT HEAD — drawn at large scale via the team's species head function ===
+  // The head functions take coordinates in their native 56×64-sprite scale.
+  // We translate + scale the context so a single _drawAnimalHead call paints
+  // the head ~4× larger, centered in the sign. Palette comes from ANIMAL_PALETTE.
+  cx.save();
+  const headCenterX = CORNER_SIGN_W / 2;
+  const headCenterY = signY + signH / 2 - 4;
+  const SCALE = 3.8;
+  cx.translate(headCenterX, headCenterY);
+  cx.scale(SCALE, SCALE);
+  // The head functions expect (cx, hx, hy, pal) where hx/hy is the head center
+  // in the cx's coord space. After translate+scale we want hx=0, hy=0.
+  let pal;
+  if (typeof ANIMAL_PALETTE !== "undefined" && ANIMAL_PALETTE[team.id]) {
+    pal = ANIMAL_PALETTE[team.id];
+  } else if (typeof _derivePaletteFromColor === "function") {
+    pal = _derivePaletteFromColor(team.color || "#888");
+  } else {
+    pal = { fur: "#888", belly: "#aaa", accent: "#444", inner: "#bbb", nose: "#222", eye: "#222", iris: "#f4c542" };
+  }
+  if (typeof _drawAnimalHead === "function") {
+    try {
+      _drawAnimalHead(cx, 0, 0, team.id, pal);
+    } catch (e) {
+      // Defensive fallback — paint a colored disc with the emoji on top
+      cx.fillStyle = team.color || "#888";
+      cx.beginPath();
+      cx.arc(0, 0, 12, 0, Math.PI * 2);
+      cx.fill();
+    }
+  }
+  cx.restore();
+
+  // === Team short code on the bottom of the sign panel ===
+  cx.font = "bold 14px ui-sans-serif, system-ui, sans-serif";
+  cx.textAlign = "center";
+  cx.textBaseline = "alphabetic";
+  cx.fillStyle = team.color || "#f7c948";
+  cx.fillText(team.short || "—", CORNER_SIGN_W / 2, signY + signH - 12);
+
+  return cv;
+}
+
+/* Build all four corner sprites for the current match. Cached and only
+   rebuilt when the cache key (teams + biome color) changes. */
+function _buildCrowdCornerCache(teamA, teamB, brandColor) {
+  return {
+    homeBanner:    _buildTeamBanner(teamA, true),
+    visitingBanner: _buildTeamBanner(teamB, false),
+    homeSign:      _buildMascotSign(teamA),
+    visitingSign:  _buildMascotSign(teamB),
+    key: (teamA && teamA.id || "?") + "|" + (teamB && teamB.id || "?") + "|" + (brandColor || ""),
+  };
+}
+
 function drawCrowd(m) {
   if (LEAGUE_CONFIG && LEAGUE_CONFIG.disableCrowd) return;
   // Build cache lazily / on resize
@@ -24513,8 +24963,20 @@ function drawCrowd(m) {
   }
   const fans = _crowdCache.fans;
   const t = (m && m.frame !== undefined) ? m.frame : 0;
+  // === v37.62: cheer fields + scoring-team awareness ===
+  // _crowdCheer now carries teamId (scoring team) and intensity (1.0 baseline,
+  // up to 4.0 for match wins) and an optional duration override (default 30
+  // frames; 60 for round wins, 90 for match wins). Legacy callers still work
+  // without these fields — we provide defaults below.
   const cheer = m && m._crowdCheer;
-  const cheerActive = cheer && (t - cheer.frame) < 30;
+  const cheerDuration = (cheer && cheer.duration) || 30;
+  const cheerActive = cheer && (t - cheer.frame) < cheerDuration;
+  const cheerIntensity = (cheer && cheer.intensity) || 1.0;
+  const cheerTeamId = cheer && cheer.teamId;
+  // Home crowd lives in the LEFT half of the field perimeter (team A is
+  // always spawned on the left). Visiting crowd lives in the right half.
+  // We compare a fan's x position against W/2 to decide which side they
+  // root for. Determined per-fan inside the bobbing loop below.
 
   // === v37.15: Stadium back wall + colored field-edge chip ===
   // Three-layer stadium framing, drawn from outside in:
@@ -24543,8 +25005,28 @@ function drawCrowd(m) {
   ctx.fillRect(W,         -midDepth, midDepth,        H + 2*midDepth);
   // Themed color chip — thin (3px) accent band right at the field edge.
   // Falls back to a neutral gold if no biome accent is available.
-  const chipColor = (biome && biome.accents && biome.accents.brandColor)
+  // === v37.62: during a team-attributed cheer, the chip flashes toward
+  // the scoring team's color, decaying with cheerProgress. Big celebrations
+  // (round/match wins) produce a noticeable color wash on the field rim. ===
+  let chipColor = (biome && biome.accents && biome.accents.brandColor)
     || "rgba(247, 201, 72, 0.55)";
+  if (cheerActive && cheerTeamId && typeof TEAM_BY_ID !== "undefined") {
+    const scoringTeam = TEAM_BY_ID[cheerTeamId];
+    if (scoringTeam && scoringTeam.color) {
+      const cheerProgress = (t - cheer.frame) / cheerDuration;
+      const flashAlpha = (1 - cheerProgress) * Math.min(0.85, cheerIntensity * 0.3);
+      // Composite the team color over the chip with computed alpha
+      // (rough but cheap: stamp team color first, then redraw chip with reduced alpha).
+      ctx.fillStyle = scoringTeam.color;
+      ctx.globalAlpha = flashAlpha;
+      const flashDepth = 5;
+      ctx.fillRect(-flashDepth, -flashDepth, W + 2*flashDepth, flashDepth);
+      ctx.fillRect(-flashDepth, H,           W + 2*flashDepth, flashDepth);
+      ctx.fillRect(-flashDepth, 0,           flashDepth,        H);
+      ctx.fillRect(W,           0,           flashDepth,        H);
+      ctx.globalAlpha = 1.0;
+    }
+  }
   const chipDepth = 3;
   ctx.fillStyle = chipColor;
   ctx.fillRect(-chipDepth, -chipDepth, W + 2*chipDepth, chipDepth);
@@ -24555,14 +25037,35 @@ function drawCrowd(m) {
   for (const f of fans) {
     // Bobbing — gentle sine wave
     let bob = Math.sin(t * 0.07 + f.phase) * 1.2;
-    // Cheer boost: fans within cheer radius bounce harder for ~30 frames
+    // === v37.62: cheer boost — radial proximity AND team affiliation ===
+    // Two contributions stack:
+    //   1. Radial proximity (existing) — fans near the cheer x/y bounce
+    //      harder regardless of team. Spectacle radius — kills near you
+    //      always feel exciting.
+    //   2. Team affiliation (NEW) — when a scoring team is attributed,
+    //      fans on that team's side of the stadium bounce harder for
+    //      the entire cheer duration. Bigger amplitude for bigger events
+    //      (round/match wins).
     if (cheerActive) {
+      const cheerProgress = (t - cheer.frame) / cheerDuration;
+      const decay = (1 - cheerProgress);
+      // Radial component
       const dx = f.x - cheer.x, dy = f.y - cheer.y;
       const d2 = dx * dx + dy * dy;
       if (d2 < cheer.radius * cheer.radius) {
-        const cheerProgress = (t - cheer.frame) / 30;
-        const cheerStrength = (1 - cheerProgress) * 4;
-        bob -= Math.abs(Math.sin(t * 0.5 + f.phase * 3)) * cheerStrength;
+        const radialStrength = decay * 4 * cheerIntensity;
+        bob -= Math.abs(Math.sin(t * 0.5 + f.phase * 3)) * radialStrength;
+      }
+      // Team-side component
+      if (cheerTeamId && m && m.teamAId) {
+        // Home fans: x < W/2 (left half perimeter); visiting fans: x >= W/2
+        const isHomeFan = f.x < W / 2;
+        const homeScored = (cheerTeamId === m.teamAId);
+        if (isHomeFan === homeScored) {
+          // This fan's team scored — celebrate
+          const sideStrength = decay * 2.5 * cheerIntensity;
+          bob -= Math.abs(Math.sin(t * 0.45 + f.phase * 2.3)) * sideStrength;
+        }
       }
     }
     const fy = f.y + bob;
@@ -24572,6 +25075,81 @@ function drawCrowd(m) {
     // Head — 2x2 dot
     ctx.fillStyle = f.palette[1];
     ctx.fillRect(f.x - 1, fy - 2, 2, 2);
+  }
+
+  // === v37.61: stadium corner art (banners + mascot signs) ===
+  // Render after the fan loop so corners sit on top of the dot-fans.
+  // Cache invalidates when match teams or biome color changes.
+  if (m && m.teamAId && m.teamBId && typeof TEAM_BY_ID !== "undefined") {
+    const teamA = TEAM_BY_ID[m.teamAId];
+    const teamB = TEAM_BY_ID[m.teamBId];
+    if (teamA && teamB) {
+      const cacheKey = m.teamAId + "|" + m.teamBId + "|" + (chipColor || "");
+      if (!_crowdCornerCache || _crowdCornerCache.key !== cacheKey) {
+        try {
+          _crowdCornerCache = _buildCrowdCornerCache(teamA, teamB, chipColor);
+        } catch (e) {
+          if (typeof console !== "undefined") console.warn("[v37.61] corner cache build failed:", e);
+          _crowdCornerCache = null;
+        }
+      }
+      if (_crowdCornerCache) {
+        // Position the four corners. Top corners are above the field
+        // (negative Y), bottom corners are below (Y > H). All inset 18px
+        // from the field edge so they don\'t touch the chip rim.
+        const inset = 18;
+        // === TOP-LEFT — home banner ===
+        ctx.drawImage(
+          _crowdCornerCache.homeBanner,
+          inset,
+          -CROWD_DEPTH + inset
+        );
+        // === TOP-RIGHT — visiting banner ===
+        ctx.drawImage(
+          _crowdCornerCache.visitingBanner,
+          W - CORNER_BANNER_W - inset,
+          -CROWD_DEPTH + inset
+        );
+
+        // === Bottom corner mascot signs — bob with cheer cycle ===
+        // Base sine bob sells the "held aloft by tired crowd members"
+        // read. Cheer adds extra impact on the side of the SCORING team
+        // (v37.62 — was an x-position heuristic, now uses cheer.teamId).
+        const baseBobL = Math.sin(t * 0.05) * 1.6;
+        const baseBobR = Math.sin(t * 0.05 + 0.7) * 1.6;
+        let cheerBobL = 0, cheerBobR = 0;
+        if (cheerActive) {
+          const cheerProgress = (t - cheer.frame) / cheerDuration;
+          // Cheer bob amplitude scales with intensity — match wins make
+          // the corner signs jump much higher than a single kill cheer.
+          const cheerStrength = (1 - cheerProgress) * 3.5 * cheerIntensity;
+          // Determine which corner cheers: prefer team attribution when
+          // available; fall back to the legacy x-position heuristic
+          // for backwards compatibility with any caller that didn\'t
+          // pass teamId.
+          let homeScored;
+          if (cheerTeamId && m.teamAId) {
+            homeScored = (cheerTeamId === m.teamAId);
+          } else {
+            homeScored = (cheer.x < W / 2);
+          }
+          if (homeScored) cheerBobL = -Math.abs(Math.sin(t * 0.4)) * cheerStrength;
+          else            cheerBobR = -Math.abs(Math.sin(t * 0.4 + 0.5)) * cheerStrength;
+        }
+        // === BOTTOM-LEFT — home mascot sign ===
+        ctx.drawImage(
+          _crowdCornerCache.homeSign,
+          inset,
+          H + inset + baseBobL + cheerBobL
+        );
+        // === BOTTOM-RIGHT — visiting mascot sign ===
+        ctx.drawImage(
+          _crowdCornerCache.visitingSign,
+          W - CORNER_SIGN_W - inset,
+          H + inset + baseBobR + cheerBobR
+        );
+      }
+    }
   }
 }
 
@@ -24764,8 +25342,13 @@ function drawHitboxes(m) {
   if (!LEAGUE_CONFIG || !LEAGUE_CONFIG.showHitboxes) return;
   if (!m) return;
 
-  const HIT_RADIUS = 14;          // matches sim's projectile-collision radius
-  const PROJECTILE_ENVELOPE = 22; // HIT_RADIUS+8 detection envelope
+  // === v37.59: honest hitbox display ===
+  // Old version drew a flat 14px circle and claimed it was the sim's
+  // projectile-collision radius — but the sim actually used 11 (and
+  // now 13 via COMBAT.hitRadius), AND the shape is now ellipse not
+  // circle. This shows what the sim ACTUALLY uses per knight via
+  // _hitProfile, plus a secondary ring at the dodge envelope.
+  const PROJECTILE_ENVELOPE = (COMBAT.hitRadius || 13) + 6;
 
   ctx.save();
   ctx.lineWidth = 1;
@@ -24775,11 +25358,21 @@ function drawHitboxes(m) {
   for (const list of [m.teamAplayers || [], m.teamBplayers || []]) {
     for (const p of list) {
       if (!p.alive) continue;
-      // Hit-radius (cyan)
+      // === v37.59: ellipse hit shape (cyan) — what the sim ACTUALLY checks ===
+      const profile = _hitProfile(p);
       ctx.strokeStyle = "rgba(0, 230, 255, 0.55)";
       ctx.beginPath();
-      ctx.arc(p.x, p.y, HIT_RADIUS, 0, Math.PI * 2);
+      ctx.ellipse(p.x, p.y, profile.rx, profile.ry, 0, 0, Math.PI * 2);
       ctx.stroke();
+      // === Suppression ring (faint pink) when suppressed ===
+      if (p.suppressedFrames > 0) {
+        ctx.strokeStyle = "rgba(247, 135, 138, 0.55)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, profile.rx + 3, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.lineWidth = 1;
+      }
 
       // Weapon attack range (yellow). For melee (range ≤ 30) draw small
       // tight circle; for ranged draw a larger circle showing engagement
@@ -28381,13 +28974,56 @@ function renderRoundStrip() {
   $("#roundScore").textContent = `${m.roundsWonA}–${m.roundsWonB}`;
 }
 
+/* === v37.60: shared safe-HTML renderer ===
+   Used by renderFeed, renderCommentary, and toast — all three previously
+   had different rendering policies (escape-everything vs raw vs raw),
+   each with its own bug class. The user reported HTML tags leaking into
+   the Live Feed (escape-everything was eating intentional <b>/<em> from
+   callers); follow-up flagged the same architectural mismatch in
+   commentary and toast (raw rendering opened an XSS surface).
+
+   This helper unifies them. ONE policy, three callers:
+     - <b></b> and <em></em>: render as bold/italic
+     - Anything else (including all other tags, attributes, nested
+       <script>, etc.): escaped to literal text
+     - Caller-supplied user content (knight names etc.) should still
+       pass through escapeHTML() at the call site — defense in depth
+
+   The regex uses a backreference so opener and closer must match
+   (e.g. <b>...</em> doesn't match — escaped as text). Non-greedy
+   inner so adjacent tags don't collapse. Recurses on inner content
+   for proper handling of nested tags.
+   ============================================================ */
+function _renderSafeHTML(raw) {
+  if (raw == null) return "";
+  const src = String(raw);
+  // <(b|em)> opening, then anything (non-greedy), then </\1> matching closer
+  const TAG_RE = /<(b|em)>([\s\S]*?)<\/\1>/g;
+  let out = "";
+  let lastIdx = 0;
+  let m;
+  while ((m = TAG_RE.exec(src)) !== null) {
+    // Escape any plain text BEFORE this tag
+    if (m.index > lastIdx) out += escapeHTML(src.slice(lastIdx, m.index));
+    // Emit the tag with recursively-rendered inner (so nested tags work)
+    out += "<" + m[1] + ">" + _renderSafeHTML(m[2]) + "</" + m[1] + ">";
+    lastIdx = TAG_RE.lastIndex;
+  }
+  // Escape any remaining text after the last match
+  if (lastIdx < src.length) out += escapeHTML(src.slice(lastIdx));
+  return out;
+}
+
 function renderFeed() {
   const el = $("#commentary");
   el.innerHTML = "";
   for (const item of FEED) {
     const div = document.createElement("div");
     div.className = "commentary-item " + item.kind;
-    div.innerHTML = `<span class="ts">${item.ts}</span><span>${escapeHTML(item.msg)}</span>`;
+    // === v37.60: whitelist <b>/<em> instead of full-escape ===
+    // Fixes the user-reported "HTML in feed" bug. Caller-passed bold/
+    // italic now renders; everything else still safe-escaped.
+    div.innerHTML = `<span class="ts">${escapeHTML(item.ts)}</span><span>${_renderSafeHTML(item.msg)}</span>`;
     el.appendChild(div);
   }
 }
@@ -28417,10 +29053,14 @@ function renderCommentary() {
     const flavor = c.flavor ? "flavor-" + c.flavor : "";
     const fresh = idx === 0 ? "fresh" : "";
     const ai = c.isAi ? "is-ai" : "";
-    return `<div class="cc-line ${c.kind} ${flavor} ${fresh} ${ai}">
-      <span class="ts">${c.ts}</span>
+    // === v37.60: route c.line through whitelist (was raw) ===
+    // Closes XSS surface — commentary callers don't currently pass HTML
+    // (verified by grep), but the previous raw-interpolation contract
+    // would have allowed it. Whitelist is consistent with feed + toast.
+    return `<div class="cc-line ${escapeHTML(c.kind)} ${escapeHTML(flavor)} ${escapeHTML(fresh)} ${escapeHTML(ai)}">
+      <span class="ts">${escapeHTML(c.ts)}</span>
       <span class="ico">${ico}</span>
-      <span class="body">${c.line}</span>
+      <span class="body">${_renderSafeHTML(c.line)}</span>
     </div>`;
   }).join("");
 }
@@ -33033,9 +33673,13 @@ function toast(msg, kind, opts) {
   const el = document.createElement("div");
   el.className = "toast " + kind;
   const icoMap = { win: "💸", lose: "💔", warn: "⚠️", info: "ℹ️" };
+  // === v37.60: toast msg routes through whitelist (was raw) ===
+  // ~30 toast call sites pass <b>${...}</b> for emphasis — these
+  // continue to render. Any caller content interpolated raw is now
+  // safely escaped if it wasn't already wrapped at the call site.
   el.innerHTML = `
     <span class="ico">${opts.ico || icoMap[kind] || "ℹ️"}</span>
-    <div class="body">${msg}</div>
+    <div class="body">${_renderSafeHTML(msg)}</div>
     <button class="close-x" aria-label="dismiss">×</button>
   `;
   const dismiss = () => {
