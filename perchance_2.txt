@@ -9960,13 +9960,14 @@
       <article class="history">
         <h3>The Stories Cabinet — what's archived here</h3>
         <div class="meta">A working archive · Float Foundation Stories Cabinet · curated narrative arcs from across the continent · entries added on a rolling basis</div>
-        <p>The Stories cabinet of the Foundation Archive holds long-running narrative columns, serialized correspondence, and curated ephemera from the continent's print outlets and grandstand seats, stored in the form their authors and editors and (in some cases) silent contributors chose to leave them. The cabinet was opened formally in Y41 closeout. As of this revision, six tenants have been admitted.</p>
+        <p>The Stories cabinet of the Foundation Archive holds long-running narrative columns, serialized correspondence, and curated ephemera from the continent's print outlets and grandstand seats, stored in the form their authors and editors and (in some cases) silent contributors chose to leave them. The cabinet was opened formally in Y41 closeout. As of this revision, seven tenants have been admitted.</p>
         <p>The first tenant, taking up the cabinet's first five chapters below, is <em>South Strip Songbook</em> — Cyril Halberd's standing column from the Wing Standard culture page, which has run since Y28 and which the Foundation has, with the Wing Standard's permission, copied into this archive in its entirety to date. Its organizing thread is the singer Byakko of Reno's Velvet Lacquer, whose debut record is at the time of this archive's opening in active production.</p>
         <p>The second tenant is the <em>Selected Ephemera from the Pew-Pew Ewe's Archive</em> — a curated draw from the seventy-five filed items the Foundation has accumulated since Y33 closeout, when an anonymous female sheep first took Section 14, Row M, seat 3 at Brewer's Reach. The selection is unauthorized in the sense that the subject has never identified herself and has, by every measurable sign, no idea this archive exists; it is authorized in the sense that the Section 14 ushers' working agreement with the Foundation permits the filing of fan ephemera as a matter of historical record.</p>
         <p>The third tenant is <em>From the Embankment</em> — the inaugural-year columns and earlier preserved letters of the anonymous fox kit who, since Y34 R3, has manned Gate Three at Brewer's Reach Pitch on every match day, and who began writing a signed column for the Wing Standard sports pages in Y41 closeout under that title.</p>
         <p>The fourth tenant is <em>Two Letters That Found Each Other</em> — the paired correspondence and shared-archive material of two young Boston Beavers fans whose paths converged in the Wing Standard letters page in Y41 mid-season and at Bess Beaverfoot's Concession Row stand at Y41 closeout, and whose families had, in the way of the Brewer's Row block, vaguely known each other for years before either child knew it. One of the two is named in print; the other is, by family preference and Section 14 fan-anonymity tradition, not.</p>
         <p>The fifth tenant is <em>Marin's Classroom</em> — the paired archive of Marin Bristlebeard, Boston schoolteacher of forty-six years' standing and wife of the retired Beaver Tank known to the canon as Bristlebeard the Second, and her secondary-school student Hollis (older brother of the Tenant Four letter-writer Penn), whose intergenerational friendship across fifty-some years of age has, since Y40 founding bell, been conducted principally on the after-school broadcasts of Beavers home matches in classroom 3-B of the Brewer's Row Common School.</p>
         <p>The sixth tenant is <em>A Hug Is Technically Legal</em> — the paired cartoon archive of two young Float Knights cartoonists from opposite coasts of the continent (Saskia Goldenpaw, twelve, Olympia Harbor, Golden Retriever; Theo Nightwhisker, eleven, Saint-Laurent, black-furred cat), whose youthful and entirely affectionate mockery of the Portland Punching Pandas' non-play eccentricities first appeared together on the Wing Standard's Y41 Hallowtide youth cartoon supplement and has, with the Pandas' coach Yu Cobblepad's gracefully written approval, run in every Hallowtide special edition since.</p>
+        <p>The seventh tenant is <em>Voices from Outside the Continent</em> — six broadcasters, streamers, and video-essay producers from beyond the Float Knights' continental boundary who have, between Y40 and Y42, produced sustained published or broadcast work about the League. The Foundation has, by the Commissioner's office's case-by-case authorization and with each contributor's signed consent, archived a representative sample. The contributors are non-canonical to the League's internal record (their work is broadcast outward, not part of the in-continent press circuit) but their published commentary is part of how the League is now seen, by audiences elsewhere, and is therefore — by the Foundation's standing doctrine that any record clearly belonging in the world's memory deserves keeping — preserved here in their respective voices.</p>
         <p>The Foundation does not, as a general rule, archive culture columns or fan ephemera; the sports archive has long been the bulk of what comes through these doors. The decision to extend the archive to these six was made by the Commissioner's office in consultation with the Wing Standard's editor, on the grounds that each had, by every measurable sign, become its own kind of permanent record of a life lived inside the League's orbit, and that this kind of record — when it appears, in any field — is worth keeping.</p>
         <div class="signoff">— Float Foundation, Stories Cabinet, opened Y41 closeout, most recently expanded Y42 closeout</div>
       </article>
@@ -10834,6 +10835,155 @@
       </details>
 
 
+      <details class="lore-timeline-era" open>
+        <summary><span class="era-name">VII — Voices from Outside the Continent</span> <span class="era-count">6 entries · the broadcasters and streamers who took notice, archived here in their own voices</span></summary>
+        <article class="history">
+          <h3>Cabinet preface — on the seventh tenant</h3>
+          <div class="meta">A note · Float Foundation, Stories Cabinet · Y42 closeout</div>
+          <p>The six entries that follow are, by the contributors' signed agreement and the Commissioner's office's authorization, archived as outside-continent commentary on the League. None of these contributors holds in-continent press accreditation; none has filed with the Wing Standard or with the LMG broadcast booth. Their published work — broadcast, streamed, or filmed elsewhere — circulated widely enough beyond the continent that the Foundation's internal review concluded the work, and the voices producing it, were a thing the world's memory of the League should not be without. The contributors are, in alphabetical order: AmbiguousAmphibian; the Angry Video Game Nerd (James Rolfe); Fillian; Game Grumps (Arin Hanson and Dan Avidan); Josh from Let's Game it Out; and TheSpiffingBrit. Each contributor reviewed and approved their own archived entry. The voices below are, in each case, the contributor's own — preserved by the Foundation's standing rule that an archived voice keeps the cadence in which it was first delivered.</p>
+          <div class="signoff">— Float Foundation, Stories Cabinet · seventh-tenant preface · Y42 closeout</div>
+        </article>
+
+        <article class="history">
+          <h3>Game Grumps visit Brewer's Reach — the R6 Beavers-Antlerlords match, archived from the broadcast transcript</h3>
+          <div class="meta">A broadcast transcript · Game Grumps, Y41 R6 · the Boston/Saint-Laurent match · transcript condensed by the Foundation, original recording held in archive box ST-Y41-GG-001</div>
+          <p><em>(broadcast in progress; the camera is on the field at Brewer's Reach Pitch; ARIN and DAN are seated in the LMG booth visiting-host chairs)</em></p>
+          <p><strong>Arin:</strong> Okay, so, I have been told — and I want to be very clear, I was TOLD this, by a person, in writing — that one of the teams on this field is, quote, allowed to just stand there. For the entire match. As a rule.</p>
+          <p><strong>Dan:</strong> The Antlerlords. The big moose guys.</p>
+          <p><strong>Arin:</strong> Right but — okay see this is the thing, Dan — they're not "allowed to stand there" in the sense of "they could stand there if they wanted to." They are, like, ENCOURAGED to stand there. By the League. By the rulebook. There is a NAMED RULE.</p>
+          <p><strong>Dan:</strong> The Antlerwood Rule.</p>
+          <p><strong>Arin:</strong> The ANTLERWOOD RULE. Yeah. And the moose at center pitch right now is — what's his name?</p>
+          <p><strong>Dan:</strong> Théodred the Third.</p>
+          <p><strong>Arin:</strong> Théodred the THIRD has been standing in the same spot for — I am looking at the LMG match clock — twenty-six minutes. He has not moved. He has not blinked. I am not sure he has a pulse. The other knights are, like, sprinting around him. There was a balloon-pop two feet from his face. He did not flinch.</p>
+          <p><strong>Dan:</strong> I think he's enjoying it.</p>
+          <p><strong>Arin:</strong> HOW CAN YOU TELL.</p>
+          <p><strong>Dan:</strong> <em>(laughing)</em> I can't, man. I really can't. He looks the exact same as he did at the opening bell. I think the moose are kind of <em>at peace</em> with the universe in a way the rest of us are not equipped to —</p>
+          <p><strong>Arin:</strong> THERE'S ANOTHER ONE. Dan. Dan look. There is — at the back — there is ANOTHER moose. ALSO standing still. There are TWO Théodreds. There can be no more.</p>
+          <p><strong>Dan:</strong> That's — actually, I think — yeah, that's the L'Ancrage second. They're allowed two of them. As long as one's at center pitch, the other can hold a deep position and also not move.</p>
+          <p><strong>Arin:</strong> The whole team is just — they're TREES. They are tree-coded knights. The League has invented tree-knights and is making the rest of the league play around them.</p>
+          <p><strong>Dan:</strong> <em>(after a long pause, considering)</em> The Beavers are absolutely going to win this.</p>
+          <p><strong>Arin:</strong> Of course they are. The Beavers ALWAYS win this. The Antlerlords aren't trying to win, Dan, they're trying to BE. They are doing — they are doing whatever the moose equivalent of meditation is. They are achieving moose-nirvana while the Beavers run laps around them. That is the WHOLE STRATEGY.</p>
+          <p><em>(the match clock ticks past 28:00; in the background, the Pew-Pew Ewe in Section 14 lets out a single distinct "PEW" that carries clear across the booth's open mic)</em></p>
+          <p><strong>Dan:</strong> Did you hear that?</p>
+          <p><strong>Arin:</strong> The — the sheep?</p>
+          <p><strong>Dan:</strong> That was a sheep, Arin.</p>
+          <p><strong>Arin:</strong> I have — I have so many questions and we are running out of time.</p>
+          <div class="signoff">— LMG visiting-host booth, Brewer's Reach Pitch, Y41 R6 · Game Grumps Float Knights episode 1 · transcript filed by the Foundation with both broadcasters' written permission · Arin and Dan returned in Y42 R8 for a follow-up; that transcript is filed separately in archive box ST-Y42-GG-002</div>
+        </article>
+
+        <article class="history">
+          <h3>Fillian's Float Knights stream — the night she became a Pew-Pew Ewe truther</h3>
+          <div class="meta">A stream transcript · Fillian's Twitch channel · Y41 closeout, archived with the streamer's signed permission · transcript condensed; the original 4-hour VOD is held in archive box ST-Y41-FL-001</div>
+          <p><em>(stream is live; Fillian is in her usual VTuber rig, on-camera; in front of her on a second monitor, the LMG broadcast feed is playing the Beavers-Owls R7 match)</em></p>
+          <p><strong>FILLIAN:</strong> Okay chat — CHAT — okay listen. Listen. We have been watching this for forty minutes. I have learned <em>everything</em>. I have learned things you should not know. I am about to ascend.</p>
+          <p><strong>FILLIAN:</strong> First of all. The Pandas. The PANDAS. They have a formation called the HUG. It is, by the rules — chat, look it up, it's in the rulebook, I am not making this up — it is "five knights standing on five different points all within a four-pace radius." That's a hug. That is a hug formation. They do this AS A STRATEGY. And it WORKS. They never finish above tenth at the Hallowtide Tag and they DO NOT CARE.</p>
+          <p><em>(chat scrolling rapidly; Fillian glances at it)</em></p>
+          <p><strong>FILLIAN:</strong> Yes "GremlinPaws88" I see you and yes, the Pandas are baby. The Pandas are absolutely baby. Their coach writes one-line approval letters when continental children draw cartoons of them. Their coach's name is YU COBBLEPAD. He signs every letter "we are, in turn, grateful." HE WRITES THIS WITH HIS WHOLE CHEST. I am going to cry on stream.</p>
+          <p><strong>FILLIAN:</strong> But — okay — okay, second thing. CHAT. The Pew-Pew Ewe.</p>
+          <p><em>(Fillian leans into the camera, lowers her voice conspiratorially)</em></p>
+          <p><strong>FILLIAN:</strong> So. There is a sheep. In Section 14, Row M, seat 3, at the Beavers home stadium. She is anonymous. Nobody knows who she is. She has been there since Year 33. She has never identified herself. She makes a sound — chat I'm dead serious — she makes a sound, that is the loudest single signal in the LMG booth's lower-register ambient feed, every Beavers home match, for eight years. And the booth director told the apprentice on his FIRST DAY that the lower register has two priorities: "anything new, and the Pew-Pew Ewe."</p>
+          <p><strong>FILLIAN:</strong> Chat. CHAT. They have a SHEEP. As a PRIORITY. In their broadcast monitoring system. I am — I am crying. This is the best fictional sport I have ever — IT'S NOT FICTIONAL CHAT THIS IS A REAL LEAGUE THEY HAVE STADIUMS. They have a stadium called THE POWER CELL. In RENO. It is — it is shaped like — chat I'm gonna go to Reno. I'm going to Reno. I'm meeting the sheep. I'm gonna find her. The sheep cannot hide from me.</p>
+          <p><em>(Fillian pauses; her on-stream cat-ear rig twitches)</em></p>
+          <p><strong>FILLIAN:</strong> Wait. Wait. The booth — the booth is calling me. They — chat they sent me a follow-up email, real-time, while I'm streaming, they're saying — they are saying I have to RESPECT the fan-anonymity tradition. The Section 14 ushers' working agreement with the Foundation. I cannot DOX the sheep. CHAT WHAT.</p>
+          <p><strong>FILLIAN:</strong> Okay. Okay. We will not dox the sheep. We will be respectful. But I AM going to Reno. We are going to the Power Cell. We are seeing a match in person. CHAT I LOVE THIS LEAGUE. Okay raid, hit the raid button, we are sending everyone to the LMG official stream because they need MORE of this energy. Bye chat. <em>(blows kiss)</em> Pew. Pew.</p>
+          <div class="signoff">— Fillian, Twitch broadcast Y41 closeout · transcript filed with permission · the stream's clip "the sheep cannot hide from me" became, by clip-tracking standards, the most-shared Float Knights moment in non-continental online circulation that year. Fillian did, in due course, attend the Y42 mid-season Reno match, sat in the visiting-fan section, and reported on stream the following Monday that she had made eye contact with the Pew-Pew Ewe across the stadium for, by her own count, "approximately one full second" and that the experience was, by her own assessment, "religious"</div>
+        </article>
+
+        <article class="history">
+          <h3>Josh (Let's Game it Out) attempts to break the Hallowtide Tag — the Y42 episode the Tag committee posted to the official archive</h3>
+          <div class="meta">A video transcript · Let's Game it Out, Y42 Hallowtide season · transcript condensed; original 47-minute video held in archive box ST-Y42-LGIO-001 · the Tag committee's official commendation letter is held in the same box</div>
+          <p><em>(Josh, on camera, in the standing Let's Game it Out flat affect, holding a copy of the Hallowtide Tag rulebook)</em></p>
+          <p><strong>Josh:</strong> So. The Hallowtide Tag. This is the continental fan-and-League annual event. Fourteen thousand attendees. Sixteen rotating Tag-mode matches across two days. Real bracket. Real stakes. The Pandas have finished eleventh for eight consecutive years.</p>
+          <p><strong>Josh:</strong> I have been given, by the Tag committee, a single qualifier-bracket honorary slot. They thought it would be funny. They were correct. It will be funny.</p>
+          <p><strong>Josh:</strong> Now — the rules of Tag mode are simple. There is one knight, on one team, who is "It." If "It" tags an opponent, that opponent freezes for eight seconds. If they pass "It" via a tag, "It" transfers. The team with the most freezes accumulated when the timer runs out wins the round.</p>
+          <p><strong>Josh:</strong> The rulebook does not say anything about — and I want you to listen very carefully — the rulebook does not say anything about <em>where</em> the It-knight has to be standing when they tag an opponent. It just says they have to tag them. With the It-tagger. Which is a stick.</p>
+          <p><em>(Josh smiles a small, terrible smile)</em></p>
+          <p><strong>Josh:</strong> So I have built a stick. It is, technically, a stick. The Tag committee approved it. They approved it because by every measurement they ran, it is one stick, with one tagger-tip, and it weighs less than the rulebook's two-point-three-kilogram cap.</p>
+          <p><strong>Josh:</strong> It is forty-one feet long. And it has a hinge in the middle. And it telescopes.</p>
+          <p><em>(cuts to footage of Josh, in qualifier-bracket gear, standing at one end of the Y42 Tag pitch with a forty-one-foot collapsible stick)</em></p>
+          <p><strong>Josh:</strong> I have just tagged everyone on the opposing team without leaving my starting position.</p>
+          <p><em>(longer shot — the opposing team is, in fact, all frozen; the referee is checking the rulebook in real-time; the Tag committee chair is on the sideline reviewing a printed copy of the rules with what film analysis would later describe as "the expression of a man who has been outwitted by a stick")</em></p>
+          <p><strong>Josh:</strong> They have called a fifteen-minute review break. They are going to find a way to disqualify this. They will be unable to. The rulebook has a hole. I have found the hole. The hole is forty-one feet long.</p>
+          <p><em>(time-lapse cut; the review takes one hour and twenty-six minutes; the Tag committee returns)</em></p>
+          <p><strong>Josh:</strong> They have ruled it legal. They have also rewritten section 4-C of the rulebook for next year. The new section 4-C reads, and I quote, "the It-tagger may not exceed three meters in maximum length, fully extended, including all hinges, telescoping mechanisms, articulating sub-segments, and any other geometry by which the effective reach of the tagger could be increased beyond standing arm's length."</p>
+          <p><strong>Josh:</strong> They named it the <em>Goose Rule</em>. After me.</p>
+          <p><em>(Josh holds up a framed certificate from the Tag committee. The certificate reads, in elegant calligraphy: "GOOSE RULE — Hallowtide Tag Section 4-C, named in honor of Josh of Let's Game it Out, whose forty-one-foot collapsible stick at Y42 Hallowtide qualifier-bracket revealed a previously-unconsidered failure mode of the rulebook. Filed with the committee's gratitude and our standing recommendation that he not be invited back in this same capacity, though he is and will remain welcome in every other.")</em></p>
+          <p><strong>Josh:</strong> They thought it would be funny. They were correct. It was funny.</p>
+          <div class="signoff">— Let's Game it Out, Y42 Hallowtide episode · the Goose Rule was officially added to the Hallowtide Tag rulebook as section 4-C effective Y43 mid-season · the original forty-one-foot stick is on permanent display, by the Tag committee's request, in the Reno Power Cell visitor's gallery, with a small placard reading "this is the stick"</div>
+        </article>
+
+        <article class="history">
+          <h3>AmbiguousAmphibian on Hester Quillstrike's plate — the seventeen-minute video about a helmet hung at three feet eight</h3>
+          <div class="meta">A video transcript · AmbiguousAmphibian, Y41 closeout · transcript condensed; original 17-minute essay held in archive box ST-Y41-AA-001 · narration in the contributor's standing soft-spoken voice, preserved here as filed</div>
+          <p>This is the Hall of Permadeath. It is in Helena, in the Hedgehog Hall building, two streets up from the Glacier Rink. The Hall holds one helmet plate per fallen knight, mounted along the long inner wall in the order of their falls. There are, as of Y42 closeout, two hundred and forty-three plates.</p>
+          <p>Most of them are mounted at adult-knight standing height. The Hall's curators chose, in the inaugural year, to mount each helmet at the height the knight wore it in their last match. This was meant as a gesture of memory — the Hall would remember not just the knight's name but the specific space they had occupied on the pitch.</p>
+          <p>Hester Quillstrike's plate is at three feet eight. It is the lowest mount in the Hall.</p>
+          <p>There is a small wooden step, hand-built by the Hall's first custodian, set on the floor beneath her plate. The step is for short visitors who would like to stand on it and see her face. The face on the helmet is sculpted from her ceremonial mask, which is to say it is sculpted from how she chose to present herself to the League. She is smiling slightly. The smile is the smile of someone who has just made a calculation and is content with the answer.</p>
+          <p>I have stood in front of this plate for, by my count, perhaps eleven minutes. I am not the first visitor to do this. The Hall's working journal — kept since opening, available for review at the front desk — notes that the average dwell time at Hester's plate is approximately eight minutes. Most visitors at most plates dwell for two.</p>
+          <p>What I have been thinking about, in those eleven minutes, is this: Hester Quillstrike set the four-hundred-and-twelve-pace shot record at the Glacier Rink in HED's inaugural season. She was the shortest knight to ever set a record. The League Office sent two officials with calipers because they did not believe the measurement. The officials apologized. Hester accepted the apology silently.</p>
+          <p>And the Hall's curators, who are themselves Hedgehogs, mounted her plate at three feet eight. Because that is where she stood. Because that was the height of her face. Because the small wooden step is a kindness extended outward — the Hall is saying, to every visitor, <em>here is a knight who did extraordinary things from a small height, and we have arranged the room so you can see her clearly.</em></p>
+          <p>I think — and I do not say this often, in essays — I think there is a kind of grace in mounting a plate at three feet eight. There is a grace in building the step. There is a grace in the curators' choice not to round up. The League could have chosen to mount every plate at a uniform height. It did not. It chose to keep the dimensions of the people it lost.</p>
+          <p>The Hall is open every day from sunrise to sunset. The custodian on duty when I visited is a Hedgehog named Wren, who is approximately Hester's height. Wren did not approach me while I stood at the plate. Wren waited at the front desk. When I walked back to leave, Wren said, <em>the step is part of the plate. it should not be moved.</em></p>
+          <p>I told Wren I would not move it. Wren said <em>thank you.</em></p>
+          <p>I think about this often.</p>
+          <div class="signoff">— AmbiguousAmphibian, Y41 closeout · "The Plate at Three Feet Eight" · transcript filed by the Foundation with the contributor's signed permission · the original video remains the most-cited outside-continent essay on Float Knights culture in academic film-and-sport-studies citation indices through Y42</div>
+        </article>
+
+        <article class="history">
+          <h3>TheSpiffingBrit's Power Core exploit video — the one the League actually thanked him for</h3>
+          <div class="meta">A video transcript · TheSpiffingBrit, Y42 mid-season · transcript condensed; original 22-minute video held in archive box ST-Y42-SB-001 · the League's official thank-you letter is held in the same box</div>
+          <p><em>(posh British accent throughout; tea cup visible in shot; The Spiffing Brit is seated at his standing desk with a printout of the Float Knights rulebook, edition forty-three, in front of him)</em></p>
+          <p><strong>The Spiffing Brit:</strong> Hello there, you absolute beautiful people, and welcome back to another perfectly balanced exploit, as all things should be! Today we are looking at — would you believe it — actual physical sport, played by actual physical knights, on actual physical fields, in a real continental league called Float Knights. And I have been reading the rulebook. ALL of the rulebook. Edition forty-three. And I have FOUND something.</p>
+          <p><strong>The Spiffing Brit:</strong> So. The Power Core. The Power Core is a periodic objective that spawns at the centre of the arena. When a knight captures it, their team gets a twenty-five percent damage bonus for eight seconds. It respawns thirty seconds after capture. Now — and here's where the rulebook gets <em>interesting</em> — the rulebook does not specify, anywhere, that a SINGLE knight cannot capture the Power Core multiple times in succession.</p>
+          <p><strong>The Spiffing Brit:</strong> "But Spiff," I hear you cry, "how could a single knight capture the Power Core multiple times when there's a thirty-second respawn timer?" Well, my dear viewer, that is the WRONG QUESTION. The right question is: <em>does the bonus stack?</em></p>
+          <p><strong>The Spiffing Brit:</strong> And the rulebook is, on the matter — and I am now quoting from page two hundred and seventy-one — ENTIRELY SILENT.</p>
+          <p><em>(zoom in on the rulebook; The Spiffing Brit taps page 271 with his pen)</em></p>
+          <p><strong>The Spiffing Brit:</strong> So I commissioned, with the kind cooperation of the Float Knights League Office's testing-bracket staff, a series of three exhibition matches in which a single knight — a Wolf brawler with the appropriate stats, lovely chap, name of Hardvein Quickstep — was permitted to capture the Power Core, then survive eight seconds, then capture it AGAIN on respawn, AND AGAIN, and so on, while we measured the damage bonus accumulation.</p>
+          <p><strong>The Spiffing Brit:</strong> The result. THE RESULT. Was that the bonuses DID stack. Briefly. For approximately one point eight seconds in the overlap window between captures. Hardvein Quickstep, in that window, dealt — by the LMG broadcast measurement — fifty percent additional damage. FIFTY PERCENT. From a perfectly balanced rulebook gap of one point eight seconds!</p>
+          <p><em>(The Spiffing Brit beams at the camera)</em></p>
+          <p><strong>The Spiffing Brit:</strong> Now — here's the LOVELY part. After our third exhibition match, the League Rules Committee — chaired by the wonderfully-named Cyril Halberd — sent me an actual physical letter, on actual physical letterhead, thanking me for the testing. Apparently they had been aware of the gap for two seasons, had been unable to reproduce it under controlled conditions, and our exhibition matches were the FIRST controlled-conditions reproduction in the gap's documented history. They have now patched it. Edition forty-four of the rulebook will include — and I quote from Cyril's lovely letter — a "Spiffing Clause" specifying that "no single knight may carry more than one active Power Core damage bonus at a single time, regardless of capture sequencing."</p>
+          <p><strong>The Spiffing Brit:</strong> Now, viewers, I want you to understand the GLORY of this. The League Rules Committee patched a one-point-eight-second exploit, named the patch clause AFTER ME, and sent me a thank-you letter. I have been gaming for fifteen years. This has never happened. Not once. Usually they just ban my account.</p>
+          <p><em>(The Spiffing Brit raises his tea cup)</em></p>
+          <p><strong>The Spiffing Brit:</strong> To Cyril Halberd, to the Float Knights League Office, and to Hardvein Quickstep, who carried the exploit with the dignity of a true professional and is now retired with the gratitude of the rules-exploit community. Cheers.</p>
+          <div class="signoff">— TheSpiffingBrit, Y42 mid-season · "The Spiffing Clause" · transcript filed with the contributor's signed permission · the patch is, as of Y43 mid-season, listed in the Rules Committee's standing register as "Section 14-D — Power Core Stacking, sometimes informally referred to as the Spiffing Clause" · the original tea cup featured in the video has been, by The Spiffing Brit's gift to the League, archived alongside the rulebook printout in box ST-Y42-SB-001</div>
+        </article>
+
+        <article class="history">
+          <h3>The Angry Video Game Nerd reviews the Antlerwood Rule — the only AVGN episode to ever receive an in-character apology from a real-life sports league</h3>
+          <div class="meta">A video transcript · The Angry Video Game Nerd, Y42 closeout · transcript condensed and language-modulated for archival; original 28-minute episode held in archive box ST-Y42-AVGN-001 · the League's response letter is held in the same box</div>
+          <p><em>(the Nerd, in character, in his basement set, in the standard glasses-and-pocket-protector get-up, holding a copy of the Float Knights rulebook with a noticeable look of disgust on his face)</em></p>
+          <p><strong>The Nerd:</strong> What were they thinking. WHAT WERE THEY THINKING. Look at this rule. Look at this — this absolute — this PILE OF —</p>
+          <p><em>(the Nerd takes a deep breath)</em></p>
+          <p><strong>The Nerd:</strong> The Antlerwood Rule. Page one hundred and eighty-six. The Float Knights rulebook, edition forty-three. This rule states — and I am QUOTING — that a knight on the Saint-Laurent Antlerlords roster, in a position called L'Ancrage, is EXEMPT from the wave-doctrine respawn protocol's ten-second movement-mandate. They can stand. At center pitch. The. ENTIRE. MATCH.</p>
+          <p><em>(the Nerd makes a gesture of incredulous fury)</em></p>
+          <p><strong>The Nerd:</strong> The ENTIRE MATCH. We're talking thirty-one minutes. THIRTY. ONE. MINUTES. Of one knight. Standing. In the middle of the field. NOT MOVING. While the OTHER knights are RUNNING AROUND HIM trying to PLAY THE GAME.</p>
+          <p><em>(the Nerd opens the rulebook to page 186 and stabs the page with his finger)</em></p>
+          <p><strong>The Nerd:</strong> "Antlerlords' L'Ancrage may, by the Rule, remain stationary at center pitch for the entire match, BY WHICH THEY MEAN THE ENTIRE MATCH." That's not a clarification, that's a CONFESSION. The rulebook is APOLOGIZING for the rule WHILE WRITING IT DOWN. The rulebook KNOWS this is bull-puckey. The rulebook is LITERALLY MAKING THE FACE I am MAKING RIGHT NOW.</p>
+          <p><strong>The Nerd:</strong> And do you know who has held this position for ninety-three years? NINETY. THREE. YEARS. The MOOSE. As a SPECIES. There is, I am told, a moose named Théodred the Third — THIRD, mind you, there have been at LEAST TWO PRIOR THÉODREDS — who is currently doing this. Standing in the middle of the field. For ninety-three years. As a, quote, "biological commitment."</p>
+          <p><em>(the Nerd throws the rulebook across the room)</em></p>
+          <p><strong>The Nerd:</strong> Did the rules committee even READ this rule before they passed it? "Hi, yeah, can we just have one of our teams not play the game for a half hour? Sure. Approved. Stamp it. Section ratified by Year-Thirty-Six protocol. ENJOY YOUR NINETY-THREE YEARS OF NOT PLAYING SPORTS, MOOSE."</p>
+          <p><strong>The Nerd:</strong> This is the WORST. WHAT a load of MOOSE-KISSING DOOKIE.</p>
+          <p><em>(the Nerd takes a long pull from a beer; he is shaking his head)</em></p>
+          <p><em>(the episode cuts to a black title card; on it, in white text, the following appears:)</em></p>
+          <p><em>"POSTSCRIPT: Two weeks after this episode aired, James Rolfe received a physical letter from the Float Knights League Office, Saint-Laurent Antlerlords division. The letter is reproduced below in full, with permission, and is held in archive box ST-Y42-AVGN-001."</em></p>
+          <p><em>(the camera focuses on a letter, on League Office letterhead, signed by the Antlerlords' head coach Maître Beauclair)</em></p>
+          <blockquote><em>Dear Mr. Rolfe,</em></blockquote>
+          <blockquote><em>We have, on the matter of your recent published commentary regarding the Antlerwood Rule (League Rulebook ed. 43, p. 186), reviewed the episode in its entirety. We regret that the Rule, as written, has caused you visible distress.</em></blockquote>
+          <blockquote><em>We should clarify, by way of apology and explanation, that the Rule was ratified in Year-36 by majority Caucus vote following a forty-one-day public consultation period. The Rule applies only to one team and one position because no other team, in the League's recorded fourteen-year history, has petitioned the Caucus for such an exemption. The Rule is, as you correctly noted, a confession in the form of a clarification. It is also, by every measurable sign, the position the species considers home.</em></blockquote>
+          <blockquote><em>We have enclosed, with this letter, a single Antlerlords-blue baseball cap, free of charge, as a small gesture. The cap reads, on the front, "I STOOD STILL AT BREWER'S REACH." The Antlerlords' standing club store in Saint-Laurent will, on presentation of this cap, provide you with one (1) free moose stew at any home match in Y43.</em></blockquote>
+          <blockquote><em>We are, on the matter, sorry the Rule troubles you. We are, in turn, grateful for the publicity.</em></blockquote>
+          <blockquote><em>Maître Beauclair, head coach, Saint-Laurent Antlerlords</em></blockquote>
+          <p><em>(cut back to the Nerd's basement; the Nerd is wearing the Antlerlords-blue baseball cap; he is staring at the camera)</em></p>
+          <p><strong>The Nerd:</strong> ... they sent me a hat.</p>
+          <p><em>(long pause)</em></p>
+          <p><strong>The Nerd:</strong> The moose sent me a hat.</p>
+          <p><em>(the Nerd takes another pull from his beer)</em></p>
+          <p><strong>The Nerd:</strong> Episode's over. I gotta go to Saint-Laurent and get a free stew.</p>
+          <div class="signoff">— The Angry Video Game Nerd, Y42 closeout · "The Antlerwood Rule" episode · transcript filed with the contributor's signed permission · James Rolfe did, in due course, attend the Y43 mid-season Antlerlords home match in Saint-Laurent, presented his cap at the standing club store, received his free moose stew, and (by Maître Beauclair's later careful written observation) sat in the visitor's section through the entire thirty-one-minute match without complaint, in front of an L'Ancrage-position Théodred IV who did not, throughout, move</div>
+        </article>
+      </details>
+
+
 </div>
 
     <div class="lore-section" data-loresection="timeline">
@@ -11457,7 +11607,7 @@
               <dd>Locker-room shorthand for the bizarre incident in the Year 33 vault rotation, when a steward repeatedly arrived at the vault with a sealed bag containing one fewer item than the bag had been sealed with. The phrase "steward's pocket" now describes any object that goes missing without rational explanation.</dd>
 
               <dt>The Stories Cabinet</dt>
-              <dd>A working sub-archive of the Float Foundation Archive, opened formally Y41 closeout, containing long-running narrative columns, serialized correspondence, and curated ephemera from the continent's print outlets and grandstand seats. As of Y42 closeout, six tenants have been admitted: <em>South Strip Songbook</em> (Tenant 1, Cyril Halberd's Wing Standard culture column), <em>Selected Ephemera from the Pew-Pew Ewe's Archive</em> (Tenant 2), <em>From the Embankment</em> (Tenant 3, the Boy at Gate Three's Wing Standard column), <em>Two Letters That Found Each Other</em> (Tenant 4, Penn and the apprentice), <em>Marin's Classroom</em> (Tenant 5, Marin Bristlebeard and Hollis), and <em>A Hug Is Technically Legal</em> (Tenant 6, Saskia and Theo). Admission is by working agreement between the Commissioner's office and the originating outlet's editorial board; once admitted, a tenant's archive is curated on a rolling basis with no closing date assumed. The Foundation does not, as a general rule, archive culture columns or fan ephemera; the sports archive has long been the bulk of what comes through these doors. The decision to extend the archive to these six was made on the grounds that each had, by every measurable sign, become its own kind of permanent record of a life lived inside the League's orbit, and that this kind of record — when it appears, in any field — is worth keeping.</dd>
+              <dd>A working sub-archive of the Float Foundation Archive, opened formally Y41 closeout, containing long-running narrative columns, serialized correspondence, and curated ephemera from the continent's print outlets and grandstand seats. As of Y42 closeout, seven tenants have been admitted: <em>South Strip Songbook</em> (Tenant 1, Cyril Halberd's Wing Standard culture column), <em>Selected Ephemera from the Pew-Pew Ewe's Archive</em> (Tenant 2), <em>From the Embankment</em> (Tenant 3, the Boy at Gate Three's Wing Standard column), <em>Two Letters That Found Each Other</em> (Tenant 4, Penn and the apprentice), <em>Marin's Classroom</em> (Tenant 5, Marin Bristlebeard and Hollis), <em>A Hug Is Technically Legal</em> (Tenant 6, Saskia and Theo), and <em>Voices from Outside the Continent</em> (Tenant 7, the six permitted outside-continent broadcasters and streamers — added Y42 closeout, the first non-continental tenant). Admission is by working agreement between the Commissioner's office and the originating outlet's editorial board; once admitted, a tenant's archive is curated on a rolling basis with no closing date assumed. The Foundation does not, as a general rule, archive culture columns or fan ephemera; the sports archive has long been the bulk of what comes through these doors. The decision to extend the archive was made on the grounds that each had, by every measurable sign, become its own kind of permanent record of a life lived inside the League's orbit, and that this kind of record — when it appears, in any field — is worth keeping.</dd>
 
               <dt>The Sundip Memorial Wing</dt>
               <dd>The wing of the Owl Hall in Seattle dedicated to Sundip Hootington Jr., OWL Sniper, who tied Hester Quillstrike's 412-pace record at the Reno Open Court in Year 35 R8 and died in the same match when the Power Core he climbed to celebrate the shot overloaded. The Wing is, by Owl tradition, the only knight memorial in the League named for a knight who tied rather than broke a record. The Owl Hall's board justified the dedication, in the original ratification statement: <em>"The shot was the equal of Quillstrike's. The Power Core's overload was, by League technical analysis, the result of a latency the Caucus has since patched. The shot stands. The shot tied. The Owl who took it died at the moment of celebration. We will, in his Hall's wing, keep his rifle and the Power Core's casing — the shot's two halves — and we will, in our seasons going forward, remember what the shot took."</em> The wing is open to the public during all Owl Hall business hours. Visitors are asked, at the door, to remove their hats. The hats remain off, by Owl Hall steward record, an average of fifty-one seconds per visitor. The Hall does not measure this; the Hall has, in two seasons, only known the average because a single Brewer's Reach Reader columnist measured it for a column the Reader's senior columnist refused to publish.</dd>
@@ -15381,6 +15531,17 @@ function tickPowerCore(m) {
         pc.respawnAtFrame = frame + 600; // 30 sec
         pc.lastCapturedTeam = p.teamId;
         pc.lastCapturedFrame = frame;
+        // === v37.63: power-core capture triggers a team-attributed cheer ===
+        // (Was incorrectly placed in pickTarget by v37.62 — fixed here so
+        // pc, team, and p are all in scope.)
+        if (typeof triggerCrowdCheer === "function") {
+          triggerCrowdCheer(m, {
+            x: pc.x, y: pc.y,
+            teamId: p.teamId,
+            radius: 320,
+            intensity: COMBAT.cheerIntensityCorePit,
+          });
+        }
         break;
       }
     }
@@ -17954,13 +18115,6 @@ const TEAM_AI = (function() {
           if (allies.some(a => a.alive && a.id === e.target)) {
             util += pers.protectAllyBonus;
           }
-        // === v37.62: power-core capture triggers a team-attributed cheer ===
-        triggerCrowdCheer(m, {
-          x: pc.x, y: pc.y,
-          teamId: p.teamId,
-          radius: 320,
-          intensity: COMBAT.cheerIntensityCorePit,
-        });
         }
       }
       if (util > bestUtility) { bestUtility = util; bestTarget = e; }
@@ -24731,113 +24885,228 @@ function _buildCrowdCache() {
    ============================================================ */
 let _crowdCornerCache = null;
 
-const CORNER_BANNER_W = 230;
-const CORNER_BANNER_H = 110;
+// === v37.64: dimensions for the new layout ===
+// Centered top scoreboard (replaces v37.61's two top corner banners).
+// Wide enough to fit both teams side-by-side with a center score panel.
+const SCOREBOARD_W = 460;
+const SCOREBOARD_H = 120;
+// Small standalone top-corner mascot heads (replaces nothing — these are
+// new visual elements occupying the corners freed by the scoreboard).
+const TOP_MASCOT_W = 88;
+const TOP_MASCOT_H = 88;
+// Bottom-corner mascot crowd-held signs (unchanged from v37.61).
 const CORNER_SIGN_W = 180;
 const CORNER_SIGN_H = 150;
 
-/* Build a team-name banner (top corner) onto an offscreen canvas. */
-function _buildTeamBanner(team, isHome) {
+/* === v37.64: combined hanging scoreboard ===
+   Replaces the v37.61 two-corner banner pair. Single wide panel (~460×120)
+   with both teams side-by-side, current round score in the middle, and
+   visible mounting straps reaching upward into the stadium structure.
+   Score is live — the cache key includes the round score so this canvas
+   re-renders on round wins. ============================================ */
+function _buildScoreboard(teamA, teamB, scoreA, scoreB) {
   const cv = document.createElement("canvas");
-  cv.width = CORNER_BANNER_W;
-  cv.height = CORNER_BANNER_H;
+  cv.width = SCOREBOARD_W;
+  cv.height = SCOREBOARD_H + 16;  // +16 leaves room for the mounting strap geometry above the panel
+  const cx = cv.getContext("2d");
+  if (!teamA || !teamB) return cv;
+
+  const STRAP_H = 16;
+  const PANEL_Y = STRAP_H;
+
+  // === Mounting straps — two thin trapezoidal cables extending upward
+  //     from the panel's top corners. Sells the "hung from above" read
+  //     so the scoreboard doesn't look like it's floating. ===
+  cx.fillStyle = "rgba(35, 38, 46, 0.95)";
+  // Left strap
+  cx.beginPath();
+  cx.moveTo(48, 0);
+  cx.lineTo(56, 0);
+  cx.lineTo(64, STRAP_H);
+  cx.lineTo(40, STRAP_H);
+  cx.closePath();
+  cx.fill();
+  // Right strap
+  cx.beginPath();
+  cx.moveTo(SCOREBOARD_W - 56, 0);
+  cx.lineTo(SCOREBOARD_W - 48, 0);
+  cx.lineTo(SCOREBOARD_W - 40, STRAP_H);
+  cx.lineTo(SCOREBOARD_W - 64, STRAP_H);
+  cx.closePath();
+  cx.fill();
+  // Strap highlights — subtle 1px lighter line on the inside edge
+  cx.fillStyle = "rgba(120, 130, 145, 0.6)";
+  cx.fillRect(56, 1, 1, STRAP_H - 2);
+  cx.fillRect(SCOREBOARD_W - 57, 1, 1, STRAP_H - 2);
+
+  // === Outer dark glass plate ===
+  cx.fillStyle = "rgba(20, 22, 28, 0.96)";
+  cx.fillRect(0, PANEL_Y, SCOREBOARD_W, SCOREBOARD_H);
+
+  // === Top accent line (gold) — full width across the panel ===
+  cx.fillStyle = "rgba(247, 201, 72, 0.85)";
+  cx.fillRect(0, PANEL_Y, SCOREBOARD_W, 2);
+
+  // === Team color stripes — left edge for home, right edge for visiting ===
+  cx.fillStyle = teamA.color || "#f7c948";
+  cx.fillRect(0, PANEL_Y, 12, SCOREBOARD_H);
+  cx.fillStyle = "rgba(255, 255, 255, 0.32)";  // inner highlight
+  cx.fillRect(11, PANEL_Y, 1, SCOREBOARD_H);
+  cx.fillStyle = teamB.color || "#f7c948";
+  cx.fillRect(SCOREBOARD_W - 12, PANEL_Y, 12, SCOREBOARD_H);
+  cx.fillStyle = "rgba(255, 255, 255, 0.32)";
+  cx.fillRect(SCOREBOARD_W - 12, PANEL_Y, 1, SCOREBOARD_H);
+
+  // === Center divider strip (where the score lives) ===
+  const CENTER_W = 100;
+  const centerX = SCOREBOARD_W / 2;
+  cx.fillStyle = "rgba(8, 10, 14, 0.85)";
+  cx.fillRect(centerX - CENTER_W / 2, PANEL_Y + 4, CENTER_W, SCOREBOARD_H - 8);
+  // Center divider gold edges
+  cx.fillStyle = "rgba(247, 201, 72, 0.5)";
+  cx.fillRect(centerX - CENTER_W / 2, PANEL_Y + 4, 1, SCOREBOARD_H - 8);
+  cx.fillRect(centerX + CENTER_W / 2 - 1, PANEL_Y + 4, 1, SCOREBOARD_H - 8);
+
+  // === Home block (left half) ===
+  const homeBlockX = 22;
+  const homeBlockEnd = centerX - CENTER_W / 2 - 12;
+  // Emoji
+  cx.font = "36px ui-sans-serif, system-ui, sans-serif";
+  cx.textBaseline = "middle";
+  cx.textAlign = "left";
+  cx.fillText(teamA.emoji || "❓", homeBlockX, PANEL_Y + 36);
+  // Team name in stencil
+  cx.font = "bold 13px ui-sans-serif, system-ui, sans-serif";
+  cx.fillStyle = "#fefcf0";
+  cx.fillText((teamA.name || "").toUpperCase(), homeBlockX + 50, PANEL_Y + 22);
+  // Short code in team color
+  cx.font = "bold 18px ui-monospace, Menlo, Consolas, monospace";
+  cx.fillStyle = teamA.color || "#f7c948";
+  cx.fillText(teamA.short || "—", homeBlockX + 50, PANEL_Y + 46);
+  // Motto in italic mute
+  cx.font = "italic 10px ui-sans-serif, system-ui, sans-serif";
+  cx.fillStyle = "rgba(220, 220, 230, 0.78)";
+  cx.fillText(teamA.motto || "", homeBlockX, PANEL_Y + 74);
+  // HOME label + founded year — bottom strip
+  cx.fillStyle = "rgba(247, 201, 72, 0.18)";
+  cx.fillRect(12, PANEL_Y + SCOREBOARD_H - 20, homeBlockEnd - 12, 20);
+  cx.font = "bold 10px ui-monospace, Menlo, Consolas, monospace";
+  cx.fillStyle = "#f7c948";
+  cx.textAlign = "left";
+  cx.fillText("HOME", homeBlockX, PANEL_Y + SCOREBOARD_H - 10);
+  cx.fillStyle = "rgba(220, 220, 230, 0.65)";
+  cx.textAlign = "right";
+  cx.fillText("Y" + (teamA.founded ? teamA.founded - 1990 : "??"), homeBlockEnd - 4, PANEL_Y + SCOREBOARD_H - 10);
+
+  // === Visiting block (right half — mirrored) ===
+  const visitBlockEnd = SCOREBOARD_W - 22;
+  const visitBlockStart = centerX + CENTER_W / 2 + 12;
+  cx.font = "36px ui-sans-serif, system-ui, sans-serif";
+  cx.textBaseline = "middle";
+  cx.textAlign = "right";
+  cx.fillText(teamB.emoji || "❓", visitBlockEnd, PANEL_Y + 36);
+  cx.font = "bold 13px ui-sans-serif, system-ui, sans-serif";
+  cx.fillStyle = "#fefcf0";
+  cx.fillText((teamB.name || "").toUpperCase(), visitBlockEnd - 50, PANEL_Y + 22);
+  cx.font = "bold 18px ui-monospace, Menlo, Consolas, monospace";
+  cx.fillStyle = teamB.color || "#f7c948";
+  cx.fillText(teamB.short || "—", visitBlockEnd - 50, PANEL_Y + 46);
+  cx.font = "italic 10px ui-sans-serif, system-ui, sans-serif";
+  cx.fillStyle = "rgba(220, 220, 230, 0.78)";
+  cx.fillText(teamB.motto || "", visitBlockEnd, PANEL_Y + 74);
+  // VISITING label + founded year
+  cx.fillStyle = "rgba(150, 170, 220, 0.15)";
+  cx.fillRect(visitBlockStart, PANEL_Y + SCOREBOARD_H - 20, SCOREBOARD_W - 12 - visitBlockStart, 20);
+  cx.font = "bold 10px ui-monospace, Menlo, Consolas, monospace";
+  cx.fillStyle = "#a0b8e0";
+  cx.textAlign = "right";
+  cx.fillText("VISITING", visitBlockEnd, PANEL_Y + SCOREBOARD_H - 10);
+  cx.fillStyle = "rgba(220, 220, 230, 0.65)";
+  cx.textAlign = "left";
+  cx.fillText("Y" + (teamB.founded ? teamB.founded - 1990 : "??"), visitBlockStart + 4, PANEL_Y + SCOREBOARD_H - 10);
+
+  // === Center score block — the LIVE scoreboard piece ===
+  // Big numbers, team-color tinted. Caching key includes scoreA/scoreB
+  // so this updates correctly on round wins.
+  const centerY = PANEL_Y + SCOREBOARD_H / 2;
+  cx.font = "bold 28px ui-monospace, Menlo, Consolas, monospace";
+  cx.textBaseline = "middle";
+  cx.textAlign = "center";
+  // Score-A in home color, dash, Score-B in visiting color
+  const scoreText = (scoreA != null ? scoreA : 0) + "  -  " + (scoreB != null ? scoreB : 0);
+  // First a thin shadow for readability
+  cx.fillStyle = "rgba(0,0,0,0.6)";
+  cx.fillText(scoreText, centerX + 1, centerY + 1);
+  cx.fillStyle = "#fefcf0";
+  cx.fillText(scoreText, centerX, centerY);
+  // "MATCH" label above the score
+  cx.font = "bold 8px ui-monospace, Menlo, Consolas, monospace";
+  cx.fillStyle = "rgba(247, 201, 72, 0.75)";
+  cx.fillText("MATCH", centerX, PANEL_Y + 16);
+  // BEST-OF label below the score (small, muted)
+  cx.font = "8px ui-monospace, Menlo, Consolas, monospace";
+  cx.fillStyle = "rgba(180, 190, 210, 0.55)";
+  cx.fillText("LIVE", centerX, PANEL_Y + SCOREBOARD_H - 12);
+
+  return cv;
+}
+
+/* === v37.64: standalone top-corner mascot head ===
+   Smaller (~88×88) version of the species head used as a quiet visual
+   anchor in the now-empty top corners freed up by the centered
+   scoreboard. No sign frame, no stick arms — just the head on a
+   subtle radial vignette so it sits cleanly against the dark stadium
+   void. Smaller scale (~2.4×) than the bottom signs (3.8×) so it reads
+   as "secondary art" not "additional banner". ============================================ */
+function _buildTopMascotHead(team) {
+  const cv = document.createElement("canvas");
+  cv.width = TOP_MASCOT_W;
+  cv.height = TOP_MASCOT_H;
   const cx = cv.getContext("2d");
   if (!team) return cv;
 
-  // === Outer dark glass plate (the banner backing) ===
-  // Visiting team gets a slightly cooler/desaturated treatment so the
-  // home banner reads as "ours" at a glance.
-  cx.fillStyle = isHome ? "rgba(20, 22, 28, 0.94)" : "rgba(18, 20, 26, 0.88)";
-  cx.fillRect(0, 0, CORNER_BANNER_W, CORNER_BANNER_H);
+  // === Soft radial vignette behind the head — keeps it grounded ===
+  // Drawn first so the head paints on top.
+  const vgrad = cx.createRadialGradient(
+    TOP_MASCOT_W / 2, TOP_MASCOT_H / 2, 4,
+    TOP_MASCOT_W / 2, TOP_MASCOT_H / 2, TOP_MASCOT_W / 2
+  );
+  vgrad.addColorStop(0, "rgba(40, 30, 20, 0.45)");
+  vgrad.addColorStop(0.7, "rgba(20, 16, 14, 0.18)");
+  vgrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+  cx.fillStyle = vgrad;
+  cx.fillRect(0, 0, TOP_MASCOT_W, TOP_MASCOT_H);
 
-  // === Team color stripe along the left edge (12px wide) ===
-  // Strong color signature even at glance. For visiting team, mirror to
-  // the right edge so the "stripe points to the field" mirroring reads.
-  cx.fillStyle = team.color || "#f7c948";
-  if (isHome) {
-    cx.fillRect(0, 0, 12, CORNER_BANNER_H);
+  // === Mascot head at scale ===
+  // Same approach as _buildMascotSign: translate+scale, then the head
+  // function paints at (0,0) in its native sprite coords.
+  cx.save();
+  const headCenterX = TOP_MASCOT_W / 2;
+  const headCenterY = TOP_MASCOT_H / 2 + 2;
+  const SCALE = 2.4;
+  cx.translate(headCenterX, headCenterY);
+  cx.scale(SCALE, SCALE);
+
+  let pal;
+  if (typeof ANIMAL_PALETTE !== "undefined" && ANIMAL_PALETTE[team.id]) {
+    pal = ANIMAL_PALETTE[team.id];
+  } else if (typeof _derivePaletteFromColor === "function") {
+    pal = _derivePaletteFromColor(team.color || "#888");
   } else {
-    cx.fillRect(CORNER_BANNER_W - 12, 0, 12, CORNER_BANNER_H);
+    pal = { fur: "#888", belly: "#aaa", accent: "#444", inner: "#bbb", nose: "#222", eye: "#222", iris: "#f4c542" };
   }
-
-  // === Inner highlight stripe (1px) on the team color ===
-  // Sells the dimensional "metallic plate" read.
-  cx.fillStyle = "rgba(255, 255, 255, 0.32)";
-  if (isHome) {
-    cx.fillRect(11, 0, 1, CORNER_BANNER_H);
-  } else {
-    cx.fillRect(CORNER_BANNER_W - 12, 0, 1, CORNER_BANNER_H);
+  if (typeof _drawAnimalHead === "function") {
+    try {
+      _drawAnimalHead(cx, 0, 0, team.id, pal);
+    } catch (e) {
+      // Defensive fallback — colored disc with first letter
+      cx.fillStyle = team.color || "#888";
+      cx.beginPath();
+      cx.arc(0, 0, 11, 0, Math.PI * 2);
+      cx.fill();
+    }
   }
-
-  // === Top accent line (gold) — separates the title block from below ===
-  cx.fillStyle = "rgba(247, 201, 72, 0.85)";
-  cx.fillRect(isHome ? 12 : 0, 0, CORNER_BANNER_W - 12, 2);
-
-  // === Big emoji (3.5em equivalent, drawn left-aligned for home,
-  //     right-aligned for visiting). Position chosen so the emoji doesn't
-  //     overlap the color stripe.
-  cx.font = "44px ui-sans-serif, system-ui, sans-serif";
-  cx.textBaseline = "middle";
-  if (isHome) {
-    cx.textAlign = "left";
-    cx.fillText(team.emoji || "❓", 22, 36);
-  } else {
-    cx.textAlign = "right";
-    cx.fillText(team.emoji || "❓", CORNER_BANNER_W - 22, 36);
-  }
-
-  // === Team name in stencil-style — bold uppercase, white ===
-  cx.font = "bold 14px ui-sans-serif, system-ui, sans-serif";
-  cx.fillStyle = "#fefcf0";
-  if (isHome) {
-    cx.textAlign = "left";
-    cx.fillText((team.name || "").toUpperCase(), 76, 24);
-  } else {
-    cx.textAlign = "right";
-    cx.fillText((team.name || "").toUpperCase(), CORNER_BANNER_W - 76, 24);
-  }
-
-  // === Short code in team color (the "brand" line — FOX, BVR, etc.) ===
-  cx.font = "bold 18px ui-monospace, Menlo, Consolas, monospace";
-  cx.fillStyle = team.color || "#f7c948";
-  if (isHome) {
-    cx.textAlign = "left";
-    cx.fillText(team.short || "—", 76, 48);
-  } else {
-    cx.textAlign = "right";
-    cx.fillText(team.short || "—", CORNER_BANNER_W - 76, 48);
-  }
-
-  // === Motto in italic mute ===
-  cx.font = "italic 11px ui-sans-serif, system-ui, sans-serif";
-  cx.fillStyle = "rgba(220, 220, 230, 0.78)";
-  if (isHome) {
-    cx.textAlign = "left";
-    cx.fillText(team.motto || "", 22, 70);
-  } else {
-    cx.textAlign = "right";
-    cx.fillText(team.motto || "", CORNER_BANNER_W - 22, 70);
-  }
-
-  // === Bottom strip — "HOME" / "VISITING" + founded year ===
-  cx.fillStyle = isHome ? "rgba(247, 201, 72, 0.18)" : "rgba(150, 170, 220, 0.15)";
-  cx.fillRect(isHome ? 12 : 0, CORNER_BANNER_H - 22, CORNER_BANNER_W - 12, 22);
-
-  cx.font = "bold 10px ui-monospace, Menlo, Consolas, monospace";
-  cx.fillStyle = isHome ? "#f7c948" : "#a0b8e0";
-  if (isHome) {
-    cx.textAlign = "left";
-    cx.fillText("HOME", 22, CORNER_BANNER_H - 11);
-    cx.textAlign = "right";
-    cx.fillStyle = "rgba(220, 220, 230, 0.65)";
-    cx.fillText("Y" + (team.founded ? team.founded - 1990 : "??"), CORNER_BANNER_W - 8, CORNER_BANNER_H - 11);
-  } else {
-    cx.textAlign = "right";
-    cx.fillText("VISITING", CORNER_BANNER_W - 22, CORNER_BANNER_H - 11);
-    cx.textAlign = "left";
-    cx.fillStyle = "rgba(220, 220, 230, 0.65)";
-    cx.fillText("Y" + (team.founded ? team.founded - 1990 : "??"), 8, CORNER_BANNER_H - 11);
-  }
+  cx.restore();
 
   return cv;
 }
@@ -24941,15 +25210,19 @@ function _buildMascotSign(team) {
   return cv;
 }
 
-/* Build all four corner sprites for the current match. Cached and only
-   rebuilt when the cache key (teams + biome color) changes. */
-function _buildCrowdCornerCache(teamA, teamB, brandColor) {
+/* === v37.64: rebuilt corner cache shape ===
+   Replaces v37.61's homeBanner/visitingBanner pair with a single
+   centered scoreboard. Adds top-corner mascot heads. Bottom signs
+   unchanged. Cache key now includes the round score so the LIVE
+   scoreboard re-renders on round wins. ============================================ */
+function _buildCrowdCornerCache(teamA, teamB, brandColor, scoreA, scoreB) {
   return {
-    homeBanner:    _buildTeamBanner(teamA, true),
-    visitingBanner: _buildTeamBanner(teamB, false),
-    homeSign:      _buildMascotSign(teamA),
-    visitingSign:  _buildMascotSign(teamB),
-    key: (teamA && teamA.id || "?") + "|" + (teamB && teamB.id || "?") + "|" + (brandColor || ""),
+    scoreboard:      _buildScoreboard(teamA, teamB, scoreA, scoreB),
+    homeTopHead:     _buildTopMascotHead(teamA),
+    visitingTopHead: _buildTopMascotHead(teamB),
+    homeSign:        _buildMascotSign(teamA),
+    visitingSign:    _buildMascotSign(teamB),
+    key: (teamA && teamA.id || "?") + "|" + (teamB && teamB.id || "?") + "|" + (brandColor || "") + "|" + (scoreA != null ? scoreA : 0) + "|" + (scoreB != null ? scoreB : 0),
   };
 }
 
@@ -25084,55 +25357,87 @@ function drawCrowd(m) {
     const teamA = TEAM_BY_ID[m.teamAId];
     const teamB = TEAM_BY_ID[m.teamBId];
     if (teamA && teamB) {
-      const cacheKey = m.teamAId + "|" + m.teamBId + "|" + (chipColor || "");
+      // === v37.64: cache key now includes live round score ===
+      // Score values come from m.roundsWonA / m.roundsWonB; default to 0.
+      const _scoreA = (m.roundsWonA != null) ? m.roundsWonA : 0;
+      const _scoreB = (m.roundsWonB != null) ? m.roundsWonB : 0;
+      const cacheKey = m.teamAId + "|" + m.teamBId + "|" + (chipColor || "") + "|" + _scoreA + "|" + _scoreB;
       if (!_crowdCornerCache || _crowdCornerCache.key !== cacheKey) {
         try {
-          _crowdCornerCache = _buildCrowdCornerCache(teamA, teamB, chipColor);
+          _crowdCornerCache = _buildCrowdCornerCache(teamA, teamB, chipColor, _scoreA, _scoreB);
         } catch (e) {
-          if (typeof console !== "undefined") console.warn("[v37.61] corner cache build failed:", e);
+          if (typeof console !== "undefined") console.warn("[v37.64] corner cache build failed:", e);
           _crowdCornerCache = null;
         }
       }
       if (_crowdCornerCache) {
-        // Position the four corners. Top corners are above the field
-        // (negative Y), bottom corners are below (Y > H). All inset 18px
-        // from the field edge so they don\'t touch the chip rim.
         const inset = 18;
-        // === TOP-LEFT — home banner ===
-        ctx.drawImage(
-          _crowdCornerCache.homeBanner,
-          inset,
-          -CROWD_DEPTH + inset
-        );
-        // === TOP-RIGHT — visiting banner ===
-        ctx.drawImage(
-          _crowdCornerCache.visitingBanner,
-          W - CORNER_BANNER_W - inset,
-          -CROWD_DEPTH + inset
-        );
 
-        // === Bottom corner mascot signs — bob with cheer cycle ===
-        // Base sine bob sells the "held aloft by tired crowd members"
-        // read. Cheer adds extra impact on the side of the SCORING team
-        // (v37.62 — was an x-position heuristic, now uses cheer.teamId).
-        const baseBobL = Math.sin(t * 0.05) * 1.6;
-        const baseBobR = Math.sin(t * 0.05 + 0.7) * 1.6;
-        let cheerBobL = 0, cheerBobR = 0;
+        // === Determine "scoring side" for cheer animation ===
+        // Used by both top mascot heads and bottom mascot signs.
+        let homeScored = null;  // null = no current cheer / neutral
+        let cheerStrength = 0;
         if (cheerActive) {
           const cheerProgress = (t - cheer.frame) / cheerDuration;
-          // Cheer bob amplitude scales with intensity — match wins make
-          // the corner signs jump much higher than a single kill cheer.
-          const cheerStrength = (1 - cheerProgress) * 3.5 * cheerIntensity;
-          // Determine which corner cheers: prefer team attribution when
-          // available; fall back to the legacy x-position heuristic
-          // for backwards compatibility with any caller that didn\'t
-          // pass teamId.
-          let homeScored;
+          cheerStrength = (1 - cheerProgress) * 3.5 * cheerIntensity;
           if (cheerTeamId && m.teamAId) {
             homeScored = (cheerTeamId === m.teamAId);
           } else {
+            // Legacy fallback (pre-v37.62 callers without teamId)
             homeScored = (cheer.x < W / 2);
           }
+        }
+
+        // === TOP CENTER — combined hanging scoreboard ===
+        // Centered horizontally; suspended from above (the strap geometry
+        // is baked into the canvas so it appears to hang from the stadium
+        // structure). A subtle pendulum sway adds life — the scoreboard
+        // is *hanging*, after all.
+        const swayAng = Math.sin(t * 0.025) * 0.4;  // gentle pendulum, ~degrees
+        const scoreboardX = (W - SCOREBOARD_W) / 2;
+        const scoreboardY = -CROWD_DEPTH + inset;
+        // Apply tiny rotation around the strap-mount points (top-center)
+        ctx.save();
+        ctx.translate(W / 2, scoreboardY);
+        ctx.rotate(swayAng * Math.PI / 180);
+        ctx.translate(-W / 2, -scoreboardY);
+        ctx.drawImage(_crowdCornerCache.scoreboard, scoreboardX, scoreboardY);
+        ctx.restore();
+
+        // === TOP-LEFT — small mascot head ===
+        // Subtle bob, smaller amplitude than bottom signs (these are
+        // smaller assets and don\'t read as "held aloft" so much as
+        // "tucked into the corner of the stadium frame").
+        const topBaseBobL = Math.sin(t * 0.06) * 0.8;
+        const topBaseBobR = Math.sin(t * 0.06 + 0.9) * 0.8;
+        let topCheerBobL = 0, topCheerBobR = 0;
+        if (cheerActive && homeScored !== null) {
+          // Top heads cheer at HALF the amplitude of the bottom signs
+          // (visually quieter, more dignified — they\'re corner accents,
+          // not the headline crowd reaction).
+          const topStrength = cheerStrength * 0.5;
+          if (homeScored) topCheerBobL = -Math.abs(Math.sin(t * 0.4)) * topStrength;
+          else            topCheerBobR = -Math.abs(Math.sin(t * 0.4 + 0.5)) * topStrength;
+        }
+        ctx.drawImage(
+          _crowdCornerCache.homeTopHead,
+          inset,
+          -CROWD_DEPTH + inset + topBaseBobL + topCheerBobL
+        );
+        // === TOP-RIGHT — small mascot head ===
+        ctx.drawImage(
+          _crowdCornerCache.visitingTopHead,
+          W - TOP_MASCOT_W - inset,
+          -CROWD_DEPTH + inset + topBaseBobR + topCheerBobR
+        );
+
+        // === Bottom corner mascot signs — UNCHANGED from v37.61/v37.62 ===
+        // Base sine bob ("held aloft by tired crowd members") + cheer
+        // bonus on the scoring team\'s side.
+        const baseBobL = Math.sin(t * 0.05) * 1.6;
+        const baseBobR = Math.sin(t * 0.05 + 0.7) * 1.6;
+        let cheerBobL = 0, cheerBobR = 0;
+        if (cheerActive && homeScored !== null) {
           if (homeScored) cheerBobL = -Math.abs(Math.sin(t * 0.4)) * cheerStrength;
           else            cheerBobR = -Math.abs(Math.sin(t * 0.4 + 0.5)) * cheerStrength;
         }
