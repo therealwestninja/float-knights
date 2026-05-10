@@ -5864,10 +5864,13 @@
       <h3>Cloud Sync</h3>
       <div class="sync-card">
         <div style="font-size: 11px; color: var(--mute); margin-bottom: 8px; line-height: 1.4;">
-          Save your League state to the cloud and share the sync code with anyone — they can pull your exact rosters, bracket, history, and bits balance into their copy of the game. Each save is a JSON snapshot uploaded via the Perchance upload plugin.
+          Save your League state to the cloud and share the sync code with anyone — they can pull your exact rosters, bracket, history, and bits balance into their copy of the game. Saves are gzip-compressed and encrypted with your username before upload (anyone without the username sees garbage).
         </div>
-        <label>Username</label>
-        <input id="syncName" placeholder="trainer name" />
+        <label>Username (encrypts your save)</label>
+        <input id="syncName" placeholder="any string — keep it consistent" />
+        <div style="font-size: 10px; color: var(--mute); margin-top: -4px; margin-bottom: 8px; line-height: 1.4; font-style: italic;">
+          The username is the encryption key. Use the same one for save AND load. If you forget it, the cloud save is unrecoverable — but your local save in this browser is unaffected.
+        </div>
         <label>Sync Code (paste an existing one, or save to get a new one)</label>
         <input id="syncCode" placeholder="paste a sync URL here, or click Save to generate one" />
         <div class="btn-row">
@@ -13641,6 +13644,10 @@ const LEAGUE = {
   // Cumulative tally of bet outcomes + net bits won/lost. seasonNet
   // resets when statsSeason !== LEAGUE.season (lazy, in renderBetTab).
   betStats: { won: 0, lost: 0, refunded: 0, lifetimeNet: 0, seasonNet: 0, statsSeason: 1 },
+  // === v37.50: inter-team trade history (capped at 50 most-recent) ===
+  // Populated by runSeasonTrades() at season rollover. Each entry:
+  // { season, fromTeamId, toTeamId, knightId, knightName, position }.
+  tradeHistory: [],
   // Shop boosts pending: { teamId: { dmg, def, spd, ... } } — applied next match
   pendingBoosts: {},
   // === v28.1: per-knight targeted boosts (Personal Sandbag etc.) ===
@@ -13805,6 +13812,8 @@ function initLeague(opts) {
   LEAGUE.promotedLegends = [];
   // v37.42: reset bet stats on fresh league
   LEAGUE.betStats = { won: 0, lost: 0, refunded: 0, lifetimeNet: 0, seasonNet: 0, statsSeason: 1 };
+  // v37.50: reset trade history on fresh league
+  LEAGUE.tradeHistory = [];
   LEAGUE.startedAt = Date.now();   // when this league was first booted (immutable)
   LEAGUE.lastTickAt = Date.now();  // wall-clock of most recent sim activity (updated each frame)
   // === v28.16: roll initial AI-style assignments for season 1 ===
@@ -14223,6 +14232,124 @@ function reapDeceased() {
      - deserializeLeague (after restoring from save)
      - initLeague is unaffected (rosters are minted fresh)
    ============================================================ */
+
+/* === v37.50: inter-team season trades ===
+   Each season the league shuffles ~(N_teams + 2) ± 2 knights between
+   teams. Trades are SWAPS (preserve position-per-team invariant) so
+   each team finishes with the same 7-position roster shape it started
+   with. Followed knights trigger a per-knight toast notification.
+
+   Called from advanceSeason just before buildBracket so the new
+   bracket reflects post-trade rosters. Wrapped in a try/catch so a
+   bad trade can never block season rollover. */
+function runSeasonTrades() {
+  try {
+    if (!LEAGUE.rosters || !TEAMS || TEAMS.length < 2) return;
+    if (!Array.isArray(LEAGUE.tradeHistory)) LEAGUE.tradeHistory = [];
+
+    const N = TEAMS.length;
+    // Roll trade count: uniform integer in [N, N+4]; mean N+2, range 4.
+    const tradeCount = N + Math.floor(Math.random() * 5);
+
+    let executed = 0;
+    let attempts = 0;
+    const maxAttempts = tradeCount * 6;  // generous re-roll budget
+
+    while (executed < tradeCount && attempts < maxAttempts) {
+      attempts++;
+
+      // Pick a random position
+      const pos = POSITIONS[Math.floor(Math.random() * POSITIONS.length)];
+
+      // Pick two distinct teams
+      const idxA = Math.floor(Math.random() * N);
+      let idxB = Math.floor(Math.random() * (N - 1));
+      if (idxB >= idxA) idxB++;
+      const teamA = TEAMS[idxA];
+      const teamB = TEAMS[idxB];
+      if (!teamA || !teamB) continue;
+
+      const rosterA = LEAGUE.rosters[teamA.id];
+      const rosterB = LEAGUE.rosters[teamB.id];
+      if (!rosterA || !rosterB) continue;
+
+      // Find the alive knight at this position on each team
+      const aIdx = rosterA.findIndex(k => k && !k.deceased && k.position === pos.id);
+      const bIdx = rosterB.findIndex(k => k && !k.deceased && k.position === pos.id);
+      if (aIdx === -1 || bIdx === -1) continue;
+
+      const knightA = rosterA[aIdx];
+      const knightB = rosterB[bIdx];
+      if (!knightA || !knightB) continue;
+      if (knightA.id === knightB.id) continue;  // shouldn't happen, defensive
+
+      // === SWAP ===
+      // Swap teamId fields
+      knightA.teamId = teamB.id;
+      knightB.teamId = teamA.id;
+      // Swap roster slots
+      rosterA[aIdx] = knightB;
+      rosterB[bIdx] = knightA;
+
+      executed++;
+
+      // Record both halves of the trade in history (capped at 50)
+      LEAGUE.tradeHistory.push({
+        season: LEAGUE.season,
+        fromTeamId: teamA.id,
+        toTeamId: teamB.id,
+        knightId: knightA.id,
+        knightName: knightA.name,
+        position: pos.id,
+      });
+      LEAGUE.tradeHistory.push({
+        season: LEAGUE.season,
+        fromTeamId: teamB.id,
+        toTeamId: teamA.id,
+        knightId: knightB.id,
+        knightName: knightB.name,
+        position: pos.id,
+      });
+
+      // Toast for followed knights (one per knight)
+      const followed = LEAGUE.followedKnights || [];
+      const teamAShort = teamA.short || teamA.id;
+      const teamBShort = teamB.short || teamB.id;
+      const teamAEmoji = teamA.emoji || "";
+      const teamBEmoji = teamB.emoji || "";
+
+      if (followed.indexOf(knightA.id) !== -1 && typeof window !== "undefined" && window.toast) {
+        window.toast(
+          `🔄 Followed knight <b>${escapeHTML(knightA.name)}</b> trades from ${teamAEmoji} ${escapeHTML(teamAShort)} to ${teamBEmoji} ${escapeHTML(teamBShort)}.`,
+          "info",
+          { ico: "🔄", ttl: 7000, key: `trade:${LEAGUE.season}:${knightA.id}` }
+        );
+      }
+      if (followed.indexOf(knightB.id) !== -1 && typeof window !== "undefined" && window.toast) {
+        window.toast(
+          `🔄 Followed knight <b>${escapeHTML(knightB.name)}</b> trades from ${teamBEmoji} ${escapeHTML(teamBShort)} to ${teamAEmoji} ${escapeHTML(teamAShort)}.`,
+          "info",
+          { ico: "🔄", ttl: 7000, key: `trade:${LEAGUE.season}:${knightB.id}` }
+        );
+      }
+    }
+
+    // Cap history at 50 entries (oldest dropped)
+    if (LEAGUE.tradeHistory.length > 50) {
+      LEAGUE.tradeHistory = LEAGUE.tradeHistory.slice(-50);
+    }
+
+    // Feed line summarizing the offseason
+    if (executed > 0 && typeof feed === "function") {
+      feed("season", `🔄 Offseason trades: ${executed} knight${executed === 1 ? "" : "s"} swapped across ${N} teams.`);
+    }
+  } catch (e) {
+    // A bad trade can never block season rollover
+    if (typeof console !== "undefined") console.warn("[v37.50] runSeasonTrades failed:", e && e.message ? e.message : e);
+  }
+}
+window.runSeasonTrades = runSeasonTrades;
+
 function backfillRosters() {
   const callups = [];
   const reaped  = [];
@@ -21689,6 +21816,11 @@ function beginNextSeason() {
   }
   LEAGUE.season++;
   LEAGUE.match = null;
+  // === v37.50: shuffle ~(N+2) knights between teams ===
+  // Runs BEFORE buildBracket so the new bracket reflects post-trade rosters.
+  // Defensive try/catch inside runSeasonTrades — a failed trade pass can
+  // never block season progression.
+  if (typeof runSeasonTrades === "function") runSeasonTrades();
   // === v28.16: roll fresh AI-style assignments for the new season ===
   // The Coaches' Caucus convenes between seasons and re-assigns playbooks.
   // We roll BEFORE buildBracket so any UI rendering at the start of the new
@@ -30028,6 +30160,8 @@ function serializeLeague() {
     _lastSavedAt: LEAGUE._lastSavedAt || null,
     // === v37.42: lifetime bet performance ===
     betStats: LEAGUE.betStats || { won: 0, lost: 0, refunded: 0, lifetimeNet: 0, seasonNet: 0, statsSeason: LEAGUE.season || 1 },
+    // === v37.50: inter-team trade history (capped 50) ===
+    tradeHistory: Array.isArray(LEAGUE.tradeHistory) ? LEAGUE.tradeHistory.slice(-50) : [],
     // === v37.19: Promoted League Legends ===
     promotedLegends: LEAGUE.promotedLegends || [],
     // === v37.23: rivalries + achievements ===
@@ -30240,6 +30374,9 @@ function deserializeLeague(jsonStr) {
   LEAGUE.loreBookmarks = (data.loreBookmarks && typeof data.loreBookmarks === "object") ? data.loreBookmarks : {};
   // v37.38: recently-read lore articles (additive — older saves default to [])
   LEAGUE.loreRecent = Array.isArray(data.loreRecent) ? data.loreRecent.slice() : [];
+  // === v37.50: hydrate tradeHistory ===
+  // Older saves (pre-v37.50) won't have this field — default to empty array.
+  LEAGUE.tradeHistory = Array.isArray(data.tradeHistory) ? data.tradeHistory.slice(-50) : [];
   // === v37.42: hydrate betStats ===
   // Older saves (pre-v37.42) won't have this field — default to zeros.
   // Defensively coerce each numeric field in case a partially-corrupt save
@@ -30289,6 +30426,206 @@ function setSyncStatus(msg, kind) {
   el.className = "status" + (kind ? " " + kind : "");
 }
 
+/* === v37.51: CloudSave encryption + gzip compression helpers ===
+   Format documented at the top of integrate_v37_51_cloudsave_crypto.py.
+   Magic bytes "FK48" let pullSave detect encrypted vs legacy plain JSON.
+   ============================================================ */
+const _FK_CRYPTO_MAGIC = "FK48";  // 4 ASCII bytes: 0x46, 0x4B, 0x34, 0x38
+const _FK_CRYPTO_VERSION = 0x01;
+const _FK_PBKDF2_ITERATIONS = 100000;
+const _FK_SALT_LEN = 16;
+const _FK_IV_LEN = 12;
+
+/* Detect whether crypto.subtle + CompressionStream are available.
+   Both ship in all modern browsers (Chrome 80+, Firefox 113+, Safari 16.4+).
+   In older environments we fall back to plain JSON upload + a warning. */
+function _fkCryptoAvailable() {
+  return (
+    typeof crypto !== "undefined" &&
+    crypto.subtle &&
+    typeof crypto.subtle.importKey === "function" &&
+    typeof crypto.subtle.deriveKey === "function" &&
+    typeof crypto.subtle.encrypt === "function" &&
+    typeof CompressionStream === "function" &&
+    typeof DecompressionStream === "function"
+  );
+}
+
+/* Derive a 256-bit AES-GCM key from username + salt via PBKDF2-SHA256.
+   100k iterations adds ~10ms cost on commodity hardware — fine for
+   one-shot save/load operations. */
+async function _fkDeriveKey(username, saltBytes) {
+  const enc = new TextEncoder();
+  const baseKey = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(String(username)),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: saltBytes,
+      iterations: _FK_PBKDF2_ITERATIONS,
+      hash: "SHA-256",
+    },
+    baseKey,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+/* Gzip a UTF-8 string via CompressionStream. Returns Uint8Array. */
+async function _fkGzip(text) {
+  const enc = new TextEncoder();
+  const bytes = enc.encode(text);
+  const cs = new CompressionStream("gzip");
+  const writer = cs.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+  const reader = cs.readable.getReader();
+  const chunks = [];
+  let total = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    total += value.length;
+  }
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) { out.set(c, off); off += c.length; }
+  return out;
+}
+
+/* Inverse of _fkGzip — Uint8Array → UTF-8 string. */
+async function _fkGunzip(bytes) {
+  const ds = new DecompressionStream("gzip");
+  const writer = ds.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+  const reader = ds.readable.getReader();
+  const chunks = [];
+  let total = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    total += value.length;
+  }
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) { out.set(c, off); off += c.length; }
+  return new TextDecoder().decode(out);
+}
+
+/* Build the binary container for the encrypted+compressed payload.
+   Layout: "FK48"(4) | version(1) | salt(16) | iv(12) | ciphertext+tag(...)
+   Returns a Uint8Array. */
+function _fkBuildContainer(salt, iv, ciphertext) {
+  // === v37.51 fix: ciphertext from crypto.subtle.encrypt is an ArrayBuffer,
+  // not a Uint8Array. Wrap it once so .length works downstream. ===
+  const ctBytes = (ciphertext instanceof Uint8Array) ? ciphertext : new Uint8Array(ciphertext);
+  const total = 4 + 1 + salt.length + iv.length + ctBytes.length;
+  const buf = new Uint8Array(total);
+  // Magic
+  buf[0] = 0x46; buf[1] = 0x4B; buf[2] = 0x34; buf[3] = 0x38;
+  buf[4] = _FK_CRYPTO_VERSION;
+  buf.set(salt, 5);
+  buf.set(iv, 5 + salt.length);
+  buf.set(ctBytes, 5 + salt.length + iv.length);
+  return buf;
+}
+
+/* Inverse — split a Uint8Array container into { salt, iv, ciphertext }. */
+function _fkParseContainer(buf) {
+  if (buf.length < 4 + 1 + _FK_SALT_LEN + _FK_IV_LEN + 16) {
+    throw new Error("Container too short");
+  }
+  // Verify magic
+  if (buf[0] !== 0x46 || buf[1] !== 0x4B || buf[2] !== 0x34 || buf[3] !== 0x38) {
+    throw new Error("Bad magic — not an FK encrypted save");
+  }
+  const ver = buf[4];
+  if (ver !== _FK_CRYPTO_VERSION) {
+    throw new Error("Unsupported encryption version: " + ver);
+  }
+  return {
+    salt: buf.slice(5, 5 + _FK_SALT_LEN),
+    iv: buf.slice(5 + _FK_SALT_LEN, 5 + _FK_SALT_LEN + _FK_IV_LEN),
+    ciphertext: buf.slice(5 + _FK_SALT_LEN + _FK_IV_LEN),
+  };
+}
+
+/* Uint8Array → base64 string. Uses btoa via a chunked binary string to
+   avoid stack overflow on large payloads (apply with arguments has a
+   ~64K limit on some engines). */
+function _fkBytesToBase64(bytes) {
+  const CHUNK = 0x8000;
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(bin);
+}
+
+/* base64 string → Uint8Array. */
+function _fkBase64ToBytes(b64) {
+  const bin = atob(String(b64).trim());
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+/* High-level: encrypt + compress a JSON string with a username.
+   Returns base64-encoded container ready to upload. */
+async function _fkEncryptForUpload(jsonStr, username) {
+  const compressed = await _fkGzip(jsonStr);
+  const salt = crypto.getRandomValues(new Uint8Array(_FK_SALT_LEN));
+  const iv   = crypto.getRandomValues(new Uint8Array(_FK_IV_LEN));
+  const key  = await _fkDeriveKey(username, salt);
+  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, compressed);
+  const container = _fkBuildContainer(salt, iv, ciphertext);
+  return {
+    base64: _fkBytesToBase64(container),
+    rawSize: jsonStr.length,
+    gzipSize: compressed.length,
+    containerSize: container.length,
+  };
+}
+
+/* High-level: decrypt + decompress a base64-encoded container into the
+   original JSON string. Throws on wrong-username (auth-tag mismatch),
+   bad-magic, or decompress failure. */
+async function _fkDecryptFromDownload(base64Str, username) {
+  const buf = _fkBase64ToBytes(base64Str);
+  const { salt, iv, ciphertext } = _fkParseContainer(buf);
+  const key = await _fkDeriveKey(username, salt);
+  const compressed = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+  return _fkGunzip(new Uint8Array(compressed));
+}
+
+/* Detect whether a downloaded body looks like the new encrypted format.
+   Magic test on the first 4 base64 chars decoded. Returns boolean. */
+function _fkLooksEncrypted(text) {
+  if (typeof text !== "string" || text.length < 12) return false;
+  // Plain JSON saves start with "{" — fast path
+  const trimmed = text.trim();
+  if (trimmed.startsWith("{")) return false;
+  // Magic "FK48" base64-encodes to "RksrOA==" prefix-stable as "RksrO".
+  // First 4 ASCII bytes "FK48" = 0x46, 0x4B, 0x34, 0x38.
+  // base64 of [0x46, 0x4B, 0x34] = "Rks0", + 0x38... actually just decode
+  // the first 8 base64 chars (= 6 bytes) and check the first 4 == "FK48".
+  try {
+    const head = _fkBase64ToBytes(trimmed.slice(0, 8));
+    return head.length >= 4 && head[0] === 0x46 && head[1] === 0x4B && head[2] === 0x34 && head[3] === 0x38;
+  } catch (_) {
+    return false;
+  }
+}
+
 async function pushSave() {
   // Per the Perchance upload-plugin API: `uploadPlugin` is imported as a
   // single CALLABLE function. Signature: `await uploadPlugin(blob)` returns
@@ -30305,10 +30642,35 @@ async function pushSave() {
   setSyncStatus("Saving…");
   try {
     const json = serializeLeague();
-    const sizeKb = (json.length / 1024).toFixed(1);
-    // uploadPlugin expects a Blob. Wrap our JSON string with the right MIME.
-    const blob = new Blob([json], { type: "application/json" });
-    const result = await uploadPlugin(blob);
+    const rawKb = (json.length / 1024).toFixed(1);
+
+    // === v37.51: encrypt + compress BEFORE upload ===
+    let bodyBlob, bodyMime, statusSuffix;
+    if (_fkCryptoAvailable()) {
+      try {
+        const enc = await _fkEncryptForUpload(json, name);
+        $("#syncCode").value && void 0;  // (no-op; preserve linter)
+        const wireKb = (enc.base64.length / 1024).toFixed(1);
+        const gzipKb = (enc.gzipSize / 1024).toFixed(1);
+        bodyBlob = new Blob([enc.base64], { type: "text/plain" });
+        bodyMime = "text/plain";
+        // Include compression payoff in status so user sees the win
+        statusSuffix = " (" + rawKb + " KB → " + gzipKb + " KB gzip → " + wireKb + " KB encrypted, schema v" + SAVE_SCHEMA_VERSION + ").";
+      } catch (e) {
+        // Crypto/gzip failed — fall back to plain JSON with warning
+        if (typeof console !== "undefined") console.warn("[v37.51] encryption failed, uploading plain:", e);
+        bodyBlob = new Blob([json], { type: "application/json" });
+        bodyMime = "application/json";
+        statusSuffix = " (" + rawKb + " KB · plain · encryption failed · schema v" + SAVE_SCHEMA_VERSION + ").";
+      }
+    } else {
+      // Crypto API unavailable — older browser. Plain JSON, with note.
+      bodyBlob = new Blob([json], { type: "application/json" });
+      bodyMime = "application/json";
+      statusSuffix = " (" + rawKb + " KB · plain · no crypto.subtle · schema v" + SAVE_SCHEMA_VERSION + ").";
+    }
+
+    const result = await uploadPlugin(bodyBlob);
     if (!result) {
       setSyncStatus("Upload returned nothing", "err");
       return;
@@ -30324,10 +30686,7 @@ async function pushSave() {
     $("#syncCode").value = result.url;
     try { localStorage.setItem("fk_syncUrl", result.url); } catch {}
     try { localStorage.setItem("fk_syncName", name); } catch {}
-    setSyncStatus(
-      "Saved (" + sizeKb + " KB · schema v" + SAVE_SCHEMA_VERSION + ").",
-      "ok"
-    );
+    setSyncStatus("Saved" + statusSuffix, "ok");
   } catch (e) {
     setSyncStatus("Save error: " + (e.message || e), "err");
   }
@@ -30486,7 +30845,27 @@ async function pullSave() {
       setSyncStatus("Fetch failed: HTTP " + res.status, "err");
       return;
     }
-    const text = await res.text();
+    let text = await res.text();
+
+    // === v37.51: detect encrypted format and decrypt before peek/deserialize ===
+    if (_fkLooksEncrypted(text)) {
+      const username = ($("#syncName") && $("#syncName").value.trim()) || "";
+      if (!username) {
+        setSyncStatus("This save is encrypted — type the username it was saved under, then click Load again.", "err");
+        return;
+      }
+      if (!_fkCryptoAvailable()) {
+        setSyncStatus("This save is encrypted, but this browser lacks crypto.subtle (need Chrome 80+, Firefox 113+, Safari 16.4+).", "err");
+        return;
+      }
+      try {
+        text = await _fkDecryptFromDownload(text, username);
+      } catch (e) {
+        // AES-GCM auth-tag failure is the most common cause — username mismatch.
+        setSyncStatus("Decryption failed — username likely incorrect (or the file is corrupt).", "err");
+        return;
+      }
+    }
 
     // Peek at the schema version BEFORE deserialization mutates state, so we
     // can show a friendly version-mismatch message without leaving LEAGUE in
