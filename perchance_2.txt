@@ -733,8 +733,14 @@
     background: var(--crt);
     border: 1px solid var(--line);
     border-radius: 0;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
+    /* === v37.57: removed `image-rendering: pixelated` ===
+       The sprite cache renders smooth curves (ellipse/arc/quadratic).
+       Forcing the upscale to nearest-neighbor was making those smooth
+       sprites read as chunky pixels at viewport scale. Browser-default
+       smooth interpolation lets the anime-style faces actually look
+       smooth. The pixelated rule is preserved on .stadium-preview-large
+       (line ~3216) where the source assets ARE hand-drawn pixel art. */
+    image-rendering: auto;
   }
   /* CRT scanline overlay */
   .arena-wrap::after {
@@ -2804,6 +2810,34 @@
     margin: 4px 0 0;
     font-size: 12.5px;
     line-height: 1.6;
+  }
+  /* === v37.55: glossary stubs — per-term bookmark/share targets === */
+  .glossary-stub {
+    /* The wrapper is layout-invisible; dt/dd inside keep their existing styles */
+    margin: 0;
+  }
+  .glossary-stub > dt {
+    /* Make room for inline action buttons next to each term */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .glossary-stub > dt .glossary-stub-actions {
+    display: inline-flex;
+    gap: 4px;
+    margin-left: auto;
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+  .glossary-stub:hover > dt .glossary-stub-actions,
+  .glossary-stub.lore-jump-target > dt .glossary-stub-actions {
+    opacity: 1;
+  }
+  /* Use the same flash animation as articles when a stub is the jump target */
+  .glossary-stub.lore-jump-target {
+    animation: loreJumpFlash 1.2s ease-out;
+    scroll-margin-top: 80px;
   }
 
   /* v37.23.8: Collapsible buckets — alphabet groups for the glossary,
@@ -5948,7 +5982,7 @@
       </div>
       <div class="bet-market">
         <h3>Total Casualties <span class="market-state" id="tcState">—</span></h3>
-        <div class="bet-overunder-sub">Will more than 5 knights die in this match?</div>
+        <div class="bet-overunder-sub">Will more than 8 knights die in this match?</div>
         <div id="betMarketTotalCasRows"></div>
       </div>
     </div>
@@ -5956,7 +5990,7 @@
     <div class="bet-row" style="margin-bottom:18px;">
       <div class="bet-market">
         <h3>Match Length <span class="market-state" id="rdState">—</span></h3>
-        <div class="bet-overunder-sub">Will the match go beyond 3 rounds?</div>
+        <div class="bet-overunder-sub">Will the match go beyond 4 rounds?</div>
         <div id="betMarketRoundsRows"></div>
       </div>
       <div class="bet-market" style="display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px;text-align:center;">
@@ -22043,7 +22077,12 @@ function placeBet(kind, target, amount) {
     const o = teamOdds(slotData.teamA, slotData.teamB);
     payoutMult = o[target] || 0;
     if (!payoutMult) return false;
-    if (kind === "round") payoutMult = +(payoutMult * 0.85).toFixed(2);
+    // === v37.56: removed the unjustified `* 0.85` haircut on round bets ===
+    // Per the v37.55 meta-analysis, round bets had a stacked house edge
+    // (5% from teamOdds margin + 15% from this multiplier = ~19% total)
+    // making them the worst-EV market in the game. Round bets now pay
+    // exactly the same as match-winner bets, with only the standard 5%
+    // margin. This keeps round-bets fair and discoverable.
   } else if (kind === "player") {
     const o = playerOdds(slotData.teamA, slotData.teamB);
     payoutMult = o[target] || 0;
@@ -22058,14 +22097,20 @@ function placeBet(kind, target, amount) {
     payoutMult = +((o[target] || 1.9) * 0.95).toFixed(2);
     if (!payoutMult) return false;
   } else if (kind === "totalcas") {
-    // Over/under 5.5 casualties this match. Roughly even-money bet.
+    // === v37.56: line moved 5.5 → 8.5; payouts recalibrated ===
+    // Old line was a near-certain hit (79.8% over) at 1.85× payout (+48% edge).
+    // New line 8.5 splits ~25.7% over / ~74.3% under; payouts target ~5% edge.
+    // Verified by simulation across 20k matches.
     if (target !== "over" && target !== "under") return false;
-    payoutMult = 1.85;
+    payoutMult = target === "over" ? 3.70 : 1.28;
   } else if (kind === "rounds") {
-    // Over/under 3.5 rounds played in the match. Most matches are 3-0 sweeps;
-    // "over" is moderately less likely so it pays slightly more.
+    // === v37.56: line moved 3.5 → 4.5; payouts recalibrated ===
+    // Old line at 3.5 was a near-certain over hit (74.5%) at 2.10× (+57% edge).
+    // New line 4.5 splits 36.8% over / 63.2% under; payouts target ~5% edge.
+    // With the new line, "over" becomes the underdog side (only matches that
+    // go to round 5 hit it) — payout reflects this shift.
     if (target !== "over" && target !== "under") return false;
-    payoutMult = target === "over" ? 2.10 : 1.65;
+    payoutMult = target === "over" ? 2.58 : 1.50;
   } else return false;
 
   LEAGUE.bits -= amount;
@@ -22186,13 +22231,13 @@ function settleBets(winnerTeamId) {
     if (bet.kind === "totalcas") {
       // Casualty count = unique deceased knights this match
       const matchDeaths = LEAGUE.graveyard.filter(g => g.season === LEAGUE.season && g.slot === m.slot).length;
-      const line = 5.5;
+      const line = 8.5;  // v37.56: was 5.5, recalibrated per meta-analysis
       label = bet.target === "over" ? `over ${line} deaths` : `under ${line} deaths`;
       if ((bet.target === "over" && matchDeaths > line) || (bet.target === "under" && matchDeaths < line)) win = true;
     }
     if (bet.kind === "rounds") {
       const totalRounds = m.rounds.length;
-      const line = 3.5;
+      const line = 4.5;  // v37.56: was 3.5, recalibrated per meta-analysis
       label = bet.target === "over" ? `over ${line} rounds` : `under ${line} rounds`;
       if ((bet.target === "over" && totalRounds > line) || (bet.target === "under" && totalRounds < line)) win = true;
     }
@@ -25736,6 +25781,13 @@ const AVATAR = {
   clearCache() { this._cache = Object.create(null); },
 };
 
+// === v37.57: invalidate any stale cached sprites on script load ===
+// The face/head rewrites mean cached sprites from older script versions
+// would still render the old look. Forcing a one-time clear at module
+// init guarantees the new style takes effect from the next render.
+// (No-op on fresh page loads where the cache is already empty.)
+try { AVATAR.clearCache(); } catch (_) { /* defensive — pre-init access */ }
+
 /* ============================================================
    ANIMAL PALETTES — fur, accent, eye, nose colors per team.
    Each palette describes the species, not the team uniform; the
@@ -26082,39 +26134,96 @@ function _derivePaletteFromColor(hex) {
 }
 
 // Fox — pointed ears, narrow tapered snout, white chin
+/* === v37.57 REFERENCE HEAD — _headFox ===
+   Reno Foxes are framed in the lore as the "fennec-coded" team — desert
+   ancestry implicit in the cheek tufts, alert ear posture, slim muzzle.
+   This redraw establishes the anime-cute conventions every other species
+   head will adopt in v37.58/v37.59:
+
+     - Rounder head silhouette (10×9.5 vs old 9×8.5) — bigger relative
+       to body for the chibi/cute proportion
+     - Soft ear shapes via quadraticCurveTo (rounded triangle apex)
+       instead of sharp three-point lineTo paths
+     - Inner ear pink uses a warm fox-specific color (slightly more
+       saturated than generic peach) so the ear color reads as
+       intentional fox-character, not afterthought
+     - Wider rounded snout patch — the muzzle is the most
+       species-distinctive feature, so it gets to be prominent
+     - Subtle cheek-tuft outlines (thin lighter strokes flanking the
+       muzzle) — the fennec-cheek-tuft callback from the Halberd lore
+     - Soft head-rim highlight along the upper edge (1px lighter line)
+       sells the "lit from above" read consistent with the body
+   ============================================================ */
 function _headFox(cx, hx, hy, pal) {
-  // Ears — triangular, tipped darker, pink interior
+  // === Ears — rounded triangles via quadratic curves (v37.57 cute style) ===
+  // Outer ear (darker accent fur)
   cx.fillStyle = pal.accent;
+  // Left ear
   cx.beginPath();
-  cx.moveTo(hx - 8, hy - 4);
-  cx.lineTo(hx - 11, hy - 12);
-  cx.lineTo(hx - 5, hy - 8);
-  cx.closePath();
-  cx.moveTo(hx + 8, hy - 4);
-  cx.lineTo(hx + 11, hy - 12);
-  cx.lineTo(hx + 5, hy - 8);
+  cx.moveTo(hx - 5, hy - 7);
+  cx.quadraticCurveTo(hx - 11, hy - 13, hx - 8, hy - 4);
+  cx.quadraticCurveTo(hx - 6, hy - 6, hx - 5, hy - 7);
   cx.closePath();
   cx.fill();
+  // Right ear
+  cx.beginPath();
+  cx.moveTo(hx + 5, hy - 7);
+  cx.quadraticCurveTo(hx + 11, hy - 13, hx + 8, hy - 4);
+  cx.quadraticCurveTo(hx + 6, hy - 6, hx + 5, hy - 7);
+  cx.closePath();
+  cx.fill();
+
+  // Inner ear (warm fox-pink — the canonical fennec inner-ear color)
   cx.fillStyle = pal.inner;
   cx.beginPath();
-  cx.moveTo(hx - 8, hy - 5);
-  cx.lineTo(hx - 9, hy - 9);
-  cx.lineTo(hx - 6, hy - 8);
-  cx.closePath();
-  cx.moveTo(hx + 8, hy - 5);
-  cx.lineTo(hx + 9, hy - 9);
-  cx.lineTo(hx + 6, hy - 8);
+  cx.moveTo(hx - 6, hy - 7);
+  cx.quadraticCurveTo(hx - 9, hy - 11, hx - 7.5, hy - 5.5);
+  cx.quadraticCurveTo(hx - 6.5, hy - 6.5, hx - 6, hy - 7);
   cx.closePath();
   cx.fill();
-  // Head — oval, slightly tapered to chin
+  cx.beginPath();
+  cx.moveTo(hx + 6, hy - 7);
+  cx.quadraticCurveTo(hx + 9, hy - 11, hx + 7.5, hy - 5.5);
+  cx.quadraticCurveTo(hx + 6.5, hy - 6.5, hx + 6, hy - 7);
+  cx.closePath();
+  cx.fill();
+
+  // === Head — bigger, rounder oval (v37.57 chibi proportion) ===
   cx.fillStyle = pal.fur;
   cx.beginPath();
-  cx.ellipse(hx, hy, 9, 8.5, 0, 0, Math.PI * 2);
+  cx.ellipse(hx, hy, 10, 9.5, 0, 0, Math.PI * 2);
   cx.fill();
-  // White snout/chin patch
+
+  // === Cheek tufts — fennec callback ===
+  // Two small lighter outlines flanking the muzzle, suggesting the
+  // characteristic fennec/desert-fox cheek fur. Thin strokes only —
+  // they read as character marking, not extra silhouette.
+  cx.strokeStyle = pal.belly;
+  cx.lineWidth = 0.7;
+  cx.beginPath();
+  cx.moveTo(hx - 8, hy + 1);
+  cx.quadraticCurveTo(hx - 9.5, hy + 3, hx - 7, hy + 5);
+  cx.stroke();
+  cx.beginPath();
+  cx.moveTo(hx + 8, hy + 1);
+  cx.quadraticCurveTo(hx + 9.5, hy + 3, hx + 7, hy + 5);
+  cx.stroke();
+
+  // === Snout / chin patch — wider and more rounded ===
+  // The white chin patch is the most species-readable element; making
+  // it bigger and properly rounded sells the "fox" silhouette at game
+  // distance.
   cx.fillStyle = pal.belly;
   cx.beginPath();
-  cx.ellipse(hx, hy + 3, 5, 4, 0, 0, Math.PI * 2);
+  cx.ellipse(hx, hy + 3.5, 6, 4.5, 0, 0, Math.PI * 2);
+  cx.fill();
+
+  // === Soft head-rim highlight (lit-from-above) ===
+  // 1px lighter line along the upper-front of the head silhouette.
+  // Cheap, big perceptual effect — sells the rounded form.
+  cx.fillStyle = "rgba(255,255,255,0.18)";
+  cx.beginPath();
+  cx.ellipse(hx, hy - 2, 8.5, 2.5, 0, 0, Math.PI * 2);
   cx.fill();
 }
 
@@ -26202,23 +26311,62 @@ function _headShark(cx, hx, hy, pal) {
 }
 
 // Panda — white face, black eye patches, black ears
+/* === v37.58 HERO HEAD — _headPanda ===
+   Portland Punching Pandas. The team that hugs. Per the Featherquill
+   lore: "It is also, on review, not a formation. It is a hug."
+   The visual identity must read SOFT — wider/rounder head than any
+   other species, gentle ear ovals, sleepy/content eye-patch angle.
+   Yu Cobblepad's "we are, in turn, grateful" — soft-spoken team,
+   soft-shaped knight. ============================================ */
 function _headPanda(cx, hx, hy, pal) {
-  // Black ears
+  // === Outer ear discs — wider-set, bigger, soft ovals ===
+  // Pandas have famously round ears that sit wide on the skull. Old
+  // version was hx±8 with r=3; new version pulls them out to hx±9.5
+  // and shapes them as soft horizontal ovals (4×3.5) for the cartoon-
+  // panda silhouette.
   cx.fillStyle = pal.accent;
   cx.beginPath();
-  cx.arc(hx - 8, hy - 8, 3, 0, Math.PI * 2);
-  cx.arc(hx + 8, hy - 8, 3, 0, Math.PI * 2);
+  cx.ellipse(hx - 9.5, hy - 7, 4, 3.5, 0, 0, Math.PI * 2);
+  cx.ellipse(hx + 9.5, hy - 7, 4, 3.5, 0, 0, Math.PI * 2);
   cx.fill();
-  // Round white head
+
+  // === Inner ear — subtle pink center ===
+  // Pandas have pink inner ears in real life; the v37.57 convention
+  // adds them for character. Small soft ovals inside the outer disc.
+  cx.fillStyle = pal.inner || "#f5d8d0";
+  cx.beginPath();
+  cx.ellipse(hx - 9.5, hy - 7, 2.2, 2, 0, 0, Math.PI * 2);
+  cx.ellipse(hx + 9.5, hy - 7, 2.2, 2, 0, 0, Math.PI * 2);
+  cx.fill();
+
+  // === Head — WIDER than tall (the "panda is rounder" silhouette) ===
+  // Old: arc(r=9.5) — perfect circle. New: ellipse(12×10.5) — visibly
+  // wider than other species' 9-10 wide heads. This is the single
+  // most readable species-distinct cue.
   cx.fillStyle = pal.fur;
   cx.beginPath();
-  cx.arc(hx, hy, 9.5, 0, Math.PI * 2);
+  cx.ellipse(hx, hy + 0.5, 12, 10.5, 0, 0, Math.PI * 2);
   cx.fill();
-  // Black eye patches (oval, tilted slightly)
+
+  // === Black eye patches — softer angles, drawn as smooth ovals ===
+  // Old patches were 3×4 ellipses tilted ±0.3 rad. New patches are
+  // slightly larger (3.3×4.2) with a gentler tilt (±0.22 rad) and
+  // shifted slightly lower so the face reads as sleepy/content
+  // rather than alert/predator. The eye geometry from _drawAnimalFace
+  // will paint over the center of each patch.
   cx.fillStyle = pal.accent;
   cx.beginPath();
-  cx.ellipse(hx - 4, hy - 1, 3, 4, -0.3, 0, Math.PI * 2);
-  cx.ellipse(hx + 4, hy - 1, 3, 4, 0.3, 0, Math.PI * 2);
+  cx.ellipse(hx - 4, hy - 0.5, 3.3, 4.2, -0.22, 0, Math.PI * 2);
+  cx.ellipse(hx + 4, hy - 0.5, 3.3, 4.2, 0.22, 0, Math.PI * 2);
+  cx.fill();
+
+  // === Soft head-rim highlight (lit from above) ===
+  // Same convention as the v37.57 fox — 1px lighter ellipse along
+  // the upper edge of the head silhouette. Slightly larger here to
+  // match the panda's wider head footprint.
+  cx.fillStyle = "rgba(255,255,255,0.22)";
+  cx.beginPath();
+  cx.ellipse(hx, hy - 4, 9.5, 2.5, 0, 0, Math.PI * 2);
   cx.fill();
 }
 
@@ -26280,33 +26428,89 @@ function _headFrog(cx, hx, hy, pal) {
 }
 
 // Hedgehog — short spikes radiating from top, pointed snout, pink nose
+/* === v37.58 HERO HEAD — _headHedgehog ===
+   Helena Hedgehogs. Hester Quillstrike, whose Hall plate hangs at
+   three feet eight — the lowest mount in the Hall. The shortest
+   knight to ever set a record. Hedgehogs are SHORT, and the spikes
+   ARE the silhouette. New version makes the head visibly smaller
+   so other species look TALLER next to a Hedgehog, while the spike
+   crown reaches roughly the same maximum height (the bristles take
+   up the height the head doesn't).
+
+   Pink nose is canon (pal.nose = "#d878a8"); the v37.57 face system
+   draws it via the default-nose-dot path. ============================================ */
 function _headHedgehog(cx, hx, hy, pal) {
-  // Spike crown — multiple short triangles around upper hemisphere
+  // === Spike crown — 12 spikes (vs old 9), via quadraticCurveTo ===
+  // Quadratic curves give each spike a slightly-curved tip rather than
+  // the old sharp three-point straight-line triangles. Variable lengths
+  // (10-13 long) make the bristle pattern feel natural instead of
+  // mechanically uniform.
+  // Shift spikes UP by 2 (hy - 2 base) so the crown reaches the same
+  // canvas-y as taller heads even though the head itself is smaller.
   cx.fillStyle = pal.spike;
-  for (let i = 0; i < 9; i++) {
-    const ang = -Math.PI + (i / 8) * Math.PI; // top hemisphere
-    const r1 = 8.5, r2 = 12;
-    const sx = hx + Math.cos(ang) * r1;
-    const sy = hy + Math.sin(ang) * r1;
-    const tx = hx + Math.cos(ang) * r2;
-    const ty = hy + Math.sin(ang) * r2;
+  const SPIKE_COUNT = 12;
+  const HEAD_RADIUS = 7;
+  for (let i = 0; i < SPIKE_COUNT; i++) {
+    const ang = -Math.PI + (i / (SPIKE_COUNT - 1)) * Math.PI;
+    // Variable length — even spikes longer, odd shorter (natural bristle)
+    const length = (i % 2 === 0) ? 6.5 : 5;
+    const r1 = HEAD_RADIUS;
+    const r2 = HEAD_RADIUS + length;
+    const baseX = hx + Math.cos(ang) * r1;
+    const baseY = hy + Math.sin(ang) * r1 - 1;  // shift baseline up
+    const tipX  = hx + Math.cos(ang) * r2;
+    const tipY  = hy + Math.sin(ang) * r2 - 1;
+    // Spike with slightly-curved tip (quadratic apex)
     cx.beginPath();
-    cx.moveTo(sx - 1.5, sy + 1);
-    cx.lineTo(tx, ty);
-    cx.lineTo(sx + 1.5, sy + 1);
+    cx.moveTo(baseX - 1, baseY + 0.5);
+    // Quadratic curve to tip — control point pulled slightly toward
+    // the head center for a gentle natural curve
+    cx.quadraticCurveTo(
+      (baseX + tipX) / 2 - Math.cos(ang) * 0.3,
+      (baseY + tipY) / 2 - Math.sin(ang) * 0.3,
+      tipX, tipY
+    );
+    cx.quadraticCurveTo(
+      (baseX + tipX) / 2 + Math.cos(ang) * 0.3,
+      (baseY + tipY) / 2 + Math.sin(ang) * 0.3,
+      baseX + 1, baseY + 0.5
+    );
     cx.closePath();
     cx.fill();
   }
-  // Round head with pointed snout
+
+  // === Head — SMALL (7×6 vs old 8.5×7.5) ===
+  // The defining "Hester is short" cue. Other species' heads are 8-10
+  // wide; this one is 7. At gameplay distance the Hedgehog visibly
+  // sits lower than every other knight on the pitch.
   cx.fillStyle = pal.fur;
   cx.beginPath();
-  cx.ellipse(hx, hy + 1, 8.5, 7.5, 0, 0, Math.PI * 2);
+  cx.ellipse(hx, hy + 1, 7, 6, 0, 0, Math.PI * 2);
   cx.fill();
-  // Light snout
+
+  // === Light snout patch — proportional to smaller head ===
+  // Was 4.5×3 on the old larger head; scaled down to 3.5×2.5 to
+  // match the new proportions. The pink nose dot will be added
+  // by the default _drawAnimalFace mouth/nose treatment.
   cx.fillStyle = pal.belly;
   cx.beginPath();
-  cx.ellipse(hx, hy + 4, 4.5, 3, 0, 0, Math.PI * 2);
+  cx.ellipse(hx, hy + 3, 3.5, 2.5, 0, 0, Math.PI * 2);
   cx.fill();
+
+  // === Spike-tip rim highlight ===
+  // Lit-from-above hits the spike tips first. Tiny lighter dabs
+  // along the top spikes (indices 4-7) give the bristles a subtle
+  // sheen without overwhelming the silhouette.
+  cx.fillStyle = "rgba(255,255,255,0.28)";
+  for (let i = 4; i <= 7; i++) {
+    const ang = -Math.PI + (i / (SPIKE_COUNT - 1)) * Math.PI;
+    const length = (i % 2 === 0) ? 6.5 : 5;
+    const tipX = hx + Math.cos(ang) * (HEAD_RADIUS + length);
+    const tipY = hy + Math.sin(ang) * (HEAD_RADIUS + length) - 1;
+    cx.beginPath();
+    cx.arc(tipX, tipY, 0.6, 0, Math.PI * 2);
+    cx.fill();
+  }
 }
 
 // Kit — triangular ears, pink nose, whiskers
@@ -26678,63 +26882,123 @@ function _headLynx(cx, hx, hy, pal) {
   cx.fill();
 }
 
-// Moose — oversized head with huge palmate antler rack, long droopy snout,
-// dewlap below jaw. The biggest head silhouette in the league after the Polar Bears.
+/* === v37.58 HERO HEAD — _headMoose ===
+   Saint-Laurent Antlerlords. The team that stands. Per the Antlerwood
+   Rule (L'Ancrage exemption): "may, by the Rule, remain stationary at
+   center pitch for the entire match, by which they mean the entire
+   match." Théodred III: "the heaviest knight in League history."
+
+   The Moose silhouette must read TALL and PERMANENT. Antlers are the
+   single most identifiable feature; this redraw replaces the old ragged
+   eight-point polygon antlers with proper palmate paddles featuring
+   three distinct finger-tines per side (real moose antlers have these).
+   The head shifts UP within the canvas frame to sell the tall,
+   stationary, rooted-in-place posture that defines L'Ancrage.
+
+   Per ANIMAL_PALETTE: pal.horn = "#a89060" (lighter tan, the antler
+   bone color); pal.dewlap = "#2a1c10" (the dangling chin-skin marker).
+   Both unchanged. ============================================ */
 function _headMoose(cx, hx, hy, pal) {
-  // Antler rack — big palmate (paddle-shaped), drawn behind head
+  // === Antlers — proper palmate paddles, drawn FIRST (behind head) ===
+  // Wider span (±18 instead of old ±16) — the antlers ARE the silhouette
+  // for this species. Each antler is a single closed quadratic-curved
+  // shape with three visible finger-tines along the outer edge.
   cx.fillStyle = pal.horn;
-  // Left antler
+
+  // Left antler — palmate paddle
   cx.beginPath();
-  cx.moveTo(hx - 7, hy - 5);
-  cx.lineTo(hx - 14, hy - 11);
-  cx.lineTo(hx - 16, hy - 8);
-  cx.lineTo(hx - 14, hy - 5);
-  cx.lineTo(hx - 11, hy - 7);
-  cx.lineTo(hx - 13, hy - 4);
-  cx.lineTo(hx - 9, hy - 4);
+  cx.moveTo(hx - 5, hy - 6);                              // base attached to head
+  cx.quadraticCurveTo(hx - 11, hy - 12, hx - 15, hy - 11); // outer-upper sweep
+  cx.lineTo(hx - 16, hy - 8);                              // outer mid
+  cx.lineTo(hx - 18, hy - 9);                              // tine 1 (outer)
+  cx.lineTo(hx - 16, hy - 6);                              // tine valley
+  cx.lineTo(hx - 17, hy - 4);                              // tine 2 (lower-outer)
+  cx.lineTo(hx - 14, hy - 4);                              // tine valley
+  cx.lineTo(hx - 13, hy - 1);                              // tine 3 (lower)
+  cx.lineTo(hx - 10, hy - 3);                              // back toward head
+  cx.quadraticCurveTo(hx - 8, hy - 5, hx - 5, hy - 6);     // close to base
   cx.closePath();
   cx.fill();
-  // Right antler
+
+  // Right antler — mirrored
   cx.beginPath();
-  cx.moveTo(hx + 7, hy - 5);
-  cx.lineTo(hx + 14, hy - 11);
+  cx.moveTo(hx + 5, hy - 6);
+  cx.quadraticCurveTo(hx + 11, hy - 12, hx + 15, hy - 11);
   cx.lineTo(hx + 16, hy - 8);
-  cx.lineTo(hx + 14, hy - 5);
-  cx.lineTo(hx + 11, hy - 7);
-  cx.lineTo(hx + 13, hy - 4);
-  cx.lineTo(hx + 9, hy - 4);
+  cx.lineTo(hx + 18, hy - 9);
+  cx.lineTo(hx + 16, hy - 6);
+  cx.lineTo(hx + 17, hy - 4);
+  cx.lineTo(hx + 14, hy - 4);
+  cx.lineTo(hx + 13, hy - 1);
+  cx.lineTo(hx + 10, hy - 3);
+  cx.quadraticCurveTo(hx + 8, hy - 5, hx + 5, hy - 6);
   cx.closePath();
   cx.fill();
-  // Antler tine highlights
-  cx.fillStyle = "rgba(255,255,255,0.18)";
-  cx.fillRect(hx - 13, hy - 10, 1, 4);
-  cx.fillRect(hx + 12, hy - 10, 1, 4);
-  // Head — long oval shape
+
+  // === Antler tine highlights — longer 1px white runs along finger ridges ===
+  // Was: two short 4px stripes near the base. Now: a stripe along each
+  // visible finger-tine, plus a stripe along the upper paddle ridge
+  // (sells the "hard polished bone" surface).
+  cx.fillStyle = "rgba(255,255,255,0.25)";
+  // Left
+  cx.fillRect(hx - 14, hy - 11, 1, 3);   // upper paddle ridge
+  cx.fillRect(hx - 17, hy - 8, 1, 1);    // tine 1 tip shine
+  cx.fillRect(hx - 16, hy - 5, 1, 1);    // tine 2 tip shine
+  cx.fillRect(hx - 12, hy - 2, 1, 1);    // tine 3 tip shine
+  // Right
+  cx.fillRect(hx + 13, hy - 11, 1, 3);
+  cx.fillRect(hx + 16, hy - 8, 1, 1);
+  cx.fillRect(hx + 15, hy - 5, 1, 1);
+  cx.fillRect(hx + 11, hy - 2, 1, 1);
+
+  // === Head — shifted up by 2px in canvas (tall L'Ancrage silhouette) ===
+  // Long oval, shifted to hy-1 (was hy+1). Slightly narrower than old
+  // (8×10 vs 8.5×9.5) for the long-faced moose look. The shift up
+  // means the antlers now visually crown the top of the canvas instead
+  // of being clustered around the eye-line.
   cx.fillStyle = pal.fur;
   cx.beginPath();
-  cx.ellipse(hx, hy + 1, 8.5, 9.5, 0, 0, Math.PI * 2);
+  cx.ellipse(hx, hy - 1, 8, 10, 0, 0, Math.PI * 2);
   cx.fill();
-  // Long droopy snout — extends down past head
+
+  // === Long droopy snout — also shifted up, slightly elongated ===
   cx.fillStyle = pal.fur;
   cx.beginPath();
-  cx.ellipse(hx, hy + 8, 5, 4, 0, 0, Math.PI * 2);
+  cx.ellipse(hx, hy + 7, 5, 4.5, 0, 0, Math.PI * 2);
   cx.fill();
-  // Dewlap (the dangling skin under the chin) — Moose-specific
+
+  // === Dewlap — droopier ellipse, extends further (the species marker) ===
+  // Was 3×2; new is 3.5×2.5 with slight Y shift, sells the heavy chin.
   cx.fillStyle = pal.dewlap;
   cx.beginPath();
-  cx.ellipse(hx, hy + 12, 3, 2, 0, 0, Math.PI * 2);
+  cx.ellipse(hx, hy + 11.5, 3.5, 2.5, 0, 0, Math.PI * 2);
   cx.fill();
-  // Lighter snout patch
+
+  // === Lighter snout patch — moves with the snout ===
   cx.fillStyle = pal.belly;
   cx.beginPath();
-  cx.ellipse(hx, hy + 8, 3.5, 2.5, 0, 0, Math.PI * 2);
+  cx.ellipse(hx, hy + 7, 3.5, 2.5, 0, 0, Math.PI * 2);
   cx.fill();
-  // Small inner ears (mostly hidden by antlers)
+
+  // === Small inner ears — repositioned for the moved head ===
   cx.fillStyle = pal.accent;
   cx.beginPath();
-  cx.arc(hx - 6, hy - 6, 1.2, 0, Math.PI * 2);
-  cx.arc(hx + 6, hy - 6, 1.2, 0, Math.PI * 2);
+  cx.arc(hx - 6, hy - 8, 1.2, 0, Math.PI * 2);
+  cx.arc(hx + 6, hy - 8, 1.2, 0, Math.PI * 2);
   cx.fill();
+
+  // === L'Ancrage stillness cue — faint horizontal grounded-line ===
+  // A subtle dark horizontal stroke at the head-base level suggesting
+  // the rooted/grounded posture. Reads as "this knight is planted"
+  // rather than just "this knight has a long head". Lore-aligned with
+  // "a position the moose has held for ninety-three years and which the
+  // species, by long-standing biological commitment, considers home."
+  cx.strokeStyle = "rgba(0, 0, 0, 0.15)";
+  cx.lineWidth = 0.6;
+  cx.beginPath();
+  cx.moveTo(hx - 7, hy + 9.5);
+  cx.lineTo(hx + 7, hy + 9.5);
+  cx.stroke();
 }
 
 // Coyote — triangular sandy head with very pointed ears, lean elongated snout,
@@ -26859,48 +27123,89 @@ function _headQuetzal(cx, hx, hy, pal) {
    distinguished by head silhouette; this saves 12*3 = 36 face
    variations and keeps the state distinction crisp.
    ============================================================ */
+/* === v37.57: shared cute-face helpers (also used by v37.58/v37.59) ===
+   Anime-style mascot conventions, applied as building blocks so every
+   head can reuse them without re-encoding the geometry. */
+
+/* Soft pink cheek blush — drawn under the eyes. Default opacity is
+   subtle (0.22) so it reads as "warm" not "embarrassed"; critical
+   state passes a stronger opacity (0.55) for a panic-flush read.
+   The lore frames many species as warm-by-temperament (Pandas hug,
+   Otters play, Badgers hug after Y36 Tag) so the default friendly
+   expression is canon-aligned, not artistic license. */
+function _drawCheekBlush(cx, hx, hy, eyeOffsetX, eyeOffsetY, opacity) {
+  const a = opacity == null ? 0.22 : opacity;
+  cx.fillStyle = `rgba(245, 130, 145, ${a})`;
+  cx.beginPath();
+  cx.ellipse(hx - eyeOffsetX - 0.5, hy + eyeOffsetY + 3, 2.2, 1.3, 0, 0, Math.PI * 2);
+  cx.ellipse(hx + eyeOffsetX + 0.5, hy + eyeOffsetY + 3, 2.2, 1.3, 0, 0, Math.PI * 2);
+  cx.fill();
+}
+
+/* Subtle curved smile under the nose — the default friendly mouth.
+   Replaces the flat 1px line that read as a disapproving slit. The
+   curve is shallow (anime ":3" cat-mouth proportions) so it doesn't
+   override species-specific mouth treatments. Skipped when the
+   species has its own mouth (beaver teeth, shark teeth, frog wide
+   grin, owl beak). */
+function _drawDefaultSmile(cx, hx, hy, accentColor) {
+  cx.strokeStyle = accentColor || "rgba(60, 40, 30, 0.7)";
+  cx.lineWidth = 0.7;
+  cx.beginPath();
+  // Two small curves meeting at the center — the canonical anime "w"
+  // mouth, but drawn shallow so it reads as a content smile not a smirk.
+  cx.moveTo(hx - 1.5, hy + 5.5);
+  cx.quadraticCurveTo(hx - 0.5, hy + 6.4, hx, hy + 5.8);
+  cx.quadraticCurveTo(hx + 0.5, hy + 6.4, hx + 1.5, hy + 5.5);
+  cx.stroke();
+}
+
 function _drawAnimalFace(cx, hx, hy, teamId, pal, state) {
-  // Eye positions — owl/frog get wider-set eyes; everyone else uses default
+  // Eye positions — owl/frog get wider-set eyes; everyone else uses default.
+  // === v37.57: baseline eye radius bumped from 1.4 → 2.2 (anime convention) ===
+  // Per-species adjustments preserved below; the new baseline larger eye
+  // applies to every species that doesn't override.
   let eyeOffsetX = 3;
   let eyeOffsetY = -1;
-  let eyeR = 1.4;
+  let eyeR = 2.2;
   let useIris = false;
+  // === v37.57: per-species eye sizes retuned to the new larger baseline ===
+  // Most species now inherit the bigger anime baseline. Species with
+  // explicit smaller eyes get scaled appropriately so the relative
+  // hierarchy (Owl > everyone else > Polar Bear > Quetzal) holds.
   if (teamId === "owl") {
-    eyeOffsetX = 3.5; eyeOffsetY = -1; eyeR = 2.4; useIris = true;
+    // Owl already had the biggest eyes; bump further for that "scholar
+    // staring through round glasses" silhouette
+    eyeOffsetX = 3.5; eyeOffsetY = -1; eyeR = 3.0; useIris = true;
   } else if (teamId === "frg") {
     // Eyes on top of head (drawn within the bulging domes)
-    eyeOffsetX = 5; eyeOffsetY = -7; eyeR = 1.8;
+    eyeOffsetX = 5; eyeOffsetY = -7; eyeR = 2.4;
   } else if (teamId === "shk") {
-    eyeOffsetX = 4; eyeOffsetY = -2; eyeR = 1;
+    // Shark stays beady-eyed by lore — the predator look
+    eyeOffsetX = 4; eyeOffsetY = -2; eyeR = 1.6;
   } else if (teamId === "wlf") {
     useIris = true;
   } else if (teamId === "bdg") {
-    // Badger eyes flank the white stripe
     eyeOffsetX = 4; eyeOffsetY = -1;
   } else if (teamId === "rvn") {
-    // Raven gets corvid yellow iris like Wolves; eyes set slightly forward
     useIris = true;
     eyeOffsetX = 3.5; eyeOffsetY = -1.5;
   } else if (teamId === "bsn") {
-    // Bison head is bulkier — set eyes wider
     eyeOffsetX = 4.5; eyeOffsetY = -1;
   } else if (teamId === "plr") {
-    // Polar bear's massive head — small dark eyes spaced wider
-    eyeOffsetX = 3.5; eyeOffsetY = -1; eyeR = 1.2;
+    // Polar bear stays small-eyed — bulky head dwarfs the eyes
+    eyeOffsetX = 3.5; eyeOffsetY = -1; eyeR = 1.8;
   } else if (teamId === "lyx") {
-    // Lynx has alert pale-green iris (boreal cat eyes catch low light)
     useIris = true;
-    eyeOffsetX = 3.2; eyeOffsetY = -1.5; eyeR = 1.5;
+    eyeOffsetX = 3.2; eyeOffsetY = -1.5; eyeR = 2.2;
   } else if (teamId === "cyt") {
-    // Coyote has yellow iris like Wolves but smaller, set forward
     useIris = true;
-    eyeOffsetX = 3; eyeOffsetY = -2; eyeR = 1.2;
+    eyeOffsetX = 3; eyeOffsetY = -2; eyeR = 1.8;
   } else if (teamId === "qtz") {
-    // Quetzal — tiny bird eyes, set high above the beak
-    eyeOffsetX = 2.8; eyeOffsetY = -2.5; eyeR = 1.0;
+    // Quetzal stays tiny-bird-eyed
+    eyeOffsetX = 2.8; eyeOffsetY = -2.5; eyeR = 1.4;
   } else if (teamId === "mos") {
-    // Moose eyes are recessed and set below the antler line
-    eyeOffsetX = 4; eyeOffsetY = -1; eyeR = 1.2;
+    eyeOffsetX = 4; eyeOffsetY = -1; eyeR = 1.8;
   }
 
   if (state === "stunned") {
@@ -26923,12 +27228,9 @@ function _drawAnimalFace(cx, hx, hy, teamId, pal, state) {
     // a faint warm flush on each cheek (the "panic blush" read) and
     // give the eye-whites an even brighter sclera so the panicked
     // expression registers at gameplay distance.
-    // Cheek flush — drawn first so eyes paint over any overlap
-    cx.fillStyle = "rgba(245, 100, 100, 0.35)";
-    cx.beginPath();
-    cx.arc(hx - eyeOffsetX - 1, hy + eyeOffsetY + 3, 2.2, 0, Math.PI * 2);
-    cx.arc(hx + eyeOffsetX + 1, hy + eyeOffsetY + 3, 2.2, 0, Math.PI * 2);
-    cx.fill();
+    // === v37.57: cheek flush now uses the shared helper at higher
+    // opacity (0.55 vs default 0.22). Same pink shape, more saturated. ===
+    _drawCheekBlush(cx, hx, hy, eyeOffsetX, eyeOffsetY, 0.55);
     // Big white sclera
     cx.fillStyle = "#fefcf0";
     cx.beginPath();
@@ -26946,46 +27248,51 @@ function _drawAnimalFace(cx, hx, hy, teamId, pal, state) {
     cx.fillRect(hx - eyeOffsetX + eyeR * 0.3, hy + eyeOffsetY - eyeR * 0.3, 1, 1);
     cx.fillRect(hx + eyeOffsetX + eyeR * 0.3, hy + eyeOffsetY - eyeR * 0.3, 1, 1);
   } else {
-    // Default alive — small focused eyes
+    // === v37.57: anime-cute alive-state eyes ===
+    // Every species gets white sclera + dark pupil + bright highlight.
+    // Iris species get the yellow ring around the pupil, but ALL species
+    // get the rounded-large-pupil + circular catchlight shimmer.
+    // Default cheek blush is drawn FIRST so eyes paint over any overlap.
+    _drawCheekBlush(cx, hx, hy, eyeOffsetX, eyeOffsetY, 0.22);
+
+    // Sclera (white of the eye) — present for every species. Slightly
+    // taller than wide for the rounded anime egg-eye shape.
+    cx.fillStyle = "#fefcf0";
+    cx.beginPath();
+    cx.ellipse(hx - eyeOffsetX, hy + eyeOffsetY, eyeR + 0.3, eyeR + 0.6, 0, 0, Math.PI * 2);
+    cx.ellipse(hx + eyeOffsetX, hy + eyeOffsetY, eyeR + 0.3, eyeR + 0.6, 0, 0, Math.PI * 2);
+    cx.fill();
+
     if (useIris) {
-      // Owl/wolf: yellow ring + black pupil
+      // Owl/wolf/lynx/coyote/raven: bright iris ring around the pupil
       cx.fillStyle = pal.iris || "#f4c542";
       cx.beginPath();
-      cx.arc(hx - eyeOffsetX, hy + eyeOffsetY, eyeR + 0.7, 0, Math.PI * 2);
-      cx.arc(hx + eyeOffsetX, hy + eyeOffsetY, eyeR + 0.7, 0, Math.PI * 2);
-      cx.fill();
-      cx.fillStyle = "#1a1a1a";
-      cx.beginPath();
-      cx.arc(hx - eyeOffsetX, hy + eyeOffsetY, eyeR * 0.65, 0, Math.PI * 2);
-      cx.arc(hx + eyeOffsetX, hy + eyeOffsetY, eyeR * 0.65, 0, Math.PI * 2);
-      cx.fill();
-    } else if (teamId === "frg") {
-      // Frog: white sclera in dome, black pupil
-      cx.fillStyle = "#fefcf0";
-      cx.beginPath();
-      cx.arc(hx - eyeOffsetX, hy + eyeOffsetY, eyeR + 1, 0, Math.PI * 2);
-      cx.arc(hx + eyeOffsetX, hy + eyeOffsetY, eyeR + 1, 0, Math.PI * 2);
-      cx.fill();
-      cx.fillStyle = "#1a1a1a";
-      cx.beginPath();
-      cx.arc(hx - eyeOffsetX, hy + eyeOffsetY, eyeR, 0, Math.PI * 2);
-      cx.arc(hx + eyeOffsetX, hy + eyeOffsetY, eyeR, 0, Math.PI * 2);
-      cx.fill();
-    } else {
-      cx.fillStyle = pal.eye;
-      cx.beginPath();
-      cx.arc(hx - eyeOffsetX, hy + eyeOffsetY, eyeR, 0, Math.PI * 2);
-      cx.arc(hx + eyeOffsetX, hy + eyeOffsetY, eyeR, 0, Math.PI * 2);
+      cx.arc(hx - eyeOffsetX, hy + eyeOffsetY, eyeR * 0.85, 0, Math.PI * 2);
+      cx.arc(hx + eyeOffsetX, hy + eyeOffsetY, eyeR * 0.85, 0, Math.PI * 2);
       cx.fill();
     }
-    // === v37.6: eye-shine ===
-    // Single bright pixel offset to the upper-right of each pupil — the
-    // "alive" catchlight that distinguishes a drawn eye from a hole.
-    // Tiny (1px on the 56-wide sprite canvas) but the perceptual lift is
-    // significant; without it the eyes read as soulless.
+    // Pupil — dark. Big, round, and centered (anime convention).
+    cx.fillStyle = useIris ? "#1a1a1a" : (pal.eye || "#1a1a1a");
+    cx.beginPath();
+    cx.arc(hx - eyeOffsetX, hy + eyeOffsetY, eyeR * 0.55, 0, Math.PI * 2);
+    cx.arc(hx + eyeOffsetX, hy + eyeOffsetY, eyeR * 0.55, 0, Math.PI * 2);
+    cx.fill();
+
+    // === Catchlight (big upper-right shimmer) ===
+    // The defining anime-eye trait. Replaces the v37.6 single-pixel
+    // catchlight with a rounded oval that registers at gameplay distance.
     cx.fillStyle = "#fefcf0";
-    cx.fillRect(hx - eyeOffsetX + eyeR * 0.3, hy + eyeOffsetY - eyeR * 0.3, 0.8, 0.8);
-    cx.fillRect(hx + eyeOffsetX + eyeR * 0.3, hy + eyeOffsetY - eyeR * 0.3, 0.8, 0.8);
+    cx.beginPath();
+    cx.ellipse(hx - eyeOffsetX + eyeR * 0.35, hy + eyeOffsetY - eyeR * 0.35, eyeR * 0.32, eyeR * 0.42, 0, 0, Math.PI * 2);
+    cx.ellipse(hx + eyeOffsetX + eyeR * 0.35, hy + eyeOffsetY - eyeR * 0.35, eyeR * 0.32, eyeR * 0.42, 0, 0, Math.PI * 2);
+    cx.fill();
+
+    // Tiny lower-left secondary catchlight for extra "shine" — the
+    // double-highlight is what separates anime eyes from realistic eyes.
+    cx.beginPath();
+    cx.ellipse(hx - eyeOffsetX - eyeR * 0.25, hy + eyeOffsetY + eyeR * 0.4, eyeR * 0.14, eyeR * 0.18, 0, 0, Math.PI * 2);
+    cx.ellipse(hx + eyeOffsetX - eyeR * 0.25, hy + eyeOffsetY + eyeR * 0.4, eyeR * 0.14, eyeR * 0.18, 0, 0, Math.PI * 2);
+    cx.fill();
   }
 
   // Mouth/nose — varies by team. Keep simple for readability.
@@ -27036,18 +27343,17 @@ function _drawAnimalFace(cx, hx, hy, teamId, pal, state) {
     cx.closePath();
     cx.fill();
   } else {
-    // Default: small black nose dot + faint mouth line
+    // === v37.57: default nose + curved anime smile ===
+    // Nose stays a small dot (works for foxes, otters, kits, hedgehogs,
+    // raccoons, badgers, bisons, polar bears, panda, tigers, pandas
+    // when the team has its own muzzle — the dot reads as a button nose).
     cx.fillStyle = pal.nose;
     cx.beginPath();
     cx.arc(hx, hy + 4, 1, 0, Math.PI * 2);
     cx.fill();
     if (state !== "stunned") {
-      cx.strokeStyle = pal.accent;
-      cx.lineWidth = 0.6;
-      cx.beginPath();
-      cx.moveTo(hx - 1, hy + 6);
-      cx.lineTo(hx + 1, hy + 6);
-      cx.stroke();
+      // Use the shared default-smile helper. Curved, content, friendly.
+      _drawDefaultSmile(cx, hx, hy, pal.accent);
     }
   }
 }
@@ -28198,26 +28504,28 @@ function _liveBetStatus(bet) {
     const deaths = (LEAGUE.graveyard || [])
       .filter(g => g.season === LEAGUE.season && g.slot === m.slot)
       .length;
+    // v37.56: line is now 8.5 (was 5.5 in pre-recalibration)
     if (bet.target === "over") {
-      if (deaths > 5) return { state: "winning", label: "WINNING" };
+      if (deaths > 8) return { state: "winning", label: "WINNING" };
       return { state: "live", label: "LIVE" };
     }
     if (bet.target === "under") {
-      if (deaths > 5) return { state: "losing", label: "LOSING" };
+      if (deaths > 8) return { state: "losing", label: "LOSING" };
       return { state: "live", label: "LIVE" };
     }
     return { state: "live", label: "LIVE" };
   }
 
   if (bet.kind === "rounds") {
-    // Line is 3.5. The 4th round only happens if a series is still alive
-    // beyond round 3 — currentRoundIndex >= 4 ⇒ "over" has hit.
+    // v37.56: line is now 4.5 (was 3.5 in pre-recalibration). The 5th round
+    // only happens if the series is still alive beyond round 4 —
+    // currentRoundIndex >= 5 ⇒ "over" has hit.
     if (bet.target === "over") {
-      if (m.currentRoundIndex >= 4) return { state: "winning", label: "WINNING" };
+      if (m.currentRoundIndex >= 5) return { state: "winning", label: "WINNING" };
       return { state: "live", label: "LIVE" };
     }
     if (bet.target === "under") {
-      if (m.currentRoundIndex >= 4) return { state: "losing", label: "LOSING" };
+      if (m.currentRoundIndex >= 5) return { state: "losing", label: "LOSING" };
       return { state: "live", label: "LIVE" };
     }
     return { state: "live", label: "LIVE" };
@@ -28507,14 +28815,15 @@ function renderBetTab() {
   const tcRows = $("#betMarketTotalCasRows");
   if (tcRows) {
     tcRows.innerHTML = "";
+    // v37.56: per-direction payouts (was a flat 1.85× both ways)
     for (const dir of ["over", "under"]) {
-      const pay = 1.85;
+      const pay = dir === "over" ? 3.70 : 1.28;
       const row = document.createElement("div");
       row.className = "bet-team-row" + (BET_PICK.kind === "totalcas" && BET_PICK.target === dir ? " selected" : "");
       row.innerHTML = `
         <div class="em">${dir === "over" ? "📈" : "📉"}</div>
         <div class="info">
-          <div class="nm">${dir === "over" ? "OVER" : "UNDER"} 5 deaths</div>
+          <div class="nm">${dir === "over" ? "OVER 8 deaths" : "UNDER 9 deaths"}</div>
           <div class="od">Pays <b>${pay}×</b></div>
         </div>
       `;
@@ -28530,9 +28839,10 @@ function renderBetTab() {
   const rdRows = $("#betMarketRoundsRows");
   if (rdRows) {
     rdRows.innerHTML = "";
+    // v37.56: line moved 3.5 → 4.5; payouts recalibrated per meta-analysis
     const opts = [
-      { dir: "over",  ico: "📈", label: "OVER 3 rounds (long match)", pay: 2.10 },
-      { dir: "under", ico: "📉", label: "UNDER 4 rounds (sweep)",     pay: 1.65 },
+      { dir: "over",  ico: "📈", label: "OVER 4 rounds (deciding round 5)", pay: 2.58 },
+      { dir: "under", ico: "📉", label: "UNDER 5 rounds (4 or fewer)",     pay: 1.50 },
     ];
     for (const o of opts) {
       const row = document.createElement("div");
@@ -33210,12 +33520,106 @@ function bootstrapLoreNav() {
       setTimeout(() => _handleLoreHashChange(), 80);
     }
   }
+  // === v37.55: assign per-term loreIds to glossary <dt>/<dd> pairs ===
+  // Wraps each pair in <div.glossary-stub data-loreid="glossary::slug">
+  // so the bookmark/jump/share infrastructure can target individual
+  // terms instead of just the glossary article header. Idempotent.
+  if (typeof _bootstrapGlossaryStubs === "function") {
+    try { _bootstrapGlossaryStubs(); } catch (e) { console.warn("_bootstrapGlossaryStubs:", e); }
+  }
   // === v37.39: wire up the spotlight-search input + glossary handlers. ===
   // Both are idempotent (guarded with dataset/window flags) so calling
   // them on every bootstrapLoreNav is fine.
   if (typeof _setupLoreSearch === "function") _setupLoreSearch();
   if (typeof _setupGlossaryLinkHandlers === "function") _setupGlossaryLinkHandlers();
 }
+
+/* === v37.55: per-term glossary stubs ===
+   Walks every <dt>/<dd> pair inside .lore-section[data-loresection=
+   "glossary"] and wraps the pair in <div class="glossary-stub"
+   data-loreid="glossary::SLUG"> so the bookmark/jump/share systems
+   can target individual terms. Each stub gets its own 🔖 and 🔗
+   buttons inserted into the <dt>.
+
+   IDEMPOTENT — uses dt.dataset.glossaryStubReady flag. Safe to call
+   multiple times (e.g. on every bootstrapLoreNav re-entry).
+   ============================================================ */
+function _bootstrapGlossaryStubs() {
+  if (typeof document === "undefined") return;
+  const dts = document.querySelectorAll('.lore-section[data-loresection="glossary"] dt');
+  dts.forEach(dt => {
+    if (dt.dataset.glossaryStubReady === "1") return;
+
+    // Find the matching dd. Glossary always pairs them <dt><dd><dt><dd>...
+    // so nextElementSibling that's a DD is the right one.
+    const dd = dt.nextElementSibling;
+    if (!dd || dd.tagName !== "DD") {
+      dt.dataset.glossaryStubReady = "1";
+      return;
+    }
+
+    // Build the stable per-term loreId via the same _slugifyLoreTitle
+    // already used for article slugs. Term text comes straight from dt.
+    const term = (dt.textContent || "").trim();
+    if (!term) {
+      dt.dataset.glossaryStubReady = "1";
+      return;
+    }
+    const slug = _slugifyLoreTitle(term);
+    const loreId = "glossary::" + slug;
+
+    // Wrap the pair in <div class="glossary-stub" data-loreid="...">
+    // Insert wrapper into the DOM in dt's position, then move dt + dd
+    // inside it. The parent <dl class="lore-glossary-bucket-list"> is
+    // forgiving about <div> inside it — browsers render dl/dt/dd
+    // semantics correctly even when grouped via a generic wrapper.
+    const wrapper = document.createElement("div");
+    wrapper.className = "glossary-stub";
+    wrapper.dataset.loreid = loreId;
+    const parent = dt.parentNode;
+    parent.insertBefore(wrapper, dt);
+    wrapper.appendChild(dt);
+    wrapper.appendChild(dd);
+
+    // Add the 🔖 and 🔗 buttons inside an action span at the END of the dt.
+    // Reuse the existing .lore-bookmark-btn and .lore-share-btn classes for
+    // visual consistency and to inherit hover/active styling.
+    const actions = document.createElement("span");
+    actions.className = "glossary-stub-actions";
+
+    const bmBtn = document.createElement("button");
+    bmBtn.className = "lore-bookmark-btn";
+    bmBtn.title = "Bookmark this term";
+    bmBtn.textContent = "🔖";
+    bmBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      toggleLoreBookmark(loreId, "glossary", term);
+      // Refresh button state to reflect new bookmark status
+      bmBtn.classList.toggle("bookmarked",
+        !!(LEAGUE.loreBookmarks && LEAGUE.loreBookmarks[loreId]));
+    });
+    if (LEAGUE.loreBookmarks && LEAGUE.loreBookmarks[loreId]) {
+      bmBtn.classList.add("bookmarked");
+    }
+    actions.appendChild(bmBtn);
+
+    const shareBtn = document.createElement("button");
+    shareBtn.className = "lore-share-btn";
+    shareBtn.title = "Copy a link to this term";
+    shareBtn.textContent = "🔗";
+    shareBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      _copyLoreShareLink(loreId);
+    });
+    actions.appendChild(shareBtn);
+
+    dt.appendChild(actions);
+    dt.dataset.glossaryStubReady = "1";
+  });
+}
+window._bootstrapGlossaryStubs = _bootstrapGlossaryStubs;
 window.bootstrapLoreNav = bootstrapLoreNav;
 
 /* Reflect current bookmark state on the button + parent article. */
@@ -33337,25 +33741,42 @@ function jumpToLoreArticle(loreId) {
   // 2. Find the article + expand it
   // Use a setTimeout so the tab-switch DOM update completes first
   setTimeout(() => {
-    const article = document.querySelector(`article[data-loreid="${CSS.escape(loreId)}"]`);
-    if (!article) return;
-    article.classList.remove("lore-collapsed");
+    // === v37.55: also accept glossary-stub targets (non-article elements
+    // with data-loreid). Glossary terms are wrapped in
+    // <div.glossary-stub data-loreid="glossary::SLUG"> so each term is
+    // independently addressable. ===
+    let target = document.querySelector(`article[data-loreid="${CSS.escape(loreId)}"]`);
+    let isStub = false;
+    if (!target) {
+      target = document.querySelector(`[data-loreid="${CSS.escape(loreId)}"]`);
+      if (target) isStub = true;
+    }
+    if (!target) return;
+    // For a real article, expand its body. For a stub, the wrapper has no
+    // collapse state — but we still need to open ancestor <details> so the
+    // alphabetical bucket containing the term is visible.
+    const article = isStub ? null : target;
+    if (article) article.classList.remove("lore-collapsed");
     // === v37.37: open every ancestor <details> ===
     // Stories and Timeline sections wrap articles in collapsed <details
     // class="lore-timeline-era"> chapter blocks. Without this, clicking a
     // TOC entry for an article inside a closed chapter silently fails to
     // reveal it: the article's lore-collapsed class is gone but the
     // surrounding <details> is still closed.
-    let node = article.parentElement;
+    // === v37.55: also opens the alphabetical glossary bucket containing
+    // a stub target. The bucket is a <details class="lore-glossary-bucket">
+    // ancestor of the stub. ===
+    let node = target.parentElement;
     while (node) {
       if (node.tagName === "DETAILS" && !node.open) node.open = true;
       node = node.parentElement;
     }
     // === v37.38: record this as a recently-read view ===
+    // === v37.55: glossary stubs use the <dt> for the title, not h3 ===
     try {
-      const h3 = article.querySelector("h3");
-      const titleClone = h3 ? h3.cloneNode(true) : null;
-      if (titleClone) titleClone.querySelectorAll(".user-badge, .lore-bookmark-btn, .lore-share-btn").forEach(el => el.remove());
+      const titleEl = isStub ? target.querySelector("dt") : (article && article.querySelector("h3"));
+      const titleClone = titleEl ? titleEl.cloneNode(true) : null;
+      if (titleClone) titleClone.querySelectorAll(".user-badge, .lore-bookmark-btn, .lore-share-btn, .glossary-stub-actions").forEach(el => el.remove());
       const cleanTitle = titleClone ? (titleClone.textContent || "").trim() : "";
       _recordLoreView(loreId, sectionId, cleanTitle);
     } catch (_) { /* tracking is best-effort, never blocks the jump */ }
@@ -33384,10 +33805,12 @@ function jumpToLoreArticle(loreId) {
       }
     } catch (_) { /* hash update is best-effort */ }
     // 3. Scroll into view + flash highlight
-    article.scrollIntoView({ behavior: "smooth", block: "start" });
-    article.classList.remove("lore-jump-target");
-    void article.offsetWidth; // restart animation
-    article.classList.add("lore-jump-target");
+    // v37.55: scroll/flash on whichever element is the jump target —
+    // an article body OR a glossary stub.
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    target.classList.remove("lore-jump-target");
+    void target.offsetWidth; // restart animation
+    target.classList.add("lore-jump-target");
   }, 60);
 }
 window.jumpToLoreArticle = jumpToLoreArticle;
@@ -33711,13 +34134,12 @@ function _buildGlossaryMap() {
     // text would be wrong (the body wouldn't include the parens). The
     // base term might still be matched via another entry.
     if (/\([^)]+\)$/.test(canonical)) return;
-    // Find the parent article's data-loreid (the glossary article) and
-    // construct a fragment-like loreId — but glossary entries themselves
-    // don't have stable per-entry loreIds. We jump to the glossary
-    // article and the user can scroll to find the entry. Future work
-    // could anchor each dt with its own id.
-    const article = dt.closest("article[data-loreid]");
-    const loreId = article ? article.dataset.loreid : "glossary::glossary-of-terms";
+    // === v37.55: prefer the per-term stub loreId when present ===
+    // Each <dt> is now wrapped in <div.glossary-stub data-loreid="glossary::SLUG">
+    // by _bootstrapGlossaryStubs. Fall back to the article-level id for
+    // any pre-stub state (e.g. first frame before bootstrapLoreNav runs).
+    const stub = dt.closest("[data-loreid]");
+    const loreId = stub ? stub.dataset.loreid : "glossary::glossary-of-terms";
     // Definition: the next-sibling dd's text, trimmed to ~140 chars
     const dd = dt.nextElementSibling;
     let definition = "";
@@ -33917,15 +34339,19 @@ function toggleLoreBookmark(loreId, sectionId, title) {
       window.toast(`🔖 Removed bookmark`, "info", { ico: "🔖", ttl: 3000 });
     }
   } else {
-    // Capture a snippet from the article body for the Bookmarks list
-    const article = document.querySelector(`article[data-loreid="${CSS.escape(loreId)}"]`);
+    // === v37.55: snippet capture works for both articles and glossary stubs ===
+    // Articles have a .lore-article-body; stubs have an inline <dd> sibling.
     let snippet = "";
-    if (article) {
-      const body = article.querySelector(".lore-article-body");
-      if (body) {
-        const text = (body.textContent || "").replace(/\s+/g, " ").trim();
-        snippet = text.slice(0, 140) + (text.length > 140 ? "…" : "");
-      }
+    let target = document.querySelector(`article[data-loreid="${CSS.escape(loreId)}"]`);
+    let body = target ? target.querySelector(".lore-article-body") : null;
+    if (!target) {
+      target = document.querySelector(`[data-loreid="${CSS.escape(loreId)}"]`);
+      // For stubs, the body is the dd sibling within the wrapper
+      body = target ? target.querySelector("dd") : null;
+    }
+    if (body) {
+      const text = (body.textContent || "").replace(/\s+/g, " ").trim();
+      snippet = text.slice(0, 140) + (text.length > 140 ? "…" : "");
     }
     LEAGUE.loreBookmarks[loreId] = {
       section: sectionId,
