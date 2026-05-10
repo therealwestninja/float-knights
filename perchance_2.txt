@@ -13600,10 +13600,17 @@ function _unlockAchievement(achId, teamId, ctx) {
   const team = TEAM_BY_ID[teamId];
   feed("season", `🏅 ${team ? team.emoji + " " + team.short + ": " : ""}<b>${escapeHTML(ach.name)}</b> unlocked. (+${ach.points} pts)`);
   if (typeof window !== "undefined" && window.toast) {
+    // v37.68: 12th HTML-leak site — team-scoped achievement toast was
+    // building inline `<br><span style="opacity:0.85;">…</span>` with
+    // embedded escapeHTML() and "?" expressions that fooled both my
+    // line-by-line grep AND the multi-line regex scanner. Now uses
+    // structured opts.subText (renderer escapes via _renderSafeHTML, so
+    // ach.desc passes through as plain text — same reason WORLD FIRST
+    // also stopped pre-escaping at the call site in v37.66).
     window.toast(
-      `🏅 ${team ? team.short : "?"}: <b>${escapeHTML(ach.name)}</b><br><span style="opacity:0.85;">${escapeHTML(ach.desc)}</span>`,
+      `🏅 ${team ? team.short : "?"}: <b>${escapeHTML(ach.name)}</b>`,
       "info",
-      { ico: ach.icon || "🏅", ttl: 6000 }
+      { ico: ach.icon || "🏅", ttl: 6000, subText: ach.desc || "" }
     );
   }
   if (typeof saveLocal === "function") saveLocal();
