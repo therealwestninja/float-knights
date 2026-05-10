@@ -4352,6 +4352,15 @@
   .toast .ico  { font-size: 16px; flex-shrink: 0; }
   .toast .body { flex: 1; }
   .toast .body b { color: var(--ink); }
+  /* v37.66: structured second-line meta text via opts.subText.
+     Replaces the inline `<br><span style="font-size:10px;opacity:0.85;">…</span>`
+     pattern that v37.60's safe-HTML whitelist was correctly stripping. */
+  .toast-subtext {
+    font-size: 10px;
+    opacity: 0.85;
+    margin-top: 2px;
+    line-height: 1.35;
+  }
   .toast .close-x {
     background: none; border: none; color: var(--mute);
     cursor: pointer; font-size: 14px; padding: 0; margin-left: 6px;
@@ -13567,10 +13576,16 @@ function _unlockAchievement(achId, teamId, ctx) {
     const team = TEAM_BY_ID[teamId];
     feed("season", `🌟 <b>WORLD FIRST</b> — ${team ? team.emoji + " " + team.short + ": " : ""}${ach.name} (${ach.points} pts)`);
     if (typeof window !== "undefined" && window.toast) {
+      // v37.66: collapsed 3-line inline-HTML structure into headline + opts.subText.
+      // Was leaking literal <br> and <span style=…> via the v37.60 safe-HTML whitelist.
+      // subText is escaped inside the toast renderer via _renderSafeHTML, so we
+      // pass plain strings (NOT pre-escaped) — pre-escaping would double-encode.
+      const subParts = [`${ach.name} — ${team ? team.short : "?"}`];
+      if (ach.desc) subParts.push(ach.desc);
       window.toast(
-        `🌟 <b>WORLD FIRST</b><br>${escapeHTML(ach.name)} — ${team ? team.short : "?"}<br><span style="opacity:0.85;">${escapeHTML(ach.desc)}</span>`,
+        `🌟 <b>WORLD FIRST</b>`,
         "info",
-        { ico: "🌟", ttl: 9000 }
+        { ico: "🌟", ttl: 9000, subText: subParts.join(" · ") }
       );
     }
     if (typeof saveLocal === "function") saveLocal();
@@ -15278,14 +15293,15 @@ function startMatch() {
             return "this slot";
           })(slotKey);
           // Casualty count — adds historical weight when nonzero.
+          // v37.66: subText routed through opts.subText (was inline <br><span>).
           const cas = Array.isArray(ref.casualties) ? ref.casualties.length : 0;
-          const casLine = cas > 0 ? `<br><span style="font-size:10px;opacity:0.85;">${cas} perma-death${cas === 1 ? "" : "s"} that match.</span>` : "";
+          const casSubText = cas > 0 ? `${cas} perma-death${cas === 1 ? "" : "s"} that match.` : "";
           window.toast(
             `📜 In ${slotLabel}, ${yearsLabel}: ` +
             `<b>${winnerTeam.emoji} ${escapeHTML(winnerTeam.short)}</b> beat ` +
-            `<b>${loserTeam.emoji} ${escapeHTML(loserTeam.short)}</b> ${ref.score}.${casLine}`,
+            `<b>${loserTeam.emoji} ${escapeHTML(loserTeam.short)}</b> ${ref.score}.`,
             "info",
-            { ico: "📜", ttl: 7000, key: `history:${LEAGUE.season}:${slotKey}` }
+            { ico: "📜", ttl: 7000, key: `history:${LEAGUE.season}:${slotKey}`, subText: casSubText }
           );
         }
       }
@@ -21463,15 +21479,16 @@ function handleKO(attacker, defender, m) {
 
       feed("kill", `⭐ <b>${escapeHTML(defender.name)}</b> enters the League Legends — ${escapeHTML(defender.name)}'s career: ${escapeHTML(careerLine)}.`);
       // === v37.44: single toast — extra ⭐ emphasis if the legend was followed ===
+      // === v37.66: careerLine subText moved from inline <br><span> to opts.subText ===
       if (typeof window !== "undefined" && window.toast) {
         const tShort = TEAM_BY_ID[defender.teamId]?.short || "?";
         const headline = wasFollowed
           ? `⭐ Followed legend <b>${defender.name}</b> (${tShort}) joins the League Legends.`
           : `⭐ <b>${defender.name}</b> joins the League Legends.`;
         window.toast(
-          `${headline}<br><span style="font-size:10px;opacity:0.85;">${careerLine}</span>`,
+          headline,
           "info",
-          { ico: "⭐", ttl: 9000, key: `permadeath:${defender.id}` }
+          { ico: "⭐", ttl: 9000, key: `permadeath:${defender.id}`, subText: careerLine }
         );
       }
     } else {
@@ -22671,26 +22688,26 @@ function buyItem(itemId, teamId) {
     // Milestone toasts in the established voice
     if (tips === 1) {
       if (typeof window !== "undefined" && window.toast) {
-        window.toast(`🧹 The cleanup crew has, on the matter, noticed.<br><span style="opacity:0.85;font-size:10px;">First tip received.</span>`, "info", { ico: "🧹", ttl: 5000 });
+        window.toast(`🧹 The cleanup crew has, on the matter, noticed.`, "info", { ico: "🧹", ttl: 5000, subText: "First tip received." });
       }
     } else if (tips === 5) {
       if (typeof window !== "undefined" && window.toast) {
-        window.toast(`🧹 The crew has, in due course, upgraded their hats.<br><span style="opacity:0.85;font-size:10px;">Small gold pin added. (5 tips)</span>`, "info", { ico: "✨", ttl: 5000 });
+        window.toast(`🧹 The crew has, in due course, upgraded their hats.`, "info", { ico: "✨", ttl: 5000, subText: "Small gold pin added. (5 tips)" });
       }
       feed("item", `✨ The crew's hats have, by their own report, gained a small gold pin.`);
     } else if (tips === 20) {
       if (typeof window !== "undefined" && window.toast) {
-        window.toast(`🧹 The crew has signed an LMG vest sponsorship.<br><span style="opacity:0.85;font-size:10px;">Hi-vis green vests now standard. (20 tips)</span>`, "info", { ico: "🟢", ttl: 6000 });
+        window.toast(`🧹 The crew has signed an LMG vest sponsorship.`, "info", { ico: "🟢", ttl: 6000, subText: "Hi-vis green vests now standard. (20 tips)" });
       }
       feed("item", `🟢 The cleanup crew has, by Foundation accounting records, transitioned to LMG-sponsored hi-vis green vests.`);
     } else if (tips === 50) {
       if (typeof window !== "undefined" && window.toast) {
-        window.toast(`🧹 A fifth janitor joins the crew.<br><span style="opacity:0.85;font-size:10px;">Watch for the thank-you wave on first sweep. (50 tips)</span>`, "info", { ico: "🎉", ttl: 7000 });
+        window.toast(`🧹 A fifth janitor joins the crew.`, "info", { ico: "🎉", ttl: 7000, subText: "Watch for the thank-you wave on first sweep. (50 tips)" });
       }
       feed("item", `🎉 A fifth janitor has joined the cleanup crew. The crew has, on the matter, expanded.`);
     } else if (tips === 100) {
       if (typeof window !== "undefined" && window.toast) {
-        window.toast(`🧹 The crew has named a broom after you.<br><span style="opacity:0.85;font-size:10px;">No further upgrades. They have, on the matter, sufficient hats. (100 tips)</span>`, "info", { ico: "🏆", ttl: 8000 });
+        window.toast(`🧹 The crew has named a broom after you.`, "info", { ico: "🏆", ttl: 8000, subText: "No further upgrades. They have, on the matter, sufficient hats. (100 tips)" });
       }
       feed("item", `🏆 The cleanup crew has, on the matter, named a broom after the bettor. The bettor will, by Foundation tradition, never be told which broom.`);
     }
@@ -33982,9 +33999,20 @@ function toast(msg, kind, opts) {
   // ~30 toast call sites pass <b>${...}</b> for emphasis — these
   // continue to render. Any caller content interpolated raw is now
   // safely escaped if it wasn't already wrapped at the call site.
+  // === v37.66: opts.subText structured second line ===
+  // Replaces the previous pattern of toast callers building inline
+  // `<br><span style="font-size:10px;opacity:0.85;">subtext</span>` HTML —
+  // which v37.60's safe-HTML whitelist correctly stripped to plain text,
+  // surfacing the literal tags to the user. Callers now pass subText as a
+  // separate string field and the renderer styles it via .toast-subtext CSS.
+  // subText routes through _renderSafeHTML so <b>/<em> still work for
+  // emphasis inside the metadata line; arbitrary HTML stays escaped.
+  const subTextHtml = opts.subText
+    ? `<div class="toast-subtext">${_renderSafeHTML(opts.subText)}</div>`
+    : "";
   el.innerHTML = `
     <span class="ico">${opts.ico || icoMap[kind] || "ℹ️"}</span>
-    <div class="body">${_renderSafeHTML(msg)}</div>
+    <div class="body">${_renderSafeHTML(msg)}${subTextHtml}</div>
     <button class="close-x" aria-label="dismiss">×</button>
   `;
   const dismiss = () => {
@@ -34342,6 +34370,155 @@ function _slugifyLoreTitle(s) {
     .slice(0, 80);
 }
 
+/* === v37.66: short-form word-bounded slug for shareable URLs ===
+   Pre-v37.66 share links used the full 80-char _slugifyLoreTitle output
+   plus the hash-fragment "#lore::section::full-slug" form, which produced
+   ugly URLs like "#lore::stories::josh-let-s-game-it-out-attempts-to-break-
+   the-hallowtide-tag-the-y42-episode-the-" (truncated mid-word, with a
+   stray trailing dash). This helper truncates to a target char budget at
+   the LAST word boundary (the last hyphen) inside it, so the slug always
+   ends on a clean word. Collision-detection within section is handled
+   separately by _buildLoreShareIndex.
+   ============================================================ */
+function _loreShortSlug(s, maxChars) {
+  if (!s) return "untitled";
+  const max = (typeof maxChars === "number" && maxChars > 0) ? maxChars : 32;
+  // Start from the canonical full slug so we share normalization rules.
+  const full = _slugifyLoreTitle(s);
+  if (full.length <= max) return full;
+  // Cut at the last hyphen at-or-before max so we never end mid-word.
+  const cut = full.slice(0, max);
+  const lastDash = cut.lastIndexOf("-");
+  // If there's no internal hyphen, the first word is itself longer than
+  // max — fall back to the hard cut and live with it.
+  return (lastDash > 0) ? cut.slice(0, lastDash) : cut;
+}
+
+/* === v37.66: detect the Perchance generator slug from the page URL ===
+   Mirrors the Memory Hero pattern at memory_hero_2.txt L27684:
+   buildShareUrl reads window.location.pathname's first segment and uses
+   it for the canonical URL. Falls back to "float-knights" so the URL
+   still resolves correctly when run outside the Perchance iframe (e.g.
+   local dev, file://, headless test).
+   ============================================================ */
+function _loreDetectGeneratorSlug() {
+  try {
+    if (typeof window === "undefined" || !window.location) return "float-knights";
+    const path = window.location.pathname || "/";
+    const seg = path.replace(/^\/+/, "").split("/")[0];
+    return seg || "float-knights";
+  } catch (_) {
+    return "float-knights";
+  }
+}
+
+/* === v37.66: build the canonical Perchance share URL ===
+   Returns "https://perchance.org/<gen-slug>?lore=lore-<section>-<short>".
+   Deliberately drops window.location.origin (which inside the Perchance
+   iframe is the per-user sandbox subdomain like
+   cffcb7f662c98a2f7de02f694d4b6fe8.perchance.org — useless to the
+   recipient) AND window.location.search (which inside the iframe is
+   parent-injected boot data like __initWithDataFromParentWindow=1 — also
+   useless to the recipient). The canonical perchance.org/<slug> URL
+   resolves the generator for any visitor regardless of which sandbox
+   subdomain serves it on their side.
+
+   shareValue is the opaque string used as the ?lore= query value. It is
+   structured "lore-<section>-<short>" so the value is human-scannable in
+   the URL bar, but the reader treats it as a flat key into
+   _fkLoreShareIndex (built by _buildLoreShareIndex below) — never tries
+   to parse it back into pieces.
+   ============================================================ */
+function _buildLoreShareUrl(shareValue) {
+  const gen = _loreDetectGeneratorSlug();
+  // encodeURIComponent is intentional even though shareValue is built
+  // from already-URL-safe chars — defense in depth in case future slugs
+  // include anything spicy.
+  return `https://perchance.org/${gen}?lore=${encodeURIComponent(shareValue)}`;
+}
+
+/* === v37.66: collision-safe short-slug index for shareable URLs ===
+   Walks every element with [data-loreid] in the document — both
+   <article data-loreid="section::full-slug"> bootstrapped by
+   bootstrapLoreNav AND <div.glossary-stub data-loreid="glossary::full-slug">
+   bootstrapped by _bootstrapGlossaryStubs. For each, computes a 32-char
+   word-bounded short slug. If two elements in the SAME section produce
+   the same short slug, both get extended (one extra word at a time, up
+   to the full 80-char slug) until they differ — guarantees uniqueness.
+
+   Stores three things back on each element:
+     - data-loreshareslug: the unique short slug (e.g. "josh-let-s-game-it-out")
+     - data-loresharevalue: the full URL value (e.g. "lore-stories-josh-let-s-game-it-out")
+   And populates window._fkLoreShareIndex: { shareValue → fullLoreId }
+   for the URL reader (_handleLoreUrlChange).
+
+   Idempotent — re-runs after each Lore tab open or glossary stub-build
+   are safe; collision-detection passes always converge to the same
+   short slugs given the same DOM.
+   ============================================================ */
+function _buildLoreShareIndex() {
+  if (typeof document === "undefined") return;
+  if (typeof window === "undefined") return;
+  // Group all data-loreid elements by section for collision detection.
+  const all = document.querySelectorAll("[data-loreid]");
+  const bySection = {};
+  all.forEach(el => {
+    const loreId = el.dataset.loreid || "";
+    const sep = loreId.indexOf("::");
+    if (sep === -1) return;
+    const sectionId = loreId.slice(0, sep);
+    const fullSlug = loreId.slice(sep + 2);
+    if (!fullSlug) return;
+    if (!bySection[sectionId]) bySection[sectionId] = [];
+    bySection[sectionId].push({ el, sectionId, fullSlug, loreId });
+  });
+  // Reset the index — rebuilding from scratch is cheap and avoids stale
+  // entries when articles are re-bootstrapped.
+  window._fkLoreShareIndex = {};
+  Object.keys(bySection).forEach(sectionId => {
+    const entries = bySection[sectionId];
+    // Start each entry at 32 chars; extend in a fixed-point loop until
+    // every short slug in the section is unique. Hard ceiling: the full
+    // 80-char slug is always unique since the legacy bootstrap already
+    // uses it as the section-scoped primary key.
+    let budget = 32;
+    const STEP = 8; // grow by 8 chars per collision-resolution pass
+    const HARD_MAX = 80;
+    while (budget <= HARD_MAX) {
+      const shorts = entries.map(e => _loreShortSlug(e.fullSlug, budget));
+      // Find any duplicates at this budget
+      const seen = {};
+      let collision = false;
+      for (let i = 0; i < shorts.length; i++) {
+        const s = shorts[i];
+        if (seen[s] !== undefined) { collision = true; break; }
+        seen[s] = i;
+      }
+      if (!collision) {
+        // All unique at this budget — commit
+        entries.forEach((e, i) => {
+          const shortSlug = shorts[i] || _loreShortSlug(e.fullSlug, HARD_MAX);
+          const shareValue = `lore-${sectionId}-${shortSlug}`;
+          e.el.dataset.loreshareslug = shortSlug;
+          e.el.dataset.loresharevalue = shareValue;
+          window._fkLoreShareIndex[shareValue] = e.loreId;
+        });
+        return; // done with this section
+      }
+      budget += STEP;
+    }
+    // Defensive — should never reach here since 80 chars guarantees
+    // uniqueness, but if it does, fall through to the fullslug as
+    // tiebreaker so we still have valid index entries.
+    entries.forEach(e => {
+      const shareValue = `lore-${sectionId}-${e.fullSlug}`;
+      e.el.dataset.loreshareslug = e.fullSlug;
+      e.el.dataset.loresharevalue = shareValue;
+      window._fkLoreShareIndex[shareValue] = e.loreId;
+    });
+  });
+}
+
 /* Walk every <article> in every .lore-section and:
    1. Tag it with data-loreid = `${section}::${slug}`
    2. Add a clickable .lore-article-header class to its h3
@@ -34456,25 +34633,49 @@ function bootstrapLoreNav() {
     _buildLoreToc(section);
   });
 
-  // === v37.38: honour any #lore:: deep-link hash on first bootstrap. ===
-  // bootstrapLoreNav runs both on script load and when the Lore tab is
-  // first opened by the user. We only want to auto-jump once per page
-  // load — guard with a window-scoped flag.
-  if (typeof window !== "undefined" && !window._loreHashHandled) {
-    const hash = (window.location.hash || "").replace(/^#/, "");
-    if (hash.startsWith("lore::")) {
-      window._loreHashHandled = true;
-      // Defer slightly so the user sees the Lore tab before the jump
-      // (and so the active sub-tab activation has DOM to work with)
-      setTimeout(() => _handleLoreHashChange(), 80);
-    }
-  }
   // === v37.55: assign per-term loreIds to glossary <dt>/<dd> pairs ===
   // Wraps each pair in <div.glossary-stub data-loreid="glossary::slug">
   // so the bookmark/jump/share infrastructure can target individual
   // terms instead of just the glossary article header. Idempotent.
+  // === v37.66: hoisted ABOVE the URL-handler block so the share-index
+  // built immediately after sees both articles AND glossary stubs.
   if (typeof _bootstrapGlossaryStubs === "function") {
     try { _bootstrapGlossaryStubs(); } catch (e) { console.warn("_bootstrapGlossaryStubs:", e); }
+  }
+
+  // === v37.66: build the share-URL lookup index for the new ?lore= ===
+  // Walks every [data-loreid] now in the DOM (articles + glossary stubs)
+  // and computes collision-safe short slugs. Populates window._fkLoreShareIndex
+  // so _handleLoreUrlChange can resolve a "?lore=lore-section-short" param
+  // back to its canonical full loreId. Idempotent — re-runs on every
+  // bootstrapLoreNav are safe and converge to the same short slugs.
+  if (typeof _buildLoreShareIndex === "function") {
+    try { _buildLoreShareIndex(); } catch (e) { console.warn("_buildLoreShareIndex:", e); }
+  }
+
+  // === v37.66: honour any deep-link URL on first bootstrap. ===
+  // Replaces v37.38's hash-only handler. The new ?lore=lore-section-short
+  // query-param format is checked FIRST; the legacy #lore::section::slug
+  // hash is honoured as backward compatibility for old shared URLs.
+  // bootstrapLoreNav runs both on script load and when the Lore tab is
+  // first opened by the user; we only want to auto-jump once per page
+  // load — guard with a window-scoped flag.
+  if (typeof window !== "undefined" && !window._loreUrlHandled) {
+    let hasDeepLink = false;
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      if (params.get("lore")) hasDeepLink = true;
+    } catch (_) { /* malformed query string — fall through to hash check */ }
+    if (!hasDeepLink) {
+      const hash = (window.location.hash || "").replace(/^#/, "");
+      if (hash.startsWith("lore::")) hasDeepLink = true;
+    }
+    if (hasDeepLink) {
+      window._loreUrlHandled = true;
+      // Defer slightly so the user sees the Lore tab before the jump
+      // (and so the active sub-tab activation has DOM to work with)
+      setTimeout(() => _handleLoreUrlChange(), 80);
+    }
   }
   // === v37.39: wire up the spotlight-search input + glossary handlers. ===
   // Both are idempotent (guarded with dataset/window flags) so calling
@@ -34733,26 +34934,48 @@ function jumpToLoreArticle(loreId) {
     try {
       if (typeof _linkGlossaryInArticle === "function") _linkGlossaryInArticle(article);
     } catch (_) { /* best-effort */ }
-    // === v37.38: update window.location.hash for shareable deep-links ===
-    // We prefix the loreId with "lore::" so external code that wants to
-    // detect a lore-deep-link hash has a stable namespace marker.
-    // === v37.48: build an ABSOLUTE URL for replaceState ===
-    // Using a relative "#hash" URL caused the Perchance iframe parent to
-    // double-inject __generatorLastEditTime in the query string, which
-    // forced an iframe remount and lost the active-sub-section state.
-    // Using pathname+search+hash gives the browser a fully-qualified URL
-    // it won't re-resolve. Same effect for shareable-link purposes.
+    // === v37.66: deep-link URL update — canonical Perchance share URL ===
+    // Pre-v37.66: this wrote a #lore::section::slug hash via replaceState,
+    // which the user reported produced unshareable URLs because (a) inside
+    // the Perchance iframe, window.location.origin is a per-user sandbox
+    // subdomain (cffcb...perchance.org) and (b) window.location.search is
+    // parent-injected boot data (?__initWithDataFromParentWindow=1).
+    // The fix: build a canonical https://perchance.org/<gen>?lore=<value>
+    // URL via _buildLoreShareUrl (which knows to drop both). The query
+    // param value is looked up by reading the DOM element's preassigned
+    // data-loresharevalue (built by _buildLoreShareIndex on bootstrap).
+    // We replaceState the absolute URL so the browser doesn't re-resolve
+    // against the iframe origin (preserves v37.48's lesson).
+    // Backward compat: also strip any leftover #lore:: hash so old shared
+    // URLs that arrived via the legacy format don't keep showing the
+    // double-colon junk in the address bar after a successful resolve.
     try {
-      const desired = "#lore::" + loreId;
-      if (window.location.hash !== desired) {
-        if (window.history && window.history.replaceState) {
-          const base = window.location.pathname + (window.location.search || "");
-          window.history.replaceState(null, "", base + desired);
-        } else {
-          window.location.hash = desired;
+      const shareValue = (target.dataset && target.dataset.loresharevalue) || "";
+      if (shareValue && window.history && window.history.replaceState) {
+        const newUrl = `?lore=${encodeURIComponent(shareValue)}`;
+        const cur = (window.location.search || "") + (window.location.hash || "");
+        // Avoid no-op writes: skip if the URL already matches what we'd write
+        // (and there's no leftover hash to clear).
+        const desired = newUrl;
+        if (cur !== desired) {
+          window.history.replaceState(null, "", window.location.pathname + desired);
         }
+      } else if (window.history && window.history.replaceState) {
+        // Defensive fallback: target had no preassigned share value (e.g.
+        // the share-index wasn't built yet for some reason). Compute one
+        // on the fly from the loreId we already have.
+        const sep = loreId.indexOf("::");
+        const sectionPart = sep > 0 ? loreId.slice(0, sep) : "lore";
+        const slugPart = sep > 0 ? loreId.slice(sep + 2) : loreId;
+        const shortSlug = (typeof _loreShortSlug === "function")
+          ? _loreShortSlug(slugPart, 32) : slugPart;
+        const fallbackValue = `lore-${sectionPart}-${shortSlug}`;
+        window.history.replaceState(
+          null, "",
+          window.location.pathname + `?lore=${encodeURIComponent(fallbackValue)}`
+        );
       }
-    } catch (_) { /* hash update is best-effort */ }
+    } catch (_) { /* URL update is best-effort */ }
     // 3. Scroll into view + flash highlight
     // v37.55: scroll/flash on whichever element is the jump target —
     // an article body OR a glossary stub.
@@ -35259,22 +35482,47 @@ function _setupGlossaryLinkHandlers() {
 window._setupGlossaryLinkHandlers = _setupGlossaryLinkHandlers;
 
 
-/* === v37.38: Hash-routing for shareable lore deep-links. ===
-   Listens for hashchange and dispatches to jumpToLoreArticle if the hash
-   matches the "#lore::section::slug" pattern. Loop guard: jumpToLoreArticle
-   uses replaceState and compares before writing, so this listener won't
-   re-fire on our own writes. */
-function _handleLoreHashChange() {
-  const hash = (window.location.hash || "").replace(/^#/, "");
-  if (!hash.startsWith("lore::")) return;
-  const loreId = hash.slice("lore::".length);
-  if (!loreId) return;
-  // Only jump if the article actually exists in the DOM (which it will
-  // once bootstrapLoreNav has run for the current Lore tab)
-  if (typeof jumpToLoreArticle === "function") jumpToLoreArticle(loreId);
+/* === v37.66: deep-link URL routing for shareable lore deep-links. ===
+   Replaces v37.38's hash-only handler. The new format is a query
+   parameter `?lore=lore-<section>-<short-slug>` which lives in the
+   canonical https://perchance.org/<gen>?lore=... URL emitted by
+   _buildLoreShareUrl. Reading: pull the param value, look it up in
+   window._fkLoreShareIndex (built by _buildLoreShareIndex on bootstrap)
+   to get the full loreId, then dispatch to jumpToLoreArticle.
+
+   Backward compatible: if the URL has no ?lore= param but does have a
+   legacy #lore::section::slug hash, read the hash form so old shared
+   URLs still resolve.
+
+   Loop guard: jumpToLoreArticle uses replaceState and compares before
+   writing, so neither popstate nor hashchange fire on our own writes.
+   ============================================================ */
+function _handleLoreUrlChange() {
+  let fullLoreId = "";
+  // 1. New format — query param. Index lookup gives the canonical loreId.
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    const v = params.get("lore");
+    if (v && window._fkLoreShareIndex && window._fkLoreShareIndex[v]) {
+      fullLoreId = window._fkLoreShareIndex[v];
+    }
+  } catch (_) { /* malformed query — fall through to hash check */ }
+  // 2. Legacy format — hash. Direct loreId match. Kept so any URL shared
+  // pre-v37.66 still works.
+  if (!fullLoreId) {
+    const hash = (window.location.hash || "").replace(/^#/, "");
+    if (hash.startsWith("lore::")) {
+      fullLoreId = hash.slice("lore::".length);
+    }
+  }
+  if (!fullLoreId) return;
+  if (typeof jumpToLoreArticle === "function") jumpToLoreArticle(fullLoreId);
 }
 if (typeof window !== "undefined") {
-  window.addEventListener("hashchange", _handleLoreHashChange);
+  // popstate fires on back/forward over query-param navigation (the new
+  // format). hashchange fires on legacy-hash navigation.
+  window.addEventListener("popstate", _handleLoreUrlChange);
+  window.addEventListener("hashchange", _handleLoreUrlChange);
 }
 
 /* Toggle bookmark state for a lore article. Stores section, title,
@@ -36842,8 +37090,33 @@ window.showKnightCompare = showKnightCompare;
    unavailable (older browsers / permissions). */
 function _copyLoreShareLink(loreId) {
   if (!loreId) return;
-  const url = window.location.origin + window.location.pathname +
-              (window.location.search || "") + "#lore::" + loreId;
+  // === v37.66: build the canonical Perchance URL ===
+  // Pre-v37.66 built `window.location.origin + pathname + search + #lore::loreId`
+  // which inside the Perchance iframe leaked (a) the per-user sandbox
+  // subdomain (cffcb7f662c98a2f7de02f694d4b6fe8.perchance.org) into the
+  // origin, and (b) parent-injected boot data
+  // (?__initWithDataFromParentWindow=1) into the search string. Both are
+  // useless to the recipient. The new builder uses
+  // _buildLoreShareUrl which always emits "https://perchance.org/<gen>?lore=<value>".
+  // The shareValue is preassigned by _buildLoreShareIndex onto the article's
+  // data-loresharevalue attribute (collision-safe within section). If the
+  // article isn't in the DOM (rare — the share button only renders on
+  // articles, but defense in depth), fall back to computing on the fly.
+  let shareValue = "";
+  try {
+    const el = document.querySelector(`[data-loreid="${CSS.escape(loreId)}"]`);
+    if (el && el.dataset && el.dataset.loresharevalue) {
+      shareValue = el.dataset.loresharevalue;
+    }
+  } catch (_) { /* DOM query failed — fall back to computed value */ }
+  if (!shareValue) {
+    const sep = loreId.indexOf("::");
+    const sectionPart = sep > 0 ? loreId.slice(0, sep) : "lore";
+    const slugPart = sep > 0 ? loreId.slice(sep + 2) : loreId;
+    const shortSlug = _loreShortSlug(slugPart, 32);
+    shareValue = `lore-${sectionPart}-${shortSlug}`;
+  }
+  const url = _buildLoreShareUrl(shareValue);
   const _ok = () => {
     if (typeof window !== "undefined" && window.toast) {
       window.toast("🔗 Article link copied to clipboard.", "info", { ico: "🔗", ttl: 3000, key: "share-copy:" + loreId });
@@ -36863,11 +37136,12 @@ function _copyLoreShareLink(loreId) {
       if (ok) _ok();
       else if (typeof window.toast === "function") {
         // Last resort: surface the URL in a toast so the user can manually copy.
-        window.toast(`🔗 Copy this URL: <code style="font-size:10px;user-select:all;">${url}</code>`, "info", { ico: "🔗", ttl: 12000 });
+        // v37.66: URL goes through opts.subText (escaped, no inline HTML leak).
+        window.toast(`🔗 Copy this URL:`, "info", { ico: "🔗", ttl: 12000, subText: url });
       }
     } catch (e) {
       if (typeof window.toast === "function") {
-        window.toast(`🔗 Copy this URL: <code style="font-size:10px;user-select:all;">${url}</code>`, "info", { ico: "🔗", ttl: 12000 });
+        window.toast(`🔗 Copy this URL:`, "info", { ico: "🔗", ttl: 12000, subText: url });
       }
     }
   };
@@ -37265,13 +37539,15 @@ async function boot() {
           }
         }
         const headLine = `⏩ Caught up ~${minutes} min — ${headParts.join(", ")} happened while you were away.`;
-        const fullMsg = detailParts.length
-          ? `${headLine}<br><span style="opacity:0.85">${detailParts.join(" · ")}</span>`
-          : headLine;
+        // v37.67: 11th HTML-leak site — catch-up toast was building inline
+        // <br><span style="opacity:0.85">…</span> via variable. Now uses
+        // structured opts.subText routed through _renderSafeHTML so the
+        // <b>…</b> tags inside detailParts still render for emphasis.
+        const subTextLine = detailParts.length ? detailParts.join(" · ") : "";
         feed("season", `⏩ Caught up ~${minutes} min — ${headParts.join(", ").replace(/<\/?b>/g, "")} happened while you were away.`);
         // Summary toast — a little longer TTL so the user has time to read
         // the aggregated details.
-        if (typeof toast === "function") toast(fullMsg, "info", { ico: "⏩", ttl: 12000 });
+        if (typeof toast === "function") toast(headLine, "info", { ico: "⏩", ttl: 12000, subText: subTextLine });
       } else if (summary.simulatedMs > 30000) {
         const minutes = Math.round(summary.simulatedMs / 60000);
         if (typeof toast === "function") toast(`⏩ Caught up ~${minutes} min of league time.`, "info", { ico: "⏩", ttl: 6000 });
@@ -37301,6 +37577,39 @@ async function boot() {
   // === v37.48: apply CRT scanline body class on boot from saved config ===
   if (typeof _setBodyScanlinesClass === "function") _setBodyScanlinesClass();
   renderAll();
+  // === v37.67: deep-link auto-resolution at boot ===
+  // v37.66 introduced the ?lore= shareable URL but only resolved it from
+  // INSIDE bootstrapLoreNav, which is gated behind switchTab("lore") →
+  // bindLoreSubtabs(). On a fresh page load the user lands on the Game
+  // tab (default), so bootstrapLoreNav never runs and the deep-link is
+  // never honoured. Fix: at boot, after renderAll() has set up the UI,
+  // detect the deep-link and programmatically switch to the Lore tab —
+  // which triggers bindLoreSubtabs → bootstrapLoreNav → _buildLoreShareIndex
+  // (all synchronous), making the index immediately ready for lookup.
+  // Then call _handleLoreUrlChange() to resolve the article and jump.
+  // The in-bootstrap detector is kept as an idempotent safety net (guarded
+  // by _loreUrlHandled, so no double-firing).
+  try {
+    let hasDeepLink = false;
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      if (params.get("lore")) hasDeepLink = true;
+    } catch (_) { /* malformed query — fall through to hash check */ }
+    if (!hasDeepLink) {
+      const hash = (window.location.hash || "").replace(/^#/, "");
+      if (hash.startsWith("lore::")) hasDeepLink = true;
+    }
+    if (hasDeepLink && !window._loreUrlHandled && typeof switchTab === "function") {
+      window._loreUrlHandled = true;
+      switchTab("lore");
+      // switchTab → bindLoreSubtabs → bootstrapLoreNav → _buildLoreShareIndex
+      // is fully synchronous, so the index is built by the time control
+      // returns. Resolve immediately.
+      if (typeof _handleLoreUrlChange === "function") {
+        _handleLoreUrlChange();
+      }
+    }
+  } catch (e) { console.warn("v37.67 boot deep-link handler:", e); }
   requestAnimationFrame(loop);
 }
 
