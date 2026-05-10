@@ -31020,6 +31020,15 @@ function _formatRelativeTime(isoStr) {
    EVENT BINDINGS
    ============================================================ */
 function bindEvents() {
+  // === v37.54: idempotency guard (defense in depth) ===
+  // Even with the v37.54 boot() guard, this is the canonical place to
+  // ensure event listeners are only attached once. Future code paths
+  // (hot reload, test harness, feature additions) might call
+  // bindEvents() a second time — this guard prevents double-binding
+  // regardless of how we got here.
+  if (window._fkEventsBound) return;
+  window._fkEventsBound = true;
+
   // Speed buttons
   $$(".controls .grp button").forEach(btn => {
     btn.addEventListener("click", () => setSpeed(parseFloat(btn.dataset.spd)));
@@ -35810,6 +35819,20 @@ function clearLocal() {
 window.saveLocal = saveLocal;
 
 async function boot() {
+  // === v37.54: idempotency guard ===
+  // Both `document.addEventListener("DOMContentLoaded", boot)` AND the
+  // fast-path `if (document.readyState !== "loading") boot()` at the
+  // bottom of this script can fire boot() in a specific timing window
+  // (DOM parsed before script-end, but DCL hasn't fired yet → fast-path
+  // runs boot, then DCL fires and runs boot again). Without this guard,
+  // bindEvents() ran twice and every click listener got registered
+  // twice — Reset League fired twice, with the second invisible pass
+  // accidentally wiping the user's bits when they clicked OK on the
+  // second prompt. Pattern mirrors existing _fkShortcutsBound /
+  // _fkVisibilityBound / _fkSettingsFilterBound idempotency flags.
+  if (window._fkBootRan) return;
+  window._fkBootRan = true;
+
   bindEvents();
   let restored = false;
   try { restored = await loadLocal(); } catch {}
