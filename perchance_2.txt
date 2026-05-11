@@ -11787,7 +11787,7 @@
 
       <div class="setting-card">
         <h3>Game Mode</h3>
-        <div class="setting-desc">Each match plays under one mode. <strong>Deathmatch</strong> = standard 5v5 best-of-N elimination. <strong>King of the Hill</strong>, <strong>Capture the Flag</strong>, and <strong>Melee Tag</strong> run as single continuous matches with their own scoring.</div>
+        <div class="setting-desc">Each match plays under one mode. <strong>Deathmatch</strong> = standard 5v5 best-of-N elimination. <strong>King of the Hill</strong>, <strong>Capture the Flag</strong>, and <strong>Melee Tag</strong> run as single continuous matches with their own scoring. <strong>CTF</strong> is classic two-flag: steal the enemy flag and bring it to your base — but you can only score if your own flag is still at home. Touch your own dropped flag to return it instantly.</div>
         <div class="setting-row">
           <select id="setGameMode" class="setting-select">
             <option value="deathmatch">Deathmatch (5v5 best-of-N rounds)</option>
@@ -12594,15 +12594,36 @@ const LEAGUE_CONFIG = {
   // canonical 5v5 best-of-N round-elimination mode. The three new modes
   // run as a single continuous "match" with different scoring rules.
   gameMode: "deathmatch",  // "deathmatch" | "koth" | "ctf" | "tag"
+  // === v37.70: tunable respawn-wave timing for continuous modes ===
+  // KOTH and CTF use team-wave respawns (see tickRespawns + applyKO).
+  // The first KO on a team schedules a wave at `frame + waveFrames`;
+  // subsequent KOs join the same wave. This config controls the
+  // wave delay. Default 30s; can be reduced for faster-paced games.
+  // Tag mode is unaffected — its win condition resolves at ≤1 alive
+  // total before any wipe state persists, so the wave timer never
+  // matters there. The wipe-accelerator in tickRespawns will also
+  // cut the delay short if a team is fully wiped, so this is a
+  // ceiling not a floor.
+  continuousModeRespawnSec: 30,
   modeConfig: {
     koth: {
       pointsToWin: 50,    // 25 / 50 / 100 supported
       tickPointsPerSec: 1, // points per second for crown holder
     },
     ctf: {
-      capsToWin: 5,       // 3 / 5 / 7 / 9
-      teamSize: 7,        // bots per team in CTF (request: "teams of 7")
-      flagReturnSec: 8,   // seconds before dropped flag returns to center
+      // === v37.69: classic two-flag CTF ===
+      // Each team has their own flag at their own base. You steal the
+      // ENEMY's flag, bring it home — but can only score if your own
+      // flag is still at home. Touch your own dropped flag to return
+      // it instantly. Auto-return is a safety net for stuck-in-corner
+      // edge cases.
+      capsToWin: 5,           // 3 / 5 / 7 / 9
+      teamSize: 7,            // bots per team in CTF
+      flagReturnSec: 30,      // safety-net: seconds before dropped flag auto-returns home.
+                              // (v37.69: was 8s for neutral-flag CTF. Bumped to 30s now
+                              // that touch-to-return is the primary mechanic — the timer
+                              // only fires when a flag is stuck somewhere no bot reaches.)
+      ownFlagTouchReturns: true, // touching your own dropped flag returns it home instantly
       carrierSpeedMult: 0.80,
     },
     tag: {
@@ -14485,7 +14506,9 @@ function runSeasonTrades() {
 
     const N = TEAMS.length;
     // Roll trade count: uniform integer in [N, N+4]; mean N+2, range 4.
-    const tradeCount = N + Math.floor(Math.random() * 5);
+    // v37.78 determinism fix: was Math.random — trades cascade into every
+    // future match (roster composition), so this must be on SIM_RNG.
+    const tradeCount = N + Math.floor(SIM_RNG.next() * 5);
 
     let executed = 0;
     let attempts = 0;
@@ -14494,12 +14517,12 @@ function runSeasonTrades() {
     while (executed < tradeCount && attempts < maxAttempts) {
       attempts++;
 
-      // Pick a random position
-      const pos = POSITIONS[Math.floor(Math.random() * POSITIONS.length)];
+      // Pick a random position (v37.78: SIM_RNG)
+      const pos = POSITIONS[Math.floor(SIM_RNG.next() * POSITIONS.length)];
 
-      // Pick two distinct teams
-      const idxA = Math.floor(Math.random() * N);
-      let idxB = Math.floor(Math.random() * (N - 1));
+      // Pick two distinct teams (v37.78: SIM_RNG)
+      const idxA = Math.floor(SIM_RNG.next() * N);
+      let idxB = Math.floor(SIM_RNG.next() * (N - 1));
       if (idxB >= idxA) idxB++;
       const teamA = TEAMS[idxA];
       const teamB = TEAMS[idxB];
@@ -15611,19 +15634,35 @@ function _initModeEntities(m) {
       pointsAccum: 0,
     };
   } else if (mode === "ctf") {
-    // Flag spawns at center; bases spawn at each team's spawn area.
-    m.flag = {
-      x: cx, y: cy,
-      homeX: cx, homeY: cy,
-      carrierId: null,
-      carrierTeamId: null,
-      droppedAtFrame: -1,  // -1 = at home, >=0 = dropped (will return after timeout)
-      returnAfterFrames: Math.round((modeCfg.flagReturnSec || 8) * 1000 / COMBAT.frameMs),
-    };
+    // === v37.69: classic two-flag CTF ===
+    // Each team has their own flag at their own base. Pre-v37.69 was a
+    // neutral-flag variant (one flag at center, whoever grabs brings it
+    // to own base). Classic CTF: steal ENEMY flag → bring to OWN base →
+    // score IFF own flag is still at home. Touching your own dropped
+    // flag returns it instantly.
     m.basesById = {
       [m.teamAId]: { x: 80, y: cy, teamId: m.teamAId },
       [m.teamBId]: { x: W - 80, y: cy, teamId: m.teamBId },
     };
+    const autoReturnFrames = Math.round((modeCfg.flagReturnSec || 30) * 1000 / COMBAT.frameMs);
+    // One flag per team, spawned at team's own base. The flag's homeX/Y
+    // is the team's base position — that's where it lives when not carried
+    // or dropped.
+    m.flagsByTeam = {};
+    for (const teamId of [m.teamAId, m.teamBId]) {
+      const base = m.basesById[teamId];
+      m.flagsByTeam[teamId] = {
+        teamId: teamId,             // who owns this flag (and whose base it spawns at)
+        x: base.x, y: base.y,
+        homeX: base.x, homeY: base.y,
+        state: "home",              // "home" | "carried" | "dropped"
+        carrierId: null,            // bot currently holding the flag (must be from ENEMY team)
+        carrierTeamId: null,        // == enemy team while carried
+        droppedAtFrame: -1,         // frame when flag became "dropped" (for auto-return timer)
+        returnAfterFrames: autoReturnFrames,
+        respawnGraceUntil: 0,       // frame until which flag is uncapturable (post-capture grace)
+      };
+    }
   } else if (mode === "tag") {
     // Pick a random "It" from team A's roster (deterministic via SIM_RNG).
     const all = [...m.teamAplayers, ...m.teamBplayers].filter(p => !p.deceased);
@@ -15664,7 +15703,8 @@ function tickKOTH(m) {
   const all = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(p => p.alive);
 
   // If carrier is dead/null, find a new pickup (any bot within 16px)
-  const carrier = c.carrierId ? all.find(p => p.id === c.carrierId) : null;
+  // v37.78: !=null guards against falsy-zero (carrier with id=0)
+  const carrier = c.carrierId != null ? all.find(p => p.id === c.carrierId) : null;
   if (!carrier) {
     c.carrierId = null;
     c.carrierTeamId = null;
@@ -15694,59 +15734,154 @@ function tickKOTH(m) {
   }
 }
 
-/* ----- CTF ----- */
-function tickCTF(m) {
-  const f = m.flag;
-  if (!f) return;
-  const all = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(p => p.alive);
+/* ----- CTF (classic two-flag) -----
+   Per-frame logic for each flag in m.flagsByTeam:
 
-  // Respawn grace — after a capture, the flag is briefly uncapturable
-  // so the same carrier doesn't immediately re-grab and re-cap.
-  if (f.respawnGraceUntil && m.roundFrame < f.respawnGraceUntil) {
-    return;
+   STATE TRANSITIONS:
+     home     → carried   (enemy bot touches it; only when state==='home')
+     home     → dropped   (impossible — never spontaneously drops from home)
+     carried  → dropped   (carrier KO'd; handled in applyKO, not here)
+     carried  → home      (capture! handled below: carrier reaches own base
+                           AND own flag is also home → score, both flags reset)
+     dropped  → carried   (any enemy-of-flag-owner bot touches it; pickup)
+     dropped  → home      (a teammate-of-flag-owner touches it; instant return)
+     dropped  → home      (auto-return timer expires; safety net)
+
+   PICKUP ELIGIBILITY: a bot can only pick up the ENEMY's flag. Touching
+   your own flag while it's at home is a no-op (it's just sitting there).
+   Touching your own flag while it's dropped triggers the touch-return.
+
+   CAPTURE GATE: scoring requires (a) carrier touches own base, AND
+   (b) own flag is at home (state==='home'). If carrier reaches own base
+   while own flag is stolen, the capture is DENIED — carrier keeps the
+   enemy flag and the gold base-ring pulse (rendered in draw layer)
+   tells the user "capture pending — your flag is gone".
+*/
+function tickCTF(m) {
+  if (!m.flagsByTeam || !m.basesById) return;
+  const all = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(p => p.alive);
+  const PICKUP_R2 = 16 * 16;          // pickup/touch radius squared
+  const CAPTURE_R2 = 24 * 24;         // capture radius (matches base ring visual)
+
+  // First pass: refresh carrier-following positions for each flag, and
+  // detect dead/missing carriers (shouldn't normally happen since applyKO
+  // also drops, but defense in depth).
+  for (const flagOwnerId of Object.keys(m.flagsByTeam)) {
+    const f = m.flagsByTeam[flagOwnerId];
+    if (f.state !== "carried") continue;
+    // v37.78: !=null guards against falsy-zero (carrier with id=0)
+    const carrier = f.carrierId != null ? all.find(p => p.id === f.carrierId) : null;
+    if (!carrier) {
+      // Carrier died but applyKO didn't drop (defensive recovery)
+      f.state = "dropped";
+      f.carrierId = null;
+      f.carrierTeamId = null;
+      f.droppedAtFrame = m.roundFrame || 0;
+    } else {
+      // Flag follows carrier (offset above their head for visibility)
+      f.x = carrier.x;
+      f.y = carrier.y - 20;
+    }
   }
 
-  // If carrier dead/null, check for pickup
-  const carrier = f.carrierId ? all.find(p => p.id === f.carrierId) : null;
-  if (!carrier) {
-    f.carrierId = null;
-    f.carrierTeamId = null;
-    for (const p of all) {
-      const dx = p.x - f.x, dy = p.y - f.y;
-      if (dx*dx + dy*dy < 16*16) {
-        f.carrierId = p.id;
-        f.carrierTeamId = p.teamId;
-        f.droppedAtFrame = -1;
-        feed("match", `🚩 ${p.name} grabs the flag for ${TEAM_BY_ID[p.teamId].short}!`);
-        break;
+  // Second pass: for each alive bot, check pickup / touch-return / capture.
+  // Order matters within a single bot: touch-own-flag is checked before
+  // touch-enemy-flag, so a bot standing exactly between both never grabs
+  // enemy while own is right there (rare but possible at base proximity).
+  for (const p of all) {
+    // Skip bots that already carry a flag (can only carry one at a time)
+    const alreadyCarrying = Object.values(m.flagsByTeam).some(f => f.carrierId === p.id);
+    const ownFlag = m.flagsByTeam[p.teamId];
+    const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+    const enemyFlag = m.flagsByTeam[enemyTeamId];
+
+    // (A) Touch own dropped flag → return it home instantly.
+    // Only applies when state==='dropped' (own flag at home is a no-op).
+    if (ownFlag && ownFlag.state === "dropped") {
+      const dx = p.x - ownFlag.x, dy = p.y - ownFlag.y;
+      if (dx * dx + dy * dy < PICKUP_R2) {
+        ownFlag.state = "home";
+        ownFlag.x = ownFlag.homeX;
+        ownFlag.y = ownFlag.homeY;
+        ownFlag.carrierId = null;
+        ownFlag.carrierTeamId = null;
+        ownFlag.droppedAtFrame = -1;
+        feed("match", `🚩 ${p.name} returns the ${TEAM_BY_ID[p.teamId].short} flag to base!`);
       }
     }
-    // Return-to-base timer if dropped (carrier was killed)
-    if (f.droppedAtFrame >= 0 && (m.roundFrame - f.droppedAtFrame) >= f.returnAfterFrames) {
-      f.x = f.homeX; f.y = f.homeY; f.droppedAtFrame = -1;
-      feed("match", `🚩 The flag returns to center.`);
-    }
-  } else {
-    // Flag follows carrier
-    f.x = carrier.x;
-    f.y = carrier.y - 20;
-    // Capture check: carrier touches their own base
-    const myBase = m.basesById[carrier.teamId];
-    if (myBase) {
-      const dbx = carrier.x - myBase.x, dby = carrier.y - myBase.y;
-      if (dbx*dbx + dby*dby < 24*24) {
-        // Capture!
-        if (carrier.teamId === m.teamAId) m.modeScoreA = (m.modeScoreA || 0) + 1;
-        else m.modeScoreB = (m.modeScoreB || 0) + 1;
-        feed("match", `🏆 ${carrier.name} captures the flag! ${TEAM_BY_ID[carrier.teamId].short} +1`);
-        // Reset flag — and apply 60-frame grace so this carrier doesn't
-        // immediately re-grab and re-cap on the next tick.
-        f.x = f.homeX; f.y = f.homeY;
-        f.carrierId = null;
-        f.carrierTeamId = null;
-        f.droppedAtFrame = -1;
-        f.respawnGraceUntil = m.roundFrame + 60;
+
+    // (B) Pickup enemy flag (if eligible — bot not already carrying, and
+    // enemy flag not on respawn grace).
+    if (!alreadyCarrying && enemyFlag &&
+        (enemyFlag.state === "home" || enemyFlag.state === "dropped") &&
+        (!enemyFlag.respawnGraceUntil || m.roundFrame >= enemyFlag.respawnGraceUntil)) {
+      const dx = p.x - enemyFlag.x, dy = p.y - enemyFlag.y;
+      if (dx * dx + dy * dy < PICKUP_R2) {
+        enemyFlag.state = "carried";
+        enemyFlag.carrierId = p.id;
+        enemyFlag.carrierTeamId = p.teamId;
+        enemyFlag.droppedAtFrame = -1;
+        feed("match", `🚩 ${p.name} grabs the ${TEAM_BY_ID[enemyTeamId].short} flag!`);
       }
+    }
+
+    // (C) Capture check — for carriers only. Carrier must be at own base
+    // AND own flag must be at home for the score to count. If own flag
+    // is stolen, capture is denied (carrier keeps the flag, no score).
+    if (enemyFlag && enemyFlag.carrierId === p.id) {
+      const myBase = m.basesById[p.teamId];
+      if (myBase) {
+        const dbx = p.x - myBase.x, dby = p.y - myBase.y;
+        if (dbx * dbx + dby * dby < CAPTURE_R2) {
+          if (ownFlag && ownFlag.state === "home") {
+            // CAPTURE! Score, reset both flags, respawn grace on both.
+            if (p.teamId === m.teamAId) m.modeScoreA = (m.modeScoreA || 0) + 1;
+            else                        m.modeScoreB = (m.modeScoreB || 0) + 1;
+            feed("match", `🏆 ${p.name} captures the ${TEAM_BY_ID[enemyTeamId].short} flag! ${TEAM_BY_ID[p.teamId].short} +1`);
+            // Reset enemy flag (the one just captured) to its home
+            enemyFlag.state = "home";
+            enemyFlag.x = enemyFlag.homeX;
+            enemyFlag.y = enemyFlag.homeY;
+            enemyFlag.carrierId = null;
+            enemyFlag.carrierTeamId = null;
+            enemyFlag.droppedAtFrame = -1;
+            enemyFlag.respawnGraceUntil = (m.roundFrame || 0) + 60;
+            // Own flag is already at home — leave it (or add grace too for symmetry)
+            ownFlag.respawnGraceUntil = (m.roundFrame || 0) + 60;
+          } else {
+            // CAPTURE DENIED — own flag is stolen. Carrier keeps the
+            // enemy flag and stays at base; the base ring will pulse
+            // gold/red (rendered in draw layer) to communicate "pending".
+            // Mark the denial state for the renderer to read.
+            m._captureDenialPulse = m._captureDenialPulse || {};
+            // Throttle the denial feed message so we don't spam — only
+            // emit once per "carrier-at-base session".
+            const denialKey = `${p.id}:${m.roundFrame >> 6}`; // every ~3.2s
+            if (!m._captureDenialPulse[denialKey]) {
+              m._captureDenialPulse[denialKey] = true;
+              feed("match", `⚠ ${p.name} reaches base but the ${TEAM_BY_ID[p.teamId].short} flag is gone — capture pending!`);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Third pass: auto-return safety-net timer for any dropped flag whose
+  // touch-to-return mechanic never fired (stuck in a corner, no living
+  // teammate, etc.). Generous 30s so this is genuinely a fallback.
+  for (const flagOwnerId of Object.keys(m.flagsByTeam)) {
+    const f = m.flagsByTeam[flagOwnerId];
+    if (f.state !== "dropped") continue;
+    if (f.droppedAtFrame < 0) continue;
+    if ((m.roundFrame || 0) - f.droppedAtFrame >= f.returnAfterFrames) {
+      f.state = "home";
+      f.x = f.homeX;
+      f.y = f.homeY;
+      f.carrierId = null;
+      f.carrierTeamId = null;
+      f.droppedAtFrame = -1;
+      feed("match", `🚩 The ${TEAM_BY_ID[flagOwnerId].short} flag auto-returns home (timeout).`);
     }
   }
 }
@@ -15825,11 +15960,24 @@ function applyTagHit(attacker, defender, m) {
 }
 
 /* ============================================================
-   v28.18: tickRespawns — TEAM-WAVE respawn for continuous modes
+   v28.18 / v37.70: tickRespawns — TEAM-WAVE respawn for continuous modes
    In KOTH/CTF/Tag (single-round, continuous modes), KO'd knights
    with lives remaining are flagged with _pendingRespawn in applyKO.
    The first KO on a team also schedules a release frame in
-   m._respawnWaves[teamId] = current_frame + 160 (8 seconds).
+   m._respawnWaves[teamId] = current_frame + waveFrames.
+
+   v37.70: wave delay is configurable via LEAGUE_CONFIG.continuousModeRespawnSec
+   (default 30s = 600 frames @ 20fps). Pre-v37.70 was hardcoded 8s
+   (160 frames). The longer default gives wiped teams a "round-like
+   comeback" cadence rather than continuous attrition.
+
+   v37.70: WIPE-ACCELERATOR. At the top of each tick, every team with
+   a pending wave is checked. If a team has zero currently-alive
+   knights (every roster member is either dead-no-lives OR pending-
+   respawn), the team is fully wiped — accelerate the wave to fire
+   within 40 frames (2s). This prevents the wipe state from sitting
+   idle for the full 30s of the normal cadence (which would feel
+   "endless" — the user-reported issue).
 
    When the release frame is reached, the ENTIRE pending team-wave
    revives in one batch:
@@ -15850,6 +15998,30 @@ function tickRespawns(m) {
   if (!m || !m.gameMode || m.gameMode === "deathmatch") return;
   if (!m._respawnWaves) return;
   const f = m.roundFrame || 0;
+
+  // === v37.70: wipe-accelerator pass ===
+  // Before the normal release loop, scan each team with a pending wave.
+  // If the team has zero alive knights right now (full wipe), reschedule
+  // their wave to fire within 40 frames (2s). The check is "alive only"
+  // — pending-respawn doesn't count as "in the field". The accelerator
+  // only PULLS IN waves; if a wave is already due (<=40 frames out), it
+  // stays where it is.
+  const WIPE_ACCEL_FRAMES = 40;  // 2 seconds @ 20fps
+  for (const teamId of Object.keys(m._respawnWaves)) {
+    const releaseFrame = m._respawnWaves[teamId];
+    if (releaseFrame == null) continue;
+    const list = (teamId === m.teamAId) ? m.teamAplayers : m.teamBplayers;
+    if (!list) continue;
+    const aliveCount = list.filter(p => p.alive).length;
+    if (aliveCount === 0) {
+      // Full wipe — accelerate wave to fire ASAP (within 2s).
+      const accelTarget = f + WIPE_ACCEL_FRAMES;
+      if (releaseFrame > accelTarget) {
+        m._respawnWaves[teamId] = accelTarget;
+        feed("spawn", `⚡ ${TEAM_BY_ID[teamId].short} wiped — wave accelerated.`);
+      }
+    }
+  }
 
   for (const teamId of Object.keys(m._respawnWaves)) {
     const releaseFrame = m._respawnWaves[teamId];
@@ -15907,8 +16079,11 @@ function tickRespawns(m) {
       const yOffset = ((slotIdx >= 0 ? slotIdx : i) - 3) * 60;  // -180..+180
 
       // Reset combat state, place at spawn
-      p.x = baseX + ((Math.random() * 12) - 6);
-      p.y = cy + yOffset + ((Math.random() * 8) - 4);
+      // v37.78 determinism fix: was using Math.random() which breaks replay
+      // reproducibility. Spawn position affects combat (engagement order,
+      // LOS, race-to-center) so this MUST be on the seeded SIM_RNG stream.
+      p.x = baseX + R(-6, 6);
+      p.y = cy + yOffset + R(-4, 4);
       p.x = Math.max(40, Math.min(COMBAT.arenaW - 40, p.x));
       p.y = Math.max(40, Math.min(COMBAT.arenaH - 40, p.y));
       p.hp = p.stats.hp;
@@ -16157,8 +16332,12 @@ function generateTerrain() {
   let attempts = 0;
   while (placed < SCATTER_COUNT && attempts < 80) {
     attempts++;
-    const x = Math.round(X_MIN + Math.random() * (X_MAX - X_MIN));
-    const y = Math.round(Y_MIN + Math.random() * (Y_MAX - Y_MIN));
+    // v37.78 determinism fix: was using Math.random() which breaks replay
+    // reproducibility. The centerline blocks above use RI/R (SIM_RNG-backed);
+    // the scatter blocks need the same so same-seeded matches lay out the
+    // same terrain.
+    const x = RI(X_MIN, X_MAX);
+    const y = RI(Y_MIN, Y_MAX);
     const blockCx = x + SIZE / 2, blockCy = y + SIZE / 2;
 
     // Power-core keepout
@@ -17881,7 +18060,9 @@ function rollSeasonAiStyles() {
   const styleIds = Object.keys(AI_PATHING_STYLES);
   const assignments = {};
   for (const teamId of Object.keys(LEAGUE.rosters)) {
-    const idx = Math.floor(Math.random() * styleIds.length);
+    // v37.78 determinism fix: was Math.random — broke replay reproducibility.
+    // Style choice cascades into every match that season.
+    const idx = Math.floor(SIM_RNG.next() * styleIds.length);
     assignments[teamId] = styleIds[idx];
   }
   LEAGUE.aiStyles = assignments;
@@ -18048,11 +18229,17 @@ const TEAM_AI = (function() {
      is unreachable. */
   function pickTarget(p, enemyAlive, m) {
     if (enemyAlive.length === 0) return null;
+    // v37.78: enemyAlive can be the stale per-team snapshot from
+    // tickMatch (L17583), containing corpses left by same-frame KOs.
+    // All loops below add an inner .alive guard. BT callsite (L20491)
+    // passes a fresh-filtered list, so the check is a defensive no-op
+    // there; legacy decideAIState callsite (L20238) is the stale one.
     const teamState = m._teamAI && m._teamAI[p.teamId];
     if (!teamState) {
       // No team state — naive nearest
       let nearest = null, nd = Infinity;
       for (const e of enemyAlive) {
+        if (!e.alive) continue;
         const d = distance(p, e);
         if (d < nd) { nd = d; nearest = e; }
       }
@@ -18070,6 +18257,7 @@ const TEAM_AI = (function() {
     // up to maintain a sticky non-kill commitment.
     let killTarget = null, killD = Infinity;
     for (const e of enemyAlive) {
+      if (!e.alive) continue;
       const eHp = e.hp / e.stats.hp;
       if (eHp >= 0.25) continue;
       const d = distance(p, e);
@@ -18095,6 +18283,7 @@ const TEAM_AI = (function() {
     if (p.position === "sniper") {
       let bestHealer = null, bhd = Infinity;
       for (const e of enemyAlive) {
+        if (!e.alive) continue;
         if (e.position !== "healer") continue;
         const d = distance(p, e);
         if (d < myWpnRange && d < bhd) { bhd = d; bestHealer = e; }
@@ -18110,6 +18299,7 @@ const TEAM_AI = (function() {
     // geographically closest.
     let bestTarget = null, bestUtility = -Infinity;
     for (const e of enemyAlive) {
+      if (!e.alive) continue;
       const d = distance(p, e);
       // Distance penalty (closer = better)
       let util = -d * 0.01;
@@ -18133,9 +18323,13 @@ const TEAM_AI = (function() {
         if (pers.woundedBonus) util += (1 - eHp) * pers.woundedBonus;
         if (pers.healerBonus && e.position === "healer") util += pers.healerBonus;
         if (pers.protectAllyBonus && e.target) {
-          // Is this enemy targeting one of our allies?
+          // v37.78 bug fix: was `a.id === e.target` comparing id to a bot
+          // reference (always false → protectAllyBonus was dead code).
+          // p.target is consistently a bot reference (see L22011, etc.) so
+          // compare to e.target.id. Also guard against stale e.target after
+          // ally death.
           const allies = (p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers);
-          if (allies.some(a => a.alive && a.id === e.target)) {
+          if (allies.some(a => a.alive && a.id === e.target.id)) {
             util += pers.protectAllyBonus;
           }
         }
@@ -18179,7 +18373,9 @@ const TEAM_AI = (function() {
     if (target) {
       // Rally point: position offset slightly toward the team center so we
       // don't crowd the teammate's own engagement.
+      // v37.78: defensive teamCenter check (matches L21045/21231/21705).
       const tc = teamState.teamCenter;
+      if (!tc) return { x: target.x, y: target.y };
       let rx = target.x * 0.7 + tc.x * 0.3;
       let ry = target.y * 0.7 + tc.y * 0.3;
 
@@ -18234,6 +18430,126 @@ const TEAM_AI = (function() {
 window.TEAM_AI = TEAM_AI;
 
 
+/* ============================================================
+   BEHAVIOR TREE FRAMEWORK (v37.73)
+   ============================================================
+   General-purpose behavior-tree engine for bot AI. Replaces the
+   monolithic per-mode `decide*()` functions with composable trees.
+
+   USAGE:
+     const tree = BT.Selector([
+       BT.Sequence([
+         BT.Condition("amIFrozen", (p, m) => isFrozen(p, m)),
+         BT.Action("hold", (p) => { p.aiState = "FROZEN"; }),
+       ]),
+       BT.Action("flee", (p, m, bb) => { ... }),
+     ]);
+
+     // Per tick, per bot:
+     const bb = p._bt_bb || (p._bt_bb = {});
+     tree.tick(p, m, bb);
+
+   The blackboard (bb) is per-bot scratch — survives across ticks
+   so trees can carry state (target commitments, timers, etc.).
+   Trees produce side effects on `p` (setting target, aiState,
+   _escort_x/y, etc.) — the execute switch reads those.
+
+   STATUS CODES:
+     SUCCESS — the node accomplished its task this tick
+     FAILURE — the node's preconditions failed; try siblings
+     RUNNING — the node is in progress (multi-tick actions)
+
+   NODE TYPES:
+     Selector  — OR composite: try children L→R; return first
+                 non-FAILURE status. Mirrors "if/elseif" chains.
+     Sequence  — AND composite: try children L→R; return first
+                 non-SUCCESS status. Used for "precondition →
+                 action" chains.
+     Inverter  — decorator: flip SUCCESS↔FAILURE on child status.
+     Condition — leaf: returns SUCCESS if predicate(p,m,bb) truthy.
+     Action    — leaf: runs fn(p,m,bb); returns its return value
+                 or SUCCESS by default. Used for side-effecting work.
+
+   This phase (v37.73): framework ships with Tag mode as the first
+   convert. Other modes follow in v37.74–76. The execute switch
+   stays running on aiState until v37.77 cleanup retires it.
+   ============================================================ */
+const BT = (function() {
+  const SUCCESS = "BT_SUCCESS";
+  const FAILURE = "BT_FAILURE";
+  const RUNNING = "BT_RUNNING";
+
+  function Selector(children) {
+    return {
+      type: "Selector",
+      children,
+      tick(p, m, bb) {
+        for (const child of children) {
+          const status = child.tick(p, m, bb);
+          if (status !== FAILURE) return status;
+        }
+        return FAILURE;
+      }
+    };
+  }
+
+  function Sequence(children) {
+    return {
+      type: "Sequence",
+      children,
+      tick(p, m, bb) {
+        for (const child of children) {
+          const status = child.tick(p, m, bb);
+          if (status !== SUCCESS) return status;
+        }
+        return SUCCESS;
+      }
+    };
+  }
+
+  function Inverter(child) {
+    return {
+      type: "Inverter",
+      child,
+      tick(p, m, bb) {
+        const status = child.tick(p, m, bb);
+        if (status === SUCCESS) return FAILURE;
+        if (status === FAILURE) return SUCCESS;
+        return status; // RUNNING passes through
+      }
+    };
+  }
+
+  function Condition(name, predicate) {
+    return {
+      type: "Condition",
+      name,
+      tick(p, m, bb) {
+        return predicate(p, m, bb) ? SUCCESS : FAILURE;
+      }
+    };
+  }
+
+  function Action(name, fn) {
+    return {
+      type: "Action",
+      name,
+      tick(p, m, bb) {
+        const result = fn(p, m, bb);
+        // Allow Action functions to return explicit statuses;
+        // otherwise treat completion as SUCCESS.
+        if (result === SUCCESS || result === FAILURE || result === RUNNING) {
+          return result;
+        }
+        return SUCCESS;
+      }
+    };
+  }
+
+  return { SUCCESS, FAILURE, RUNNING, Selector, Sequence, Inverter, Condition, Action };
+})();
+if (typeof window !== "undefined") window.BT = BT;
+
 const MODE_AI = (function() {
 
   /* Helper: closest enemy (or any-team) bot to position. */
@@ -18279,7 +18595,8 @@ const MODE_AI = (function() {
     const aliveA = m.teamAplayers.filter(p => p.alive);
     const aliveB = m.teamBplayers.filter(p => p.alive);
     const allAlive = [...aliveA, ...aliveB];
-    const carrier = m.crown.carrierId
+    // v37.78: !=null guards against falsy-zero (carrier with id=0)
+    const carrier = m.crown.carrierId != null
       ? allAlive.find(p => p.id === m.crown.carrierId)
       : null;
 
@@ -18406,8 +18723,12 @@ const MODE_AI = (function() {
     }
 
     if (role === "attacker") {
-      // Enemy attacker — directly engage carrier
-      const carrier = allies.find(t => t.id === m.crown.carrierId);
+      // Enemy attacker — directly engage carrier.
+      // v37.78: was using `allies.find(carrierId)` but attacker/flanker
+      // roles are assigned to ENEMIES of the carrier (per assignKothRoles).
+      // The same-team lookup never returned the carrier — dead code path.
+      // Same fix as v37.74 BT version; legacy was missed at the time.
+      const carrier = enemies.find(t => t.id === m.crown.carrierId);
       if (carrier) {
         p.target = carrier;
         p.aiState = "ENGAGE";
@@ -18419,7 +18740,8 @@ const MODE_AI = (function() {
       // Enemy flanker — try to reach carrier from a side angle.
       // Move to a point offset perpendicular to the carrier→nearest-enemy
       // line, then close in.
-      const carrier = allies.find(t => t.id === m.crown.carrierId);
+      // v37.78: enemies.find, same fix reason as attacker above.
+      const carrier = enemies.find(t => t.id === m.crown.carrierId);
       if (carrier) {
         const ang = Math.atan2(carrier.y - p.y, carrier.x - p.x);
         // Pick a flank side based on which side we're on relative to the line
@@ -18482,119 +18804,231 @@ const MODE_AI = (function() {
        interceptor — predicts carrier's path, moves to block
        support     — engages other carrier-team players
 
-     Uncarried flag:
-       retriever_a — closest bot from each team races flag
-       retriever_b — second-closest from each team takes lead-line
-       (rest defend or hold)
+     Classic two-flag CTF role assignment (v37.71 — priority-based allocator).
+
+     CRITICAL FIX vs v37.69: the previous case-based allocator (we-have-
+     carrier XOR we-don't) had a bilateral-carrier soft-lock. When both
+     teams had grabbed each other's flags, BOTH teams fell into the
+     "we-have-carrier" branch, which only assigned escorts/supports —
+     NO chasers. So nobody hunted the enemy carrier, neither team could
+     recover their stolen flag, and neither team could score (because of
+     the own-flag-must-be-home capture gate). Both bases just sat there
+     red-pulsing forever.
+
+     The new allocator is a priority list. Each role has its own
+     precondition; roles are tried in order; each assigned to the
+     closest unassigned bot. Chasers are gated on "enemy carries our
+     flag" (the actual condition that demands chasing), NOT on "we
+     don't have our own carrier" — so both teams correctly chase each
+     other's carriers in the bilateral state.
+
+     Priority order (rationale in comments below):
+       1. chaser_a (if their carrier exists)         — recover stolen flag (urgent)
+       2. own_flag_retriever (if our flag dropped)   — touch-return path
+       3. chaser_b (if their carrier exists)         — second chaser, flanking
+       4. escort_lead (if our carrier will rush)     — protect carrier route
+       5. interceptor (if their carrier exists)      — predict enemy carrier path
+       6. escort_rear (if our carrier will rush)     — trail carrier behind
+       7. enemy_flag_retriever (if no carriers)      — offense, sprint to grab
+       8. zone_def (always)                          — guard own base
+       9. enemy_flag_retriever backup (if no carriers) — second offense
+      10. support (catch-all)                        — mid-field fluidity
      ============================================================ */
   function assignCtfRoles(m) {
-    if (!m.flag || !m.basesById) return;
+    if (!m.flagsByTeam || !m.basesById) return;
     const aliveA = m.teamAplayers.filter(p => p.alive);
     const aliveB = m.teamBplayers.filter(p => p.alive);
-    const allAlive = [...aliveA, ...aliveB];
-    const carrier = m.flag.carrierId
-      ? allAlive.find(p => p.id === m.flag.carrierId)
-      : null;
 
-    if (carrier) {
-      const carrierTeam = (carrier.teamId === m.teamAId) ? aliveA : aliveB;
-      const enemyTeam   = (carrier.teamId === m.teamAId) ? aliveB : aliveA;
-      const ownBase = m.basesById[carrier.teamId];
+    // Clear stale roles from previous tick — start every assignment
+    // pass with a clean slate to avoid leaking roles when match state
+    // shifts (e.g., flag captured, carrier killed).
+    for (const p of [...aliveA, ...aliveB]) p._modeRole = null;
 
-      carrier._modeRole = "carrier";
+    const teamsData = [
+      { teamId: m.teamAId, team: aliveA, enemyTeam: aliveB },
+      { teamId: m.teamBId, team: aliveB, enemyTeam: aliveA },
+    ];
 
-      // Carrier-team teammates: 1 escort_lead (closest to base), 1 escort_rear
-      // (closest to carrier from behind), rest support.
-      const teammates = carrierTeam.filter(p => p.id !== carrier.id);
-      // Lead = teammate closest to own base AND ahead of carrier on path
-      const baseDir = Math.atan2(ownBase.y - carrier.y, ownBase.x - carrier.x);
-      const baseUx = Math.cos(baseDir), baseUy = Math.sin(baseDir);
-      // For each teammate, project (teammate - carrier) onto baseDir
-      // — positive = ahead of carrier, negative = behind.
-      const projected = teammates.map(t => {
-        const dx = t.x - carrier.x, dy = t.y - carrier.y;
-        const proj = dx * baseUx + dy * baseUy;
-        return { p: t, proj, distFromBase: distance(t, ownBase), distFromCarrier: distance(t, carrier) };
-      });
-      // escort_lead: most-ahead teammate (highest proj). Fallback: closest to base.
-      let lead = null;
-      let aheadSorted = projected.filter(o => o.proj > 0).sort((a, b) => b.proj - a.proj);
-      if (aheadSorted.length > 0) lead = aheadSorted[0].p;
-      else if (projected.length > 0) lead = [...projected].sort((a, b) => a.distFromBase - b.distFromBase)[0].p;
-      if (lead) lead._modeRole = "escort_lead";
-      // escort_rear: most-behind teammate (lowest proj). Fallback: closest to carrier.
-      let rear = null;
-      let behindSorted = projected.filter(o => o.p !== lead && o.proj <= 0).sort((a, b) => a.proj - b.proj);
-      if (behindSorted.length > 0) rear = behindSorted[0].p;
-      else {
-        const remaining = projected.filter(o => o.p !== lead);
-        if (remaining.length > 0) rear = [...remaining].sort((a, b) => a.distFromCarrier - b.distFromCarrier)[0].p;
-      }
-      if (rear) rear._modeRole = "escort_rear";
-      // Rest: support
-      for (const t of teammates) {
-        if (t._modeRole !== "escort_lead" && t._modeRole !== "escort_rear") {
-          t._modeRole = "support";
-        }
+    for (const { teamId, team, enemyTeam } of teamsData) {
+      const ownFlag     = m.flagsByTeam[teamId];
+      const enemyTeamId = (teamId === m.teamAId) ? m.teamBId : m.teamAId;
+      const enemyFlag   = m.flagsByTeam[enemyTeamId];
+      const ownBase     = m.basesById[teamId];
+
+      // Identify carriers (one each side, at most)
+      const ourCarrier = enemyFlag && enemyFlag.carrierId != null
+        ? team.find(p => p.id === enemyFlag.carrierId)
+        : null;
+      const theirCarrier = ownFlag && ownFlag.carrierId != null
+        ? enemyTeam.find(p => p.id === ownFlag.carrierId)
+        : null;
+
+      // Pin the carrier — their role is determined by physics, not choice.
+      if (ourCarrier) ourCarrier._modeRole = "carrier";
+
+      // Will our carrier rush? Only if our own flag is at home; otherwise
+      // the carrier holds defensively (decideCtf handles the CTF_HOLD
+      // state). Escorts are skipped when carrier is holding — those bots
+      // become chasers / zone_def instead, which is what we want anyway.
+      const carrierWillRush = !!(ourCarrier && ownFlag && ownFlag.state === "home");
+
+      // Helper: get bots still unassigned (excludes the pinned carrier)
+      const unassigned = () => team.filter(p => !p._modeRole);
+      // Helper: closest unassigned bot to a target {x,y}. Returns null
+      // if no bots remain.
+      const closestTo = (target) => {
+        if (!target) return null;
+        const u = unassigned();
+        if (u.length === 0) return null;
+        return [...u].sort((a, b) => distance(a, target) - distance(b, target))[0];
+      };
+
+      // === Priority assignments ===
+      // Each `if` is independent; we walk the want list top-to-bottom.
+      // Higher-priority assignments deplete the pool before lower ones
+      // get a chance.
+
+      // 1. chaser_a — most urgent role when enemy is carrying our flag.
+      //    Without this assigned, the soft-lock persists (the user's
+      //    reported bug).
+      if (theirCarrier && unassigned().length > 0) {
+        const c = closestTo(theirCarrier);
+        if (c) c._modeRole = "chaser_a";
       }
 
-      // Enemy-team roles
-      const enemyByDistToCarrier = [...enemyTeam].sort((a, b) => distance(a, carrier) - distance(b, carrier));
-      for (let i = 0; i < enemyByDistToCarrier.length; i++) {
-        const e = enemyByDistToCarrier[i];
-        if (i === 0) e._modeRole = "chaser_a";
-        else if (i === 1) e._modeRole = "chaser_b";
-        else if (i === 2) e._modeRole = "interceptor";
-        else e._modeRole = "support";
+      // 2. own_flag_retriever — touch-return our dropped flag.
+      //    Fires only when state === "dropped" (not "carried" — that's
+      //    a chaser's job).
+      if (ownFlag && ownFlag.state === "dropped" && unassigned().length > 0) {
+        const r = closestTo(ownFlag);
+        if (r) r._modeRole = "own_flag_retriever";
       }
-      // Override one enemy to be zone_def: the one already closest to ENEMY's
-      // own base (i.e. defending their goal-line stand) — unless they're chaser_a.
-      const enemyOwnBase = m.basesById[enemyByDistToCarrier[0]?.teamId];
-      if (enemyOwnBase) {
-        const sortedByOwnBase = [...enemyTeam].sort((a, b) => distance(a, enemyOwnBase) - distance(b, enemyOwnBase));
-        const candidate = sortedByOwnBase.find(e => e._modeRole !== "chaser_a");
-        if (candidate) candidate._modeRole = "zone_def";
+
+      // 3. chaser_b — secondary chaser for flanking. Only when their
+      //    carrier exists.
+      if (theirCarrier && unassigned().length > 0) {
+        const c = closestTo(theirCarrier);
+        if (c) c._modeRole = "chaser_b";
       }
-    } else {
-      // === Flag is loose ===
-      // Each team: closest 2 to flag are retrievers, rest are zone_def or support
-      for (const team of [aliveA, aliveB]) {
-        const sorted = [...team].sort((a, b) => {
-          const da = (a.x - m.flag.x)**2 + (a.y - m.flag.y)**2;
-          const db = (b.x - m.flag.x)**2 + (b.y - m.flag.y)**2;
-          return da - db;
-        });
-        for (let i = 0; i < sorted.length; i++) {
-          if (i === 0) sorted[i]._modeRole = "retriever_a";
-          else if (i === 1) sorted[i]._modeRole = "retriever_b";
-          else if (i === 2 && m.basesById && m.basesById[sorted[i].teamId]) sorted[i]._modeRole = "zone_def";
-          else sorted[i]._modeRole = "support";
-        }
+
+      // 4. escort_lead — protect carrier's path to base (when rushing).
+      //    Skipped when carrier is holding (no path to escort).
+      if (carrierWillRush && unassigned().length > 0) {
+        const baseDir = Math.atan2(ownBase.y - ourCarrier.y, ownBase.x - ourCarrier.x);
+        const leadTarget = {
+          x: ourCarrier.x + Math.cos(baseDir) * 80,
+          y: ourCarrier.y + Math.sin(baseDir) * 80,
+        };
+        const lead = closestTo(leadTarget);
+        if (lead) lead._modeRole = "escort_lead";
       }
+
+      // 5. interceptor — predict enemy carrier path; cut them off.
+      if (theirCarrier && unassigned().length > 0) {
+        const c = closestTo(theirCarrier);
+        if (c) c._modeRole = "interceptor";
+      }
+
+      // 6. escort_rear — trail carrier from behind, kill pursuers.
+      if (carrierWillRush && unassigned().length > 0) {
+        const baseDir = Math.atan2(ownBase.y - ourCarrier.y, ownBase.x - ourCarrier.x);
+        const rearTarget = {
+          x: ourCarrier.x - Math.cos(baseDir) * 50,
+          y: ourCarrier.y - Math.sin(baseDir) * 50,
+        };
+        const rear = closestTo(rearTarget);
+        if (rear) rear._modeRole = "escort_rear";
+      }
+
+      // 7. enemy_flag_retriever — offensive sprint to grab enemy flag.
+      //    Only fires when NO carriers exist on either side and the
+      //    enemy flag isn't already being carried. (When OUR carrier
+      //    exists, we already have their flag; when THEIR carrier
+      //    exists, we're focused on defense.)
+      const noCarriers = !ourCarrier && !theirCarrier;
+      if (noCarriers && enemyFlag && enemyFlag.state !== "carried" && unassigned().length > 0) {
+        const r = closestTo(enemyFlag);
+        if (r) r._modeRole = "enemy_flag_retriever";
+      }
+
+      // 8. zone_def — always guard own base (1 bot). Useful in every
+      //    state: defends against future grabs, intercepts enemies
+      //    approaching, picks up our flag if it gets dropped near base.
+      if (ownBase && unassigned().length > 0) {
+        const d = closestTo(ownBase);
+        if (d) d._modeRole = "zone_def";
+      }
+
+      // 9. enemy_flag_retriever (backup) — second offensive sprint.
+      //    Same conditions as #7.
+      if (noCarriers && enemyFlag && enemyFlag.state !== "carried" && unassigned().length > 0) {
+        const r = closestTo(enemyFlag);
+        if (r) r._modeRole = "enemy_flag_retriever";
+      }
+
+      // 10. support — fluid mid-field role for everyone else.
+      for (const p of unassigned()) p._modeRole = "support";
     }
   }
 
+  // v37.78: removed _ctfOpportunisticEngage helper (dead code after the
+  // legacy v37.72 hack was retired). Fire-while-moving lives in the
+  // execute-layer _tryOpportunisticFire helper.
+
   function decideCtf(p, m) {
-    if (!m.flag) return null;
+    if (!m.flagsByTeam) return null;
     const role = p._modeRole || "support";
     const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
     const allies  = (p.teamId === m.teamAId) ? m.teamAplayers : m.teamBplayers;
     const enemyAlive = enemies.filter(e => e.alive);
     const ownBase = m.basesById && m.basesById[p.teamId];
+    // Per-flag accessors (v37.69 classic two-flag CTF)
+    const ownFlag   = m.flagsByTeam[p.teamId];
+    const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+    const enemyFlag = m.flagsByTeam[enemyTeamId];
 
     if (role === "carrier") {
-      // Run toward own base. The CTF_RUSH state already handles base-rushing
-      // movement at reduced speed. Just set state.
+      // Run toward own base. The CTF_RUSH state handles base-rushing
+      // movement at reduced speed.
+      // === v37.69: defensive hold if own flag is stolen ===
+      // A carrier whose team's own flag is gone cannot score. Suicide-
+      // rushing to a denied base just gets them killed and drops the
+      // enemy flag back near their goal. Hold position near own base
+      // instead and let the own_flag_retriever do their job. Once own
+      // flag returns home (via teammate touch-return or auto-return),
+      // the next AI tick re-evaluates and goes back to CTF_RUSH.
       p._modeCarrier = true;
+      if (ownFlag && ownFlag.state !== "home") {
+        p.aiState = "CTF_HOLD";
+        if (ownBase) {
+          // Hold near base but not directly on it (so the eventual return
+          // visual is uncluttered). 60px out from base, on the line back
+          // toward the field's center.
+          const cx = COMBAT.arenaW / 2;
+          const dirX = cx - ownBase.x, dirY = (COMBAT.arenaH / 2) - ownBase.y;
+          const dirLen = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
+          p._escort_x = ownBase.x + (dirX / dirLen) * 60;
+          p._escort_y = ownBase.y + (dirY / dirLen) * 60;
+        }
+        return "CTF_HOLD";
+      }
       p.aiState = "CTF_RUSH";
       return "CTF_RUSH";
     }
+
+    // v37.78: removed legacy v37.72 opportunistic-engage hack.
+    // Pre-v37.78, escorts/retrievers/chasers with an enemy within 70px
+    // would flip aiState="ENGAGE" for one tick, stopping their movement.
+    // The v37.77 execute-layer _tryOpportunisticFire now provides true
+    // fire-while-moving without disrupting role intent. The hack here
+    // was redundant AND counterproductive — bots paused movement to
+    // engage when they could have just fired in passing.
 
     if (role === "escort_lead") {
       // Run AHEAD of carrier toward own base, picking off any enemies
       // along the path. If an enemy is between us and base, attack them.
       // If no enemy near path, sprint forward.
-      const carrier = allies.find(a => a.id === m.flag.carrierId);
+      const carrier = enemyFlag && enemyFlag.carrierId != null ? allies.find(a => a.id === enemyFlag.carrierId) : null;
       if (!carrier || !ownBase) return null;
       // Find closest enemy on the carrier→base path
       const pathAng = Math.atan2(ownBase.y - carrier.y, ownBase.x - carrier.x);
@@ -18625,7 +19059,7 @@ const MODE_AI = (function() {
 
     if (role === "escort_rear") {
       // Trail carrier, attack pursuing chasers
-      const carrier = allies.find(a => a.id === m.flag.carrierId);
+      const carrier = enemyFlag && enemyFlag.carrierId != null ? allies.find(a => a.id === enemyFlag.carrierId) : null;
       if (!carrier || !ownBase) return null;
       // Find any enemy within 120px of carrier (a pursuer). Engage if so.
       let pursuer = null, bestD = 120 * 120;
@@ -18648,41 +19082,40 @@ const MODE_AI = (function() {
       return "CTF_ESCORT_REAR";
     }
 
+    // === v37.69: chasers target the bot carrying OUR flag ===
     if (role === "chaser_a") {
-      // Direct chase — go straight at carrier
-      const carrier = enemyAlive.find(e => e.id === m.flag.carrierId);
-      if (carrier) {
-        p.target = carrier;
+      // Direct chase — go straight at the enemy bot carrying our flag
+      const theirCarrier = ownFlag && ownFlag.carrierId != null ? enemyAlive.find(e => e.id === ownFlag.carrierId) : null;
+      if (theirCarrier) {
+        p.target = theirCarrier;
         p.aiState = "ENGAGE";
         return "ENGAGE";
       }
     }
 
     if (role === "chaser_b") {
-      // Flanking chase — head to a point ahead-of-carrier-toward-base
-      // so we cut them off. Real-world: ultimate frisbee "lane defender".
-      const carrier = enemyAlive.find(e => e.id === m.flag.carrierId);
-      const enemyBase = m.basesById && m.basesById[carrier?.teamId];
-      if (carrier && enemyBase) {
-        const pathAng = Math.atan2(enemyBase.y - carrier.y, enemyBase.x - carrier.x);
-        const cutX = carrier.x + Math.cos(pathAng) * 100;
-        const cutY = carrier.y + Math.sin(pathAng) * 100;
+      // Flanking chase — cut off the enemy carrier on their path to their own base
+      const theirCarrier = ownFlag && ownFlag.carrierId != null ? enemyAlive.find(e => e.id === ownFlag.carrierId) : null;
+      const enemyBase = theirCarrier ? m.basesById[theirCarrier.teamId] : null;
+      if (theirCarrier && enemyBase) {
+        const pathAng = Math.atan2(enemyBase.y - theirCarrier.y, enemyBase.x - theirCarrier.x);
+        const cutX = theirCarrier.x + Math.cos(pathAng) * 100;
+        const cutY = theirCarrier.y + Math.sin(pathAng) * 100;
         p._escort_x = cutX; p._escort_y = cutY;
-        p.target = carrier;
+        p.target = theirCarrier;
         p.aiState = "CTF_FLANK";
         return "CTF_FLANK";
       }
     }
 
     if (role === "interceptor") {
-      // Predict carrier's future position (carrier velocity * 30 frames)
-      // and head there. If close enough, attack.
-      const carrier = enemyAlive.find(e => e.id === m.flag.carrierId);
-      if (carrier) {
-        const fx = carrier.x + (carrier.vx || 0) * 30;
-        const fy = carrier.y + (carrier.vy || 0) * 30;
+      // Predict enemy-carrier's future position and head there.
+      const theirCarrier = ownFlag && ownFlag.carrierId != null ? enemyAlive.find(e => e.id === ownFlag.carrierId) : null;
+      if (theirCarrier) {
+        const fx = theirCarrier.x + (theirCarrier.vx || 0) * 30;
+        const fy = theirCarrier.y + (theirCarrier.vy || 0) * 30;
         p._escort_x = fx; p._escort_y = fy;
-        p.target = carrier;
+        p.target = theirCarrier;
         p.aiState = "CTF_FLANK";
         return "CTF_FLANK";
       }
@@ -18690,7 +19123,7 @@ const MODE_AI = (function() {
 
     if (role === "zone_def") {
       // Camp own base perimeter — football safety / zone defender.
-      // Stay within ~80px of own base; engage anyone who comes within 120px.
+      // Stay within ~80px of own base; engage anyone who comes within 200px.
       if (!ownBase) return null;
       const distToBase = distance(p, ownBase);
       // Find any enemy approaching base
@@ -18705,34 +19138,40 @@ const MODE_AI = (function() {
         p.aiState = "ENGAGE";
         return "ENGAGE";
       }
-      // No threat — return to base perimeter
-      if (distToBase > 80) {
-        p._escort_x = ownBase.x; p._escort_y = ownBase.y;
-        p.aiState = "CTF_HOLD";
-        return "CTF_HOLD";
-      }
-      // At perimeter, no threat — fall through to engage nearest
+      // v37.72: hold position at base when no threat — DO NOT fall through.
+      // Pre-v37.72 the "at perimeter, no threat" branch fell through to
+      // deathmatch AI which targeted the nearest enemy (often far from
+      // base), pulling the defender off and leaving the flag unguarded.
+      // The user-reported "neither team leaves a bot teammate behind to
+      // guard their flag" bug. Now: defender stays rooted at base
+      // regardless of distToBase, ready to react to any approach.
+      p._escort_x = ownBase.x;
+      p._escort_y = ownBase.y;
+      p.aiState = "CTF_HOLD";
+      return "CTF_HOLD";
     }
 
-    if (role === "retriever_a" || role === "retriever_b") {
-      // Race to flag. Lead-running for retriever_b (slight offset
-      // toward expected pickup approach line).
-      const dx = m.flag.x - p.x, dy = m.flag.y - p.y;
-      let tx = m.flag.x, ty = m.flag.y;
-      if (role === "retriever_b") {
-        // Aim for a point slightly past the flag toward our own base
-        if (ownBase) {
-          const fb = Math.atan2(ownBase.y - m.flag.y, ownBase.x - m.flag.x);
-          tx += Math.cos(fb) * 30;
-          ty += Math.sin(fb) * 30;
-        }
+    // === v37.69: own_flag_retriever — race to own dropped flag and touch-return ===
+    if (role === "own_flag_retriever") {
+      if (ownFlag && ownFlag.state === "dropped") {
+        p._escort_x = ownFlag.x; p._escort_y = ownFlag.y;
+        p.aiState = "CTF_RACE";
+        return "CTF_RACE";
       }
-      p._escort_x = tx; p._escort_y = ty;
-      p.aiState = "CTF_RACE";
-      return "CTF_RACE";
+      // Own flag is home or carried (by enemy) — fall through to support behavior
     }
 
-    return null; // fall through to deathmatch
+    // === v37.69: enemy_flag_retriever — race to enemy flag (home or dropped) ===
+    if (role === "enemy_flag_retriever") {
+      if (enemyFlag && enemyFlag.state !== "carried") {
+        p._escort_x = enemyFlag.x; p._escort_y = enemyFlag.y;
+        p.aiState = "CTF_RACE";
+        return "CTF_RACE";
+      }
+      // Enemy flag is carried (by a teammate or someone else) — fall through
+    }
+
+    return null; // fall through to deathmatch AI
   }
 
   /* ============================================================
@@ -18994,6 +19433,659 @@ const MODE_AI = (function() {
     return null;
   }
 
+  /* === v37.75: CTF behavior tree ===
+     Phase 3 of 5. The complex one — 10 distinct role branches plus the
+     carrier-state two-way split (RUSH vs HOLD) plus the v37.72
+     opportunistic-engage interrupt for movement-focused roles.
+
+     Tree structure (top-level Selector — first non-FAILURE wins):
+
+       1. carrier — special case at the top (always SUCCESS for a
+          carrier; sub-Selector picks RUSH vs HOLD based on own flag state).
+       2. oppEngage — for non-carrier/non-defender/non-support roles, if
+          any enemy is within 70px, switch to ENGAGE this tick. v37.72
+          "fire while moving" behavior.
+       3. escort_lead / escort_rear — protect carrier path
+       4. chaser_a / chaser_b / interceptor — hunt enemy carrier
+       5. zone_def — guard own base
+       6. own_flag_retriever — race to our dropped flag (touch-return)
+       7. enemy_flag_retriever — race to enemy flag (offense)
+
+     Audit notes from v37.75 port (none required actual fixes — CTF
+     architecture is in better shape than KOTH was):
+       - escort_lead/rear correctly use allies.find for our carrier
+       - chasers correctly use enemyAlive.find for the enemy carrier
+       - interceptor's CTF_FLANK fallback (close-on-target if predicted
+         position is reached) is intentional, not a bug
+       - chaser_b silently no-ops if basesById incomplete; defensive only
+  */
+  const _ctfTreeImpl = (function() {
+    // === Action: carrier (CTF_RUSH or CTF_HOLD based on own flag state) ===
+    function actCarrier(p, m, bb) {
+      const ownFlag = m.flagsByTeam[p.teamId];
+      const ownBase = m.basesById && m.basesById[p.teamId];
+      p._modeCarrier = true;
+      if (ownFlag && ownFlag.state !== "home") {
+        // Defensive hold: own flag is stolen, capture would be denied.
+        // Hold near own base, away from the field's interior, so we don't
+        // suicide-rush into a denial.
+        p.aiState = "CTF_HOLD";
+        if (ownBase) {
+          const cx = COMBAT.arenaW / 2;
+          const dirX = cx - ownBase.x, dirY = (COMBAT.arenaH / 2) - ownBase.y;
+          const dirLen = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
+          p._escort_x = ownBase.x + (dirX / dirLen) * 60;
+          p._escort_y = ownBase.y + (dirY / dirLen) * 60;
+        }
+        return BT.SUCCESS;
+      }
+      p.aiState = "CTF_RUSH";
+      return BT.SUCCESS;
+    }
+
+    // === Action: escort_lead (run ahead of carrier toward own base) ===
+    function actEscortLead(p, m, bb) {
+      const allies = (p.teamId === m.teamAId) ? m.teamAplayers : m.teamBplayers;
+      const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+      const enemyAlive = enemies.filter(e => e.alive);
+      const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+      const enemyFlag = m.flagsByTeam[enemyTeamId];
+      const ownBase = m.basesById && m.basesById[p.teamId];
+      const carrier = enemyFlag && enemyFlag.carrierId != null
+        ? allies.find(a => a.id === enemyFlag.carrierId)
+        : null;
+      if (!carrier || !ownBase) return BT.FAILURE;
+      const pathAng = Math.atan2(ownBase.y - carrier.y, ownBase.x - carrier.x);
+      const ux = Math.cos(pathAng), uy = Math.sin(pathAng);
+      let bestEnemy = null, bestProj = Infinity;
+      for (const e of enemyAlive) {
+        const dx = e.x - carrier.x, dy = e.y - carrier.y;
+        const proj = dx * ux + dy * uy;
+        const perp = Math.abs(dx * (-uy) + dy * ux);
+        if (proj > 0 && proj < distance(carrier, ownBase) && perp < 80) {
+          if (proj < bestProj) { bestProj = proj; bestEnemy = e; }
+        }
+      }
+      if (bestEnemy) {
+        p.target = bestEnemy;
+        p.aiState = "ENGAGE";
+        return BT.SUCCESS;
+      }
+      const aheadX = carrier.x + Math.cos(pathAng) * 80;
+      const aheadY = carrier.y + Math.sin(pathAng) * 80;
+      p._escort_x = aheadX; p._escort_y = aheadY;
+      p.aiState = "CTF_ESCORT_LEAD";
+      return BT.SUCCESS;
+    }
+
+    // === Action: escort_rear (trail carrier, attack pursuers) ===
+    function actEscortRear(p, m, bb) {
+      const allies = (p.teamId === m.teamAId) ? m.teamAplayers : m.teamBplayers;
+      const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+      const enemyAlive = enemies.filter(e => e.alive);
+      const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+      const enemyFlag = m.flagsByTeam[enemyTeamId];
+      const ownBase = m.basesById && m.basesById[p.teamId];
+      const carrier = enemyFlag && enemyFlag.carrierId != null
+        ? allies.find(a => a.id === enemyFlag.carrierId)
+        : null;
+      if (!carrier || !ownBase) return BT.FAILURE;
+      let pursuer = null, bestD = 120 * 120;
+      for (const e of enemyAlive) {
+        const dx = e.x - carrier.x, dy = e.y - carrier.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 < bestD) { bestD = d2; pursuer = e; }
+      }
+      if (pursuer) {
+        p.target = pursuer;
+        p.aiState = "ENGAGE";
+        return BT.SUCCESS;
+      }
+      const baseDir = Math.atan2(ownBase.y - carrier.y, ownBase.x - carrier.x);
+      const trailX = carrier.x - Math.cos(baseDir) * 50;
+      const trailY = carrier.y - Math.sin(baseDir) * 50;
+      p._escort_x = trailX; p._escort_y = trailY;
+      p.aiState = "CTF_ESCORT_REAR";
+      return BT.SUCCESS;
+    }
+
+    // === Action: chaser_a (direct chase on enemy carrier) ===
+    function actChaserA(p, m, bb) {
+      const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+      const enemyAlive = enemies.filter(e => e.alive);
+      const ownFlag = m.flagsByTeam[p.teamId];
+      const theirCarrier = ownFlag && ownFlag.carrierId != null
+        ? enemyAlive.find(e => e.id === ownFlag.carrierId)
+        : null;
+      if (!theirCarrier) return BT.FAILURE;
+      p.target = theirCarrier;
+      p.aiState = "ENGAGE";
+      return BT.SUCCESS;
+    }
+
+    // === Action: chaser_b (flanking cutoff) ===
+    function actChaserB(p, m, bb) {
+      const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+      const enemyAlive = enemies.filter(e => e.alive);
+      const ownFlag = m.flagsByTeam[p.teamId];
+      const theirCarrier = ownFlag && ownFlag.carrierId != null
+        ? enemyAlive.find(e => e.id === ownFlag.carrierId)
+        : null;
+      const enemyBase = theirCarrier && m.basesById ? m.basesById[theirCarrier.teamId] : null;
+      if (!theirCarrier || !enemyBase) return BT.FAILURE;
+      const pathAng = Math.atan2(enemyBase.y - theirCarrier.y, enemyBase.x - theirCarrier.x);
+      const cutX = theirCarrier.x + Math.cos(pathAng) * 100;
+      const cutY = theirCarrier.y + Math.sin(pathAng) * 100;
+      p._escort_x = cutX; p._escort_y = cutY;
+      p.target = theirCarrier;
+      p.aiState = "CTF_FLANK";
+      return BT.SUCCESS;
+    }
+
+    // === Action: interceptor (velocity-predicted cutoff) ===
+    function actInterceptor(p, m, bb) {
+      const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+      const enemyAlive = enemies.filter(e => e.alive);
+      const ownFlag = m.flagsByTeam[p.teamId];
+      const theirCarrier = ownFlag && ownFlag.carrierId != null
+        ? enemyAlive.find(e => e.id === ownFlag.carrierId)
+        : null;
+      if (!theirCarrier) return BT.FAILURE;
+      const fx = theirCarrier.x + (theirCarrier.vx || 0) * 30;
+      const fy = theirCarrier.y + (theirCarrier.vy || 0) * 30;
+      p._escort_x = fx; p._escort_y = fy;
+      p.target = theirCarrier;
+      p.aiState = "CTF_FLANK";
+      return BT.SUCCESS;
+    }
+
+    // === Action: zone_def (guard own base) ===
+    // v37.72 fix preserved: hold position at base when no threat (do not
+    // fall through to deathmatch which would pull the defender off-base).
+    function actZoneDef(p, m, bb) {
+      const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+      const enemyAlive = enemies.filter(e => e.alive);
+      const ownBase = m.basesById && m.basesById[p.teamId];
+      if (!ownBase) return BT.FAILURE;
+      let approacher = null, bestD = 200 * 200;
+      for (const e of enemyAlive) {
+        const dx = e.x - ownBase.x, dy = e.y - ownBase.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 < bestD) { bestD = d2; approacher = e; }
+      }
+      if (approacher && Math.sqrt(bestD) < 200) {
+        p.target = approacher;
+        p.aiState = "ENGAGE";
+        return BT.SUCCESS;
+      }
+      p._escort_x = ownBase.x;
+      p._escort_y = ownBase.y;
+      p.aiState = "CTF_HOLD";
+      return BT.SUCCESS;
+    }
+
+    // === Action: own_flag_retriever (race to our dropped flag) ===
+    function actOwnFlagRetriever(p, m, bb) {
+      const ownFlag = m.flagsByTeam[p.teamId];
+      if (!ownFlag || ownFlag.state !== "dropped") return BT.FAILURE;
+      p._escort_x = ownFlag.x; p._escort_y = ownFlag.y;
+      p.aiState = "CTF_RACE";
+      return BT.SUCCESS;
+    }
+
+    // === Action: enemy_flag_retriever (race to enemy flag) ===
+    function actEnemyFlagRetriever(p, m, bb) {
+      const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+      const enemyFlag = m.flagsByTeam[enemyTeamId];
+      if (!enemyFlag || enemyFlag.state === "carried") return BT.FAILURE;
+      p._escort_x = enemyFlag.x; p._escort_y = enemyFlag.y;
+      p.aiState = "CTF_RACE";
+      return BT.SUCCESS;
+    }
+
+    // Build the tree.
+    // v37.77: removed the v37.72 isMovementFocused Sequence (opportunistic
+    // engage interrupt). It was a hack to make movement-focused roles
+    // (escorts/retrievers/chasers) fire at nearby enemies by switching
+    // p.aiState="ENGAGE" for one tick. That worked but stopped the bot's
+    // movement. The execute-layer _tryOpportunisticFire now handles
+    // fire-while-moving natively (CTF_RACE state fires AND moves in the
+    // same tick) — the tree no longer needs to interrupt itself for fire.
+    const tree = BT.Selector([
+      // 1. Carrier (always handles its own state; no fall-through)
+      BT.Sequence([
+        BT.Condition("isRoleCarrier", (p) => p._modeRole === "carrier"),
+        BT.Action("ctfCarrier", actCarrier),
+      ]),
+      // 2. Escort roles
+      BT.Sequence([
+        BT.Condition("isRoleEscortLead", (p) => p._modeRole === "escort_lead"),
+        BT.Action("ctfEscortLead", actEscortLead),
+      ]),
+      BT.Sequence([
+        BT.Condition("isRoleEscortRear", (p) => p._modeRole === "escort_rear"),
+        BT.Action("ctfEscortRear", actEscortRear),
+      ]),
+      // 3. Chaser roles (hunt enemy carrier)
+      BT.Sequence([
+        BT.Condition("isRoleChaserA", (p) => p._modeRole === "chaser_a"),
+        BT.Action("ctfChaserA", actChaserA),
+      ]),
+      BT.Sequence([
+        BT.Condition("isRoleChaserB", (p) => p._modeRole === "chaser_b"),
+        BT.Action("ctfChaserB", actChaserB),
+      ]),
+      BT.Sequence([
+        BT.Condition("isRoleInterceptor", (p) => p._modeRole === "interceptor"),
+        BT.Action("ctfInterceptor", actInterceptor),
+      ]),
+      // 4. Zone defender (the v37.72 fix preserved)
+      BT.Sequence([
+        BT.Condition("isRoleZoneDef", (p) => p._modeRole === "zone_def"),
+        BT.Action("ctfZoneDef", actZoneDef),
+      ]),
+      // 5. Retriever roles
+      BT.Sequence([
+        BT.Condition("isRoleOwnFlagRet", (p) => p._modeRole === "own_flag_retriever"),
+        BT.Action("ctfOwnFlagRetriever", actOwnFlagRetriever),
+      ]),
+      BT.Sequence([
+        BT.Condition("isRoleEnemyFlagRet", (p) => p._modeRole === "enemy_flag_retriever"),
+        BT.Action("ctfEnemyFlagRetriever", actEnemyFlagRetriever),
+      ]),
+    ]);
+
+    return { tree };
+  })();
+
+  /* === v37.74: KOTH behavior tree ===
+     Phase 2 of 5 (BT migration roadmap). Mirrors v37.73's Tag pattern:
+     a Selector of role-gated Sequences. Each role's logic preserved
+     verbatim from decideKoth as a single BT.Action. The tree's shape
+     makes the priority order visible at the top level.
+
+     Tree priority (first non-FAILURE wins):
+       1. carrier   → KOTH_KITE (always succeeds; flee enemies)
+       2. escort    → KOTH_ESCORT (or fall through if no threat exists)
+       3. pressure  → ENGAGE on furthest-from-carrier enemy
+       4. attacker  → ENGAGE on enemy carrier
+       5. flanker   → KOTH_FLANK or ENGAGE on enemy carrier
+       6. chaser    → KOTH_RACE (uncarried crown)
+       7. interceptor → KOTH_RACE (2nd-closest to crown)
+
+     The escort/pressure/attacker/flanker branches return BT.FAILURE
+     when their preconditions don't hold (no threat / no carrier),
+     allowing the Selector to fall through to subsequent branches
+     OR to null-return for deathmatch fallback.
+  */
+  const _kothTreeImpl = (function() {
+    // === Action: carrier (kite away from enemies, blend toward center near walls) ===
+    function actCarrier(p, m, bb) {
+      const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+      const enemyAlive = enemies.filter(e => e.alive);
+      const cxw = COMBAT.arenaW / 2, cyw = COMBAT.arenaH / 2;
+      let avgX = 0, avgY = 0, count = 0;
+      for (const e of enemyAlive) {
+        const dx = p.x - e.x, dy = p.y - e.y;
+        const d = Math.hypot(dx, dy) || 1;
+        // Inverse-distance weighted (closer enemies push harder)
+        avgX += (dx / d) * (200 / Math.max(40, d));
+        avgY += (dy / d) * (200 / Math.max(40, d));
+        count++;
+      }
+      const wallProx = Math.max(
+        (80 - p.x) / 80,
+        (p.x - (COMBAT.arenaW - 80)) / 80,
+        (60 - p.y) / 60,
+        (p.y - (COMBAT.arenaH - 60)) / 60,
+        0
+      );
+      const fleeAng = (count > 0) ? Math.atan2(avgY, avgX) : Math.atan2(cyw - p.y, cxw - p.x);
+      const centerAng = Math.atan2(cyw - p.y, cxw - p.x);
+      const blend = clamp(wallProx * 0.85, 0, 0.95);
+      const moveAng = _blendAngles(fleeAng, centerAng, blend);
+      p._koth_moveAng = moveAng;
+      p.aiState = "KOTH_KITE";
+      p._modeCarrier = true;
+      return BT.SUCCESS;
+    }
+
+    // === Action: escort (screen carrier from nearest threat) ===
+    function actEscort(p, m, bb) {
+      const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+      const enemyAlive = enemies.filter(e => e.alive);
+      const carrier = (p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers)
+                        .find(t => t.id === m.crown.carrierId);
+      if (!carrier) return BT.FAILURE;
+      const threat = _closestTo(carrier.x, carrier.y, enemyAlive);
+      if (!threat) return BT.FAILURE; // no threat → falls through to next branch
+      const tx = carrier.x + (threat.x - carrier.x) * 0.55;
+      const ty = carrier.y + (threat.y - carrier.y) * 0.55;
+      p._escort_x = tx; p._escort_y = ty;
+      p.target = threat;
+      p.aiState = "KOTH_ESCORT";
+      return BT.SUCCESS;
+    }
+
+    // === Action: pressure (engage furthest-from-carrier enemy) ===
+    function actPressure(p, m, bb) {
+      const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+      const enemyAlive = enemies.filter(e => e.alive);
+      const carrier = (p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers)
+                        .find(t => t.id === m.crown.carrierId);
+      if (!carrier || enemyAlive.length === 0) return BT.FAILURE;
+      let best = null, bestScore = -Infinity;
+      for (const e of enemyAlive) {
+        const distFromCarrier = distance(e, carrier);
+        const distFromUs = distance(e, p);
+        const score = distFromCarrier - distFromUs * 0.5;
+        if (score > bestScore) { bestScore = score; best = e; }
+      }
+      if (!best) return BT.FAILURE;
+      p.target = best;
+      p.aiState = "ENGAGE";
+      return BT.SUCCESS;
+    }
+
+    // === Action: attacker (engage enemy carrier directly) ===
+    // v37.74 NOTE: fixed a latent bug from decideKoth — original used
+    // `allies.find(...carrierId)` to find the carrier, but attacker/flanker
+    // roles are assigned to ENEMIES of the carrier (see assignKothRoles).
+    // The same-team lookup never returned the carrier, so attacker/flanker
+    // code paths were dead in the legacy implementation — bots fell through
+    // to deathmatch AI which happens to do the right thing when the closest
+    // enemy IS the carrier. This BT port realizes the original design intent
+    // by looking in the enemies list (which is the carrier's team relative
+    // to this bot).
+    function actAttacker(p, m, bb) {
+      const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+      const carrier = enemies.find(t => t.id === m.crown.carrierId);
+      if (!carrier) return BT.FAILURE;
+      p.target = carrier;
+      p.aiState = "ENGAGE";
+      return BT.SUCCESS;
+    }
+
+    // === Action: flanker (perpendicular approach to carrier) ===
+    // v37.74 NOTE: same latent-bug fix as attacker — enemies list, not allies.
+    function actFlanker(p, m, bb) {
+      const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+      const carrier = enemies.find(t => t.id === m.crown.carrierId);
+      if (!carrier) return BT.FAILURE;
+      const ang = Math.atan2(carrier.y - p.y, carrier.x - p.x);
+      const perpAng = ang + (Math.PI / 2);
+      const flankX = carrier.x + Math.cos(perpAng) * 60;
+      const flankY = carrier.y + Math.sin(perpAng) * 60;
+      const d = distance(p, carrier);
+      if (d > 90) {
+        p._escort_x = flankX; p._escort_y = flankY;
+        p.target = carrier;
+        p.aiState = "KOTH_FLANK";
+      } else {
+        p.target = carrier;
+        p.aiState = "ENGAGE";
+      }
+      return BT.SUCCESS;
+    }
+
+    // === Action: chaser (race to uncarried crown) ===
+    function actChaser(p, m, bb) {
+      p._koth_moveAng = Math.atan2(m.crown.y - p.y, m.crown.x - p.x);
+      p.aiState = "KOTH_RACE";
+      return BT.SUCCESS;
+    }
+
+    // === Action: interceptor (2nd-closest to crown — anticipate escort pos) ===
+    function actInterceptor(p, m, bb) {
+      const dx = m.crown.x - p.x, dy = m.crown.y - p.y;
+      p._koth_moveAng = Math.atan2(dy, dx);
+      p.aiState = "KOTH_RACE";
+      return BT.SUCCESS;
+    }
+
+    // Build the tree. Selector picks the first non-FAILURE Sequence.
+    // Role conditions read p._modeRole as set by assignKothRoles.
+    const tree = BT.Selector([
+      BT.Sequence([
+        BT.Condition("isRoleCarrier", (p) => p._modeRole === "carrier"),
+        BT.Action("kothCarrier", actCarrier),
+      ]),
+      BT.Sequence([
+        BT.Condition("isRoleEscort", (p) => p._modeRole === "escort"),
+        BT.Action("kothEscort", actEscort),
+      ]),
+      BT.Sequence([
+        BT.Condition("isRolePressure", (p) => p._modeRole === "pressure"),
+        BT.Action("kothPressure", actPressure),
+      ]),
+      BT.Sequence([
+        BT.Condition("isRoleAttacker", (p) => p._modeRole === "attacker"),
+        BT.Action("kothAttacker", actAttacker),
+      ]),
+      BT.Sequence([
+        BT.Condition("isRoleFlanker", (p) => p._modeRole === "flanker"),
+        BT.Action("kothFlanker", actFlanker),
+      ]),
+      BT.Sequence([
+        BT.Condition("isRoleChaser", (p) => p._modeRole === "chaser"),
+        BT.Action("kothChaser", actChaser),
+      ]),
+      BT.Sequence([
+        BT.Condition("isRoleInterceptor", (p) => p._modeRole === "interceptor"),
+        BT.Action("kothInterceptor", actInterceptor),
+      ]),
+    ]);
+
+    return { tree };
+  })();
+
+  /* === v37.73: Tag behavior tree ===
+     Replaces decideTag() with a composable BT. The tree expresses the
+     SAME decision logic decideTag had (verified by /tmp/test_v37_73_bt),
+     but the structure (priority order, role gates) is now visible at
+     the top level rather than buried in an if-elseif chain. Each
+     complex per-role action stays as a single BT.Action that wraps
+     the original logic verbatim — future phases can decompose those
+     into smaller reusable leaves.
+
+     Tree priority (top to bottom; first non-FAILURE wins):
+       1. Frozen → set aiState="FROZEN", do nothing
+       2. IT predator → pick prey, set aiState to MELEE or TAG_HUNT
+       3. Prey shielded → hide behind another bot
+       4. Prey break → scatter laterally from herd
+       5. Prey flock (default) → flee toward center, away from IT
+  */
+  const _tagTreeImpl = (function() {
+    // Shared helpers used by the Action implementations below.
+    const isFrozen = (id, m) => !!(m.tag && m.tag.tagFreezes && m.tag.tagFreezes[id]);
+
+    // === Action: frozen prey ===
+    function actFrozen(p, m, bb) {
+      p.aiState = "FROZEN";
+      return BT.SUCCESS;
+    }
+
+    // === Action: IT predator (port of decideTag's role==="it_predator" branch) ===
+    function actPredator(p, m, bb) {
+      const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
+      const candidates = allAlive.filter(e => e.id !== p.id && !isFrozen(e.id, m));
+      if (candidates.length === 0) {
+        // Only frozen prey left — pick nearest of those
+        const frozenPrey = allAlive.filter(e => e.id !== p.id && isFrozen(e.id, m));
+        if (frozenPrey.length > 0) {
+          frozenPrey.sort((a, b) => distance(p, a) - distance(p, b));
+          p.target = frozenPrey[0];
+          p.aiState = "MELEE";
+          return BT.SUCCESS;
+        }
+        return BT.FAILURE; // tree falls through (shouldn't normally happen)
+      }
+      // Commitment timer (≥60 frames before re-evaluating)
+      const committed =
+        p.target && p.target.alive && !isFrozen(p.target.id, m) &&
+        (m.roundFrame - (p._tag_targetSince || 0)) < 60;
+      let bestTarget = null;
+      if (committed) {
+        bestTarget = p.target;
+      } else {
+        let bestScore = -Infinity;
+        for (const e of candidates) {
+          const d = distance(p, e);
+          const hpScore = 1 - (e.hp / e.stats.hp);
+          const speedScore = 1 - clamp((e.stats.spd || 2.5) / 5, 0, 1);
+          let nearestPeerD = Infinity;
+          for (const peer of candidates) {
+            if (peer === e) continue;
+            const pd = distance(e, peer);
+            if (pd < nearestPeerD) nearestPeerD = pd;
+          }
+          const isolationScore = clamp(nearestPeerD / 200, 0, 1);
+          const ang = Math.atan2(e.y - p.y, e.x - p.x);
+          const motionAng = Math.atan2(p.vy || 0, p.vx || 1);
+          let coneDiff = Math.abs(ang - motionAng);
+          if (coneDiff > Math.PI) coneDiff = 2*Math.PI - coneDiff;
+          const coneScore = 1 - clamp(coneDiff / Math.PI, 0, 1);
+          const distWeight = candidates.length <= 2 ? -0.10 : -0.05;
+          const score =
+            d * distWeight +
+            hpScore * 30 +
+            isolationScore * 20 +
+            speedScore * 10 +
+            coneScore * 8;
+          if (score > bestScore) { bestScore = score; bestTarget = e; }
+        }
+      }
+      if (!bestTarget) return BT.FAILURE;
+      if (p.target !== bestTarget) {
+        p.target = bestTarget;
+        p._tag_targetSince = m.roundFrame;
+      }
+      const d = distance(p, bestTarget);
+      const futureFrames = clamp(d / 30, 2, 14);
+      p._tag_aim_x = bestTarget.x + (bestTarget.vx || 0) * futureFrames;
+      p._tag_aim_y = bestTarget.y + (bestTarget.vy || 0) * futureFrames;
+      p.attackedBy = null;
+      p.aiState = (d < _meleeSwitchRangeFor(p)) ? "MELEE" : "TAG_HUNT";
+      return BT.SUCCESS;
+    }
+
+    // === Action: prey shielded ===
+    function actPreyShielded(p, m, bb) {
+      const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
+      const it = allAlive.find(e => e.id === m.tag.itId);
+      if (!it) return BT.FAILURE;
+      const itAng = Math.atan2(it.y - p.y, it.x - p.x);
+      let shield = null, shieldD = Infinity;
+      for (const other of allAlive) {
+        if (other === p || other === it) continue;
+        const ox = other.x - p.x, oy = other.y - p.y;
+        const od = Math.hypot(ox, oy);
+        if (od === 0) continue;
+        const oAng = Math.atan2(oy, ox);
+        let angDiff = Math.abs(oAng - itAng);
+        if (angDiff > Math.PI) angDiff = 2*Math.PI - angDiff;
+        if (angDiff < 0.35 && od < shieldD) {
+          shield = other; shieldD = od;
+        }
+      }
+      if (!shield) return BT.FAILURE; // no shield available, try next branch
+      const awayAng = Math.atan2(p.y - it.y, p.x - it.x);
+      p._tag_move_x = shield.x + Math.cos(awayAng) * 25;
+      p._tag_move_y = shield.y + Math.sin(awayAng) * 25;
+      p.target = it;
+      p.aiState = "TAG_SHIELD";
+      return BT.SUCCESS;
+    }
+
+    // === Action: prey break (scatter laterally from herd) ===
+    function actPreyBreak(p, m, bb) {
+      const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
+      const it = allAlive.find(e => e.id === m.tag.itId);
+      if (!it) return BT.FAILURE;
+      const peers = allAlive.filter(e => e !== p && e !== it && !isFrozen(e.id, m));
+      if (peers.length === 0) return BT.FAILURE; // no herd to break from
+      let cx = 0, cy = 0;
+      for (const peer of peers) { cx += peer.x; cy += peer.y; }
+      cx /= peers.length; cy /= peers.length;
+      const fromHerd = Math.atan2(p.y - cy, p.x - cx);
+      const fromIt = Math.atan2(p.y - it.y, p.x - it.x);
+      const ang = _blendAngles(fromIt, fromHerd, 0.5);
+      p._tag_move_x = p.x + Math.cos(ang) * 100;
+      p._tag_move_y = p.y + Math.sin(ang) * 100;
+      p.target = it;
+      p.aiState = "TAG_BREAK";
+      return BT.SUCCESS;
+    }
+
+    // === Action: prey flock (default fallback) ===
+    function actPreyFlock(p, m, bb) {
+      const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
+      const it = allAlive.find(e => e.id === m.tag.itId);
+      if (!it) return BT.FAILURE;
+      const peers = allAlive.filter(e => e !== p && e !== it && !isFrozen(e.id, m));
+      const fromIt = Math.atan2(p.y - it.y, p.x - it.x);
+      let moveAng = fromIt;
+      if (peers.length > 0) {
+        let cx = 0, cy = 0;
+        for (const peer of peers) { cx += peer.x; cy += peer.y; }
+        cx /= peers.length; cy /= peers.length;
+        const toHerd = Math.atan2(cy - p.y, cx - p.x);
+        moveAng = _blendAngles(fromIt, toHerd, 0.30);
+      }
+      // Wall-avoidance bias toward center
+      const cxw = COMBAT.arenaW / 2, cyw = COMBAT.arenaH / 2;
+      const wallProx = Math.max(
+        (80 - p.x) / 80,
+        (p.x - (COMBAT.arenaW - 80)) / 80,
+        (60 - p.y) / 60,
+        (p.y - (COMBAT.arenaH - 60)) / 60,
+        0
+      );
+      if (wallProx > 0) {
+        const centerAng = Math.atan2(cyw - p.y, cxw - p.x);
+        moveAng = _blendAngles(moveAng, centerAng, clamp(wallProx * 0.7, 0, 0.85));
+      }
+      p._tag_move_x = p.x + Math.cos(moveAng) * 100;
+      p._tag_move_y = p.y + Math.sin(moveAng) * 100;
+      p.target = it;
+      p.aiState = "TAG_FLEE";
+      return BT.SUCCESS;
+    }
+
+    // The tree itself — built once, ticked per bot per frame.
+    // Each Sequence is "precondition Condition → main Action".
+    // Role conditions read p._modeRole as set by assignTagRoles.
+    const tree = BT.Selector([
+      // 1. Frozen — short-circuits everything else
+      BT.Sequence([
+        BT.Condition("isRoleFrozen", (p) => p._modeRole === "frozen"),
+        BT.Action("setFrozen", actFrozen),
+      ]),
+      // 2. IT predator
+      BT.Sequence([
+        BT.Condition("isRoleIt", (p) => p._modeRole === "it_predator"),
+        BT.Action("predator", actPredator),
+      ]),
+      // 3. Prey shielded (preferred prey behavior if shield available)
+      BT.Sequence([
+        BT.Condition("isRoleShielded", (p) => p._modeRole === "prey_shielded"),
+        BT.Action("preyShielded", actPreyShielded),
+      ]),
+      // 4. Prey break (scatter from herd)
+      BT.Sequence([
+        BT.Condition("isRoleBreak", (p) => p._modeRole === "prey_break"),
+        BT.Action("preyBreak", actPreyBreak),
+      ]),
+      // 5. Prey flock (default fallback for any prey role)
+      BT.Sequence([
+        BT.Condition("isAnyPrey", (p) => p._modeRole && p._modeRole.indexOf("prey_") === 0),
+        BT.Action("preyFlock", actPreyFlock),
+      ]),
+    ]);
+
+    return { tree };
+  })();
+
   /* Public API */
   return {
     /* Called once per AI tick (per-team batch) — refreshes role
@@ -19012,9 +20104,58 @@ const MODE_AI = (function() {
     decide(p, m) {
       if (!m) return null;
       const mode = m.gameMode;
-      if (mode === "koth") return decideKoth(p, m);
-      if (mode === "ctf")  return decideCtf(p, m);
-      if (mode === "tag")  return decideTag(p, m);
+      if (mode === "koth") {
+        // === v37.74: BT-driven KOTH decision ===
+        const useBT = (typeof LEAGUE_CONFIG !== "undefined")
+          ? (LEAGUE_CONFIG.useBTForKoth !== false)
+          : true;
+        if (useBT) {
+          if (!m.crown) return null;
+          // Clear aiState before ticking so we can detect whether the tree
+          // set one (SUCCESS path) or fell through (FAILURE → null return).
+          const prevState = p.aiState;
+          p.aiState = null;
+          const bb = p._bt_bb || (p._bt_bb = {});
+          const status = _kothTreeImpl.tree.tick(p, m, bb);
+          if (status === BT.SUCCESS && p.aiState) return p.aiState;
+          // Tree failed (no role matched, or role returned FAILURE) — restore
+          // previous state and fall through to deathmatch.
+          p.aiState = prevState;
+          return null;
+        }
+        return decideKoth(p, m);
+      }
+      if (mode === "ctf")  {
+        // === v37.75: BT-driven CTF decision ===
+        const useBT = (typeof LEAGUE_CONFIG !== "undefined")
+          ? (LEAGUE_CONFIG.useBTForCtf !== false)
+          : true;
+        if (useBT) {
+          if (!m.flagsByTeam) return null;
+          const prevState = p.aiState;
+          p.aiState = null;
+          const bb = p._bt_bb || (p._bt_bb = {});
+          const status = _ctfTreeImpl.tree.tick(p, m, bb);
+          if (status === BT.SUCCESS && p.aiState) return p.aiState;
+          p.aiState = prevState;
+          return null;
+        }
+        return decideCtf(p, m);
+      }
+      if (mode === "tag")  {
+        // === v37.73: BT-driven Tag decision ===
+        // Tree replaces decideTag(). Feature-flag for safe rollback:
+        // set LEAGUE_CONFIG.useBTForTag = false to use legacy function.
+        const useBT = (typeof LEAGUE_CONFIG !== "undefined")
+          ? (LEAGUE_CONFIG.useBTForTag !== false)
+          : true;
+        if (useBT) {
+          const bb = p._bt_bb || (p._bt_bb = {});
+          _tagTreeImpl.tree.tick(p, m, bb);
+          return p.aiState || null;
+        }
+        return decideTag(p, m);
+      }
       return null;
     },
   };
@@ -19045,9 +20186,12 @@ function decideAIState(p, enemyAlive, m) {
       return;
     }
     // Carrier flag tracking — used by execute layer to suppress shooting.
+    // v37.69: CTF now has two flags, so a bot is "carrier" if EITHER flag
+    // has them as carrierId. (At most one will, since pickup logic prevents
+    // double-carry.)
     p._modeCarrier =
       (m.gameMode === "koth" && m.crown && m.crown.carrierId === p.id) ||
-      (m.gameMode === "ctf"  && m.flag  && m.flag.carrierId  === p.id);
+      (m.gameMode === "ctf"  && m.flagsByTeam && Object.values(m.flagsByTeam).some(f => f.carrierId === p.id));
     const modeState = MODE_AI.decide(p, m);
     if (modeState) return;  // mode took full control this tick
   } else {
@@ -19055,8 +20199,18 @@ function decideAIState(p, enemyAlive, m) {
   }
   // === end mode dispatch — fall through to deathmatch logic ===
 
+  // === v37.76: route through BT when feature flag is on ===
+  const useDmBT = (typeof LEAGUE_CONFIG !== "undefined")
+    ? (LEAGUE_CONFIG.useBTForDeathmatch !== false)
+    : true;
+  if (useDmBT && typeof _dmTreeImpl !== "undefined") {
+    const bb = p._bt_bb || (p._bt_bb = {});
+    _dmTreeImpl.tree.tick(p, m, bb);
+    return; // tree always sets some aiState (default ENGAGE catches everything)
+  }
+
   /* ============================================================
-     v28.2 DEATHMATCH AI — full rework
+     v28.2 DEATHMATCH AI — full rework (LEGACY — kept as fallback) ===
 
      Decision priority (each step returns if the state is set;
      otherwise falls through):
@@ -19091,8 +20245,10 @@ function decideAIState(p, enemyAlive, m) {
 
   // Use TEAM_AI to pick a target (focus fire when reachable, else nearest)
   const focusedTarget = TEAM_AI.pickTarget(p, enemyAlive, m);
+  // v37.78: skip corpses in the stale enemyAlive snapshot
   let nearest = null, nearestD = Infinity;
   for (const e of enemyAlive) {
+    if (!e.alive) continue;
     const d = distance(p, e);
     if (d < nearestD) { nearestD = d; nearest = e; }
   }
@@ -19106,7 +20262,8 @@ function decideAIState(p, enemyAlive, m) {
 
   // === Mercy: if someone's hitting us hard, pivot to them ===
   // Higher priority than rally so we don't ignore the bot in our face.
-  if (p.attackedBy) {
+  // v37.78: != null guards against falsy-zero (consistent with L18364)
+  if (p.attackedBy != null) {
     const attacker = enemyAlive.find(e => e.id === p.attackedBy);
     if (attacker && distance(p, attacker) < (ranged ? myWpn.range : 220)) {
       p.aiState = "FINISH_OFF";
@@ -19123,9 +20280,18 @@ function decideAIState(p, enemyAlive, m) {
   const wasFleeing = (p.aiState === "FLEE" || p.aiState === "RALLY");
   if (TEAM_AI.shouldRally(p, nearestD, m)) {
     if (wasFleeing && p.aiStateFrames > 90) {
-      // Time-cap escape — back to action even at low HP
+      // === v37.76 bug fix: time-cap escape ===
+      // Pre-v37.76, this branch set aiState=IDLE then fell through, but
+      // the FLEE block immediately below re-entered FLEE with target=nearest
+      // (since wasFleeing was still true from the pre-reset snapshot, and
+      // aiStateFrames had just been reset to 0). Net effect: bot oscillated
+      // between RALLY and FLEE forever at low HP. Comment said "back to
+      // action even at low HP" but that's not what happened.
+      // Fix: set a sentinel that the FLEE block honors, so the bot truly
+      // returns to active combat rather than slipping into FLEE.
       p.aiState = "IDLE";
       p.aiStateFrames = 0;
+      p._justEscapedRally = true;
       // fall through — RALLY won't be picked again until aiStateFrames resets
     } else {
       if (!wasFleeing) p.aiStateFrames = 0;
@@ -19136,17 +20302,21 @@ function decideAIState(p, enemyAlive, m) {
         p._rally_x = rallyPt.x;
         p._rally_y = rallyPt.y;
       }
+      p._justEscapedRally = false;
       return;
     }
+  } else {
+    p._justEscapedRally = false;
   }
   // Legacy FLEE fallback when there's no rally point but HP is critical.
   // === v28.4: also suppressed in lastStand mode (≤2 bots outnumbered) —
   // those bots fight to the finish, no panic-flee. ===
   // === v28.16: also style-tunable. aggressive: never flee. cautious: flee earlier. ===
+  // === v37.76: also suppressed if we JUST time-capped out of RALLY. ===
   const mods = getAiPathingMods(p.teamId);
   const teamState = m._teamAI && m._teamAI[p.teamId];
   const inLastStand = teamState && teamState.lastStand;
-  if (!mods.suppressFlee && !inLastStand && hpFrac < mods.fleeHpThreshold && nearestD > 40) {
+  if (!mods.suppressFlee && !inLastStand && !p._justEscapedRally && hpFrac < mods.fleeHpThreshold && nearestD > 40) {
     if (wasFleeing && p.aiStateFrames > 90) {
       p.aiState = "IDLE";
       p.aiStateFrames = 0;
@@ -19245,22 +20415,33 @@ function decideAIState(p, enemyAlive, m) {
   const targetExpired = !p.target || !p.target.alive ||
     (m.roundFrame - (p._targetCommitFrame || 0)) > 30;
   let opportunityBreak = false;
+  let opportunityTarget = null;
   if (!targetExpired && p.target && ranged) {
     const curHp = p.target.hp / p.target.stats.hp;
     const curD = distance(p, p.target);
     for (const e of enemyAlive) {
       if (e === p.target) continue;
+      if (!e.alive) continue;  // v37.78: skip corpses in stale snapshot
       const eHp = e.hp / e.stats.hp;
       const eD = distance(p, e);
       // Strong opportunity: target at <30% HP, closer than current,
       // in weapon range, and current isn't already in critical state
       if (eHp < 0.30 && eD < curD && eD < (myWpn.range || 220) && curHp > 0.40) {
         opportunityBreak = true;
+        opportunityTarget = e;
         break;
       }
     }
   }
-  if (targetExpired || opportunityBreak) {
+  if (opportunityBreak) {
+    // v37.76 bug fix: pre-v37.76 this was `p.target = focusedTarget || nearest`,
+    // but focusedTarget is often the SAME target we just decided to abandon
+    // (the team's plan hasn't updated within this tick). The whole point of
+    // opportunity-break is to swap to the weak target the loop just identified,
+    // so use it directly.
+    p.target = opportunityTarget;
+    p._targetCommitFrame = m.roundFrame;
+  } else if (targetExpired) {
     p.target = focusedTarget || nearest;
     p._targetCommitFrame = m.roundFrame;
   }
@@ -19270,6 +20451,251 @@ function decideAIState(p, enemyAlive, m) {
   if (p.aiState !== "ENGAGE") p.aiStateFrames = 0;
   p.aiState = "ENGAGE";
 }
+
+/* ============================================================
+   v37.76: DEATHMATCH BEHAVIOR TREE (Phase 4 of 5)
+   ============================================================
+   Replaces the deathmatch-portion of decideAIState() with a
+   composable BT. Mode-dispatch and stunned-bot handling stay in
+   decideAIState (those are entry-point concerns shared by all
+   modes); the deathmatch decision logic itself lives here.
+
+   Tree priority (first non-FAILURE wins):
+     1. healerOrGrenadier  → ENGAGE (early specialty bots)
+     2. noEnemies          → IDLE (no targets exist)
+     3. mercyFinishOff     → FINISH_OFF (someone's hitting us hard)
+     4. rally              → RALLY (low HP + rally point available)
+                              (or escape-IDLE on time-cap, with the
+                              v37.76 sentinel to suppress FLEE re-entry)
+     5. flee               → FLEE (low HP, no rally available)
+     6. meleeOverride      → MELEE (ranged bot at point-blank)
+     7. sniperHold         → SNIPER_HOLD (sniper kiting to backline)
+     8. seekItem           → SEEK_ITEM (useful drop nearby)
+     9. seekCore           → SEEK_CORE (power core eligible)
+    10. engage             → ENGAGE (default, with sticky targeting +
+                              v37.18 opportunity-break)
+
+   Each branch's logic is preserved verbatim from decideAIState as a
+   single BT.Action. The blackboard carries scratch values
+   (focusedTarget, nearest, hpFrac, etc.) computed once at the top
+   of the tick so multiple actions can reuse them.
+
+   AUDIT NOTES (v37.76 port):
+     - RALLY→FLEE oscillation bug found and patched in the legacy
+       function pre-port (see L20289 comment). Sentinel
+       p._justEscapedRally added so the BT version inherits the fix.
+     - attackedBy and id values are integers starting at 1 (per
+       _idCounter); the carrierId-style falsy-zero bug doesn't apply
+       to these fields in production data.
+   ============================================================ */
+const _dmTreeImpl = (function() {
+  // === Helper: compute shared scratch values once per tick ===
+  // Stored in the per-bot blackboard so all actions can read without
+  // recomputing.
+  function computeContext(p, m, bb) {
+    bb.hpFrac = p.hp / p.stats.hp;
+    bb.myWpn = p.weapon || {};
+    bb.ranged = (bb.myWpn.range || 0) > 30;
+    bb.enemyAlive = (p.teamId === m.teamAId ? m.teamBplayers : m.teamAplayers).filter(e => e.alive);
+    bb.focusedTarget = TEAM_AI.pickTarget(p, bb.enemyAlive, m);
+    bb.nearest = null;
+    bb.nearestD = Infinity;
+    for (const e of bb.enemyAlive) {
+      const d = distance(p, e);
+      if (d < bb.nearestD) { bb.nearestD = d; bb.nearest = e; }
+    }
+    bb.mods = getAiPathingMods(p.teamId);
+    bb.teamState = m._teamAI && m._teamAI[p.teamId];
+    bb.inLastStand = bb.teamState && bb.teamState.lastStand;
+    bb.wasFleeing = (p.aiState === "FLEE" || p.aiState === "RALLY");
+  }
+
+  // === Action: healer/grenadier specialty bots → ENGAGE ===
+  function actHealerOrGrenadier(p, m, bb) {
+    if (p.position !== "healer" && p.position !== "grenadier") return BT.FAILURE;
+    p.aiState = "ENGAGE";
+    return BT.SUCCESS;
+  }
+
+  // === Action: no enemies → IDLE ===
+  function actNoEnemies(p, m, bb) {
+    if (bb.nearest) return BT.FAILURE;
+    p.aiState = "IDLE";
+    p.target = null;
+    return BT.SUCCESS;
+  }
+
+  // === Action: mercy finish-off (someone's hitting us hard) ===
+  function actMercyFinishOff(p, m, bb) {
+    // v37.78: != null guards against falsy-zero (consistent with legacy)
+    if (p.attackedBy == null) return BT.FAILURE;
+    const attacker = bb.enemyAlive.find(e => e.id === p.attackedBy);
+    if (!attacker) return BT.FAILURE;
+    const limit = bb.ranged ? bb.myWpn.range : 220;
+    if (distance(p, attacker) >= limit) return BT.FAILURE;
+    p.aiState = "FINISH_OFF";
+    p.target = attacker;
+    return BT.SUCCESS;
+  }
+
+  // === Action: rally (low HP + rally point available) ===
+  // v37.76: sentinel _justEscapedRally suppresses FLEE re-entry after
+  // time-cap. See decideAIState legacy code for the original bug.
+  function actRally(p, m, bb) {
+    if (!TEAM_AI.shouldRally(p, bb.nearestD, m)) return BT.FAILURE;
+    if (bb.wasFleeing && p.aiStateFrames > 90) {
+      // Time-cap escape — back to active combat
+      p.aiState = "IDLE";
+      p.aiStateFrames = 0;
+      p._justEscapedRally = true;
+      return BT.FAILURE; // explicitly cascade — IDLE will get re-evaluated
+    }
+    if (!bb.wasFleeing) p.aiStateFrames = 0;
+    p.aiState = "RALLY";
+    p.target = bb.nearest;
+    const rallyPt = TEAM_AI.findRallyPoint(p, m);
+    if (rallyPt) {
+      p._rally_x = rallyPt.x;
+      p._rally_y = rallyPt.y;
+    }
+    p._justEscapedRally = false;
+    return BT.SUCCESS;
+  }
+
+  // === Action: flee (low HP, no rally available) ===
+  function actFlee(p, m, bb) {
+    if (bb.mods.suppressFlee) return BT.FAILURE;
+    if (bb.inLastStand) return BT.FAILURE;
+    if (p._justEscapedRally) return BT.FAILURE;  // v37.76 bug fix
+    if (bb.hpFrac >= bb.mods.fleeHpThreshold) return BT.FAILURE;
+    if (bb.nearestD <= 40) return BT.FAILURE;
+    if (bb.wasFleeing && p.aiStateFrames > 90) {
+      p.aiState = "IDLE";
+      p.aiStateFrames = 0;
+      return BT.FAILURE; // cascade so we can pick a real engage state
+    }
+    if (!bb.wasFleeing) p.aiStateFrames = 0;
+    p.aiState = "FLEE";
+    p.target = bb.nearest;
+    return BT.SUCCESS;
+  }
+
+  // === Action: melee override (ranged bot at point-blank) ===
+  function actMeleeOverride(p, m, bb) {
+    if (!bb.ranged) return BT.FAILURE;
+    if (bb.nearestD >= _meleeSwitchRangeFor(p)) return BT.FAILURE;
+    p.aiState = "MELEE";
+    p.target = bb.nearest;
+    return BT.SUCCESS;
+  }
+
+  // === Action: sniper backline (kite to maintain distance) ===
+  function actSniperHold(p, m, bb) {
+    if (p.position !== "sniper") return BT.FAILURE;
+    if (bb.hpFrac <= 0.20) return BT.FAILURE;
+    const sniperHoldRange = bb.myWpn.range * bb.mods.sniperKiteRange;
+    const sniperReleaseRange = bb.myWpn.range * bb.mods.sniperReleaseRange;
+    const wasSniperHold = (p.aiState === "SNIPER_HOLD");
+    if (bb.nearestD >= sniperHoldRange && !(wasSniperHold && bb.nearestD < sniperReleaseRange)) {
+      return BT.FAILURE;
+    }
+    p.aiState = "SNIPER_HOLD";
+    p.target = bb.focusedTarget || bb.nearest;
+    return BT.SUCCESS;
+  }
+
+  // === Action: seek item (useful drop nearby) ===
+  function actSeekItem(p, m, bb) {
+    const wantedDrop = findBestDropFor(p, m);
+    if (!wantedDrop) return BT.FAILURE;
+    const isUrgent =
+      (wantedDrop.slot === "health" && bb.hpFrac < 0.5) ||
+      (wantedDrop.slot === "armor" && (p.armor?.defMod || 0) < 5);
+    const safeFromEnemy = !bb.nearest || bb.nearestD > 55;
+    if (!isUrgent && !safeFromEnemy) return BT.FAILURE;
+    p.aiState = "SEEK_ITEM";
+    p.itemTarget = wantedDrop;
+    return BT.SUCCESS;
+  }
+
+  // === Action: seek core (power core eligible) ===
+  function actSeekCore(p, m, bb) {
+    if (!m.powerCore || m.powerCore.state !== "active") return BT.FAILURE;
+    const dx = p.x - m.powerCore.x, dy = p.y - m.powerCore.y;
+    const distToCore = Math.sqrt(dx*dx + dy*dy);
+    const teamHasBuff = (p.boostMods && p.boostMods.dmgMult >= 1.25);
+    const myTeamPostCaptureCooldown = (m.powerCore.lastCapturedTeam === p.teamId)
+      && (m.roundFrame - (m.powerCore.lastCapturedFrame || 0)) < 120;
+    if (teamHasBuff) return BT.FAILURE;
+    if (myTeamPostCaptureCooldown) return BT.FAILURE;
+    if (distToCore >= 180) return BT.FAILURE;
+    const enemyClear = !bb.nearest || bb.nearestD > 110;
+    if (!enemyClear) return BT.FAILURE;
+    const teammates = (p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers);
+    for (const mate of teammates) {
+      if (!mate.alive || mate === p) continue;
+      const mdx = mate.x - m.powerCore.x, mdy = mate.y - m.powerCore.y;
+      const mateDist = Math.sqrt(mdx*mdx + mdy*mdy);
+      if (mateDist < distToCore) return BT.FAILURE; // teammate is closer
+    }
+    p.aiState = "SEEK_CORE";
+    return BT.SUCCESS;
+  }
+
+  // === Action: default engage (sticky targeting + opportunity-break) ===
+  // v37.18 opportunity-break preserved (with v37.76 bug fix — captures
+  // the weak target directly rather than re-asking TEAM_AI).
+  function actDefaultEngage(p, m, bb) {
+    const targetExpired = !p.target || !p.target.alive ||
+      (m.roundFrame - (p._targetCommitFrame || 0)) > 30;
+    let opportunityBreak = false;
+    let opportunityTarget = null;
+    if (!targetExpired && p.target && bb.ranged) {
+      const curHp = p.target.hp / p.target.stats.hp;
+      const curD = distance(p, p.target);
+      for (const e of bb.enemyAlive) {
+        if (e === p.target) continue;
+        const eHp = e.hp / e.stats.hp;
+        const eD = distance(p, e);
+        if (eHp < 0.30 && eD < curD && eD < (bb.myWpn.range || 220) && curHp > 0.40) {
+          opportunityBreak = true;
+          opportunityTarget = e;
+          break;
+        }
+      }
+    }
+    if (opportunityBreak) {
+      p.target = opportunityTarget;
+      p._targetCommitFrame = m.roundFrame;
+    } else if (targetExpired) {
+      p.target = bb.focusedTarget || bb.nearest;
+      p._targetCommitFrame = m.roundFrame;
+    }
+    if (p.aiState !== "ENGAGE") p.aiStateFrames = 0;
+    p.aiState = "ENGAGE";
+    return BT.SUCCESS;
+  }
+
+  const tree = BT.Selector([
+    BT.Action("dmContext", (p, m, bb) => { computeContext(p, m, bb); return BT.FAILURE; }),
+    // ^ Always returns FAILURE so the Selector continues. Pure-side-effect leaf
+    //   that populates the blackboard. Equivalent to a "setup" decorator.
+    BT.Action("dmHealerOrGrenadier", actHealerOrGrenadier),
+    BT.Action("dmNoEnemies", actNoEnemies),
+    BT.Action("dmMercyFinishOff", actMercyFinishOff),
+    BT.Action("dmRally", actRally),
+    BT.Action("dmFlee", actFlee),
+    BT.Action("dmMeleeOverride", actMeleeOverride),
+    BT.Action("dmSniperHold", actSniperHold),
+    BT.Action("dmSeekItem", actSeekItem),
+    BT.Action("dmSeekCore", actSeekCore),
+    BT.Action("dmDefaultEngage", actDefaultEngage),
+    // Default ENGAGE always succeeds, so the Selector returns SUCCESS.
+  ]);
+
+  return { tree };
+})();
+if (typeof window !== "undefined") window._dmTreeImpl = _dmTreeImpl;
 
 function findBestDropFor(p, m) {
   if (!m.drops.length) return null;
@@ -19442,7 +20868,7 @@ function tryDodgeProjectile(p, m, effSpd) {
       x: backDirX * effSpd * 0.55,
       y: backDirY * effSpd * 0.55,
     };
-    if (!p._lastDodgeFrame || (m.frame - p._lastDodgeFrame) > 30) {
+    if (p._lastDodgeFrame == null || (m.frame - p._lastDodgeFrame) > 30) {
       m.floats.push({ x: p.x, y: p.y - 16, text: "↩", life: 14, color: "#f7c948" });
       p._lastDodgeFrame = m.frame;
     }
@@ -19457,7 +20883,7 @@ function tryDodgeProjectile(p, m, effSpd) {
       x: px * side * effSpd * 0.30,
       y: py * side * effSpd * 0.30,
     };
-    if (!p._lastDodgeFrame || (m.frame - p._lastDodgeFrame) > 30) {
+    if (p._lastDodgeFrame == null || (m.frame - p._lastDodgeFrame) > 30) {
       m.floats.push({ x: p.x, y: p.y - 16, text: "↯", life: 12, color: "#88c0d0" });
       p._lastDodgeFrame = m.frame;
     }
@@ -19656,22 +21082,12 @@ function tickHealerBehavior(p, m, effSpd) {
         moveAlong(p, Math.atan2(tdy, tdx), effSpd * 0.55);
       }
     }
-    // Opportunistic light attack — Healer beam can damage enemies too
-    // if they're inadvertently in range. Low priority, low aggression.
-    if (p.attackCooldown <= 0 && p.stunned <= 0) {
-      let targetEnemy = null, tdMin = Infinity;
-      for (const e of enemies) {
-        if (!e.alive) continue;
-        const ed = distance(p, e);
-        if (ed < HEAL_RANGE && ed < tdMin && hasLineOfSight(p.x, p.y, e.x, e.y, m.terrain)) {
-          tdMin = ed; targetEnemy = e;
-        }
-      }
-      if (targetEnemy) {
-        // Don't actually fire — Healers are non-combatant by design.
-        // Just face that direction so they look engaged. Skip.
-      }
-    }
+    // v37.78: removed dead-code block here that computed the closest enemy
+    // in HEAL_RANGE with LOS, then deliberately did nothing with it (the
+    // intent was to "face that direction so they look engaged" but the
+    // facing code was never written). Removing the dead loop saves cycles
+    // per frame for every patientless healer. Healers are non-combatant
+    // by design; no firing action belongs here.
     return;
   }
 
@@ -19939,13 +21355,18 @@ function detonateGrenade(pr, m) {
     // Falloff with distance
     const falloff = 1 - (d / pr.blastRadius);
     const dmg = Math.max(2, Math.round(pr.blastDamage * falloff));
-    // Find a representative attacker (nearest teammate) for kill credit
+    // Find a representative attacker (alive grenadier preferred, then any
+    // alive teammate, then teamList[0] as last-ditch). v37.78: was
+    // `teamList.find(grenadier) || teamList[0]`, which could fall back to
+    // a dead bot if the first roster entry was KO'd.
     const teamList = pr.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers;
-    const attacker = teamList.find(t => t.alive && t.position === "grenadier") || teamList[0];
+    const attacker = teamList.find(t => t.alive && t.position === "grenadier")
+                  || teamList.find(t => t.alive)
+                  || teamList[0];
     if (!attacker) continue;
     e.attackedBy = attacker.id;
     e.attackedByExpires = 90;
-    applyDamage(attacker, e, dmg, false, m);
+    applyDamage(attacker, e, dmg, false, m, { noKnockback: true });
     // === v28.5 knockback ===
     // Push the enemy away from the blast center. Falloff-scaled so a
     // direct hit shoves hard, edge of blast just nudges. We write into
@@ -20011,6 +21432,59 @@ function triggerCrowdCheer(m, opts) {
 }
 
 /* ============================================================
+   v37.77: OPPORTUNISTIC FIRE HELPER (multi-tasking phase 1)
+   ============================================================
+   Called from movement-focused execute states (CTF_RACE, KOTH_RACE,
+   SEEK_CORE) to enable "fire while moving toward objective" — the
+   true multi-tasking behavior the user requested. Without this,
+   bots running to flags / crowns / cores sprinted past enemies
+   without firing, even when an enemy was a meter away.
+
+   The function:
+     1. Finds the closest LIVING enemy
+     2. Checks if they're within weapon range
+     3. Checks line-of-sight (won't fire through walls)
+     4. If all pass, fires at them and sets attack cooldown
+
+   This is DIFFERENT from the v37.72 hack in decideCtf which switched
+   p.aiState to "ENGAGE" for the tick. That hack worked but had the
+   side effect of overriding the bot's movement intent — a CTF_RACE
+   bot would stop running and engage. The execute-layer version
+   preserves movement (the bot keeps running) and ALSO fires. True
+   multi-tasking.
+
+   Carriers (CTF_RUSH, KOTH_KITE) deliberately do NOT use this —
+   carrier hands are full, no firing allowed. That's a gameplay
+   rule, not an oversight.
+   ============================================================ */
+function _tryOpportunisticFire(p, m, enemyAlive, ranged, wpn, effSpd) {
+  // Cheap-reject: melee bots use a different fire mechanism (resolveAttack
+  // direct contact), and a melee bot opportunistically firing while moving
+  // would mean instant-tag any enemy in 18px range. That's too strong.
+  // Restrict opportunistic fire to ranged weapons.
+  if (!ranged) return false;
+  if (p.attackCooldown > 0 || p.stunned > 0) return false;
+  if (!wpn || !wpn.range) return false;
+  // Find closest in-range enemy with LOS.
+  // v37.78: enemyAlive is a snapshot taken at the top of the per-team
+  // loop; teammates killing enemies earlier in this frame leave their
+  // .alive=false corpses in the array. Skip those.
+  let best = null, bestD = Infinity;
+  for (const e of enemyAlive) {
+    if (!e.alive) continue;
+    const d = distance(p, e);
+    if (d >= bestD) continue;
+    if (d > wpn.range) continue;
+    if (!hasLineOfSight(p.x, p.y, e.x, e.y, m.terrain)) continue;
+    bestD = d; best = e;
+  }
+  if (!best) return false;
+  fireAttack(p, best, m);
+  p.attackCooldown = computeCooldown(p, effSpd);
+  return true;
+}
+
+/* ============================================================
    AI STATE EXECUTION
    ============================================================ */
 function executeAIState(p, enemyAlive, m) {
@@ -20041,9 +21515,13 @@ function executeAIState(p, enemyAlive, m) {
   const wpn = p.weapon || {};
   const ranged = (wpn.range || 0) > 30;
 
-  // Find nearest enemy for dodge + state purposes
+  // Find nearest enemy for dodge + state purposes.
+  // v37.78: enemyAlive is a snapshot taken at the top of the per-team
+  // loop in tickMatch; teammates can have killed enemies earlier this
+  // frame, leaving corpses in the array. Skip them.
   let nearestEnemy = null, nearestD = Infinity;
   for (const e of enemyAlive) {
+    if (!e.alive) continue;
     const d = distance(p, e);
     if (d < nearestD) { nearestD = d; nearestEnemy = e; }
   }
@@ -20152,7 +21630,12 @@ function executeAIState(p, enemyAlive, m) {
     }
     case "KOTH_RACE":
     case "CTF_RACE": {
-      // Race for crown / flag. Pure movement at full sprint, no firing.
+      // === v37.77: race for crown/flag, fire opportunistically while moving ===
+      // Pre-v37.77 was "pure movement, no firing" — the source of the
+      // user's reported "bots sprint past enemies without firing" bug.
+      // Now: still movement-first (1.10x sprint), but fires at any in-range
+      // enemy with LOS via _tryOpportunisticFire. True multi-tasking —
+      // movement intent and combat intent both execute this tick.
       let ang;
       if (p.aiState === "KOTH_RACE" && typeof p._koth_moveAng === "number") {
         ang = p._koth_moveAng;
@@ -20160,6 +21643,7 @@ function executeAIState(p, enemyAlive, m) {
         ang = Math.atan2(p._escort_y - p.y, p._escort_x - p.x);
       } else break;
       moveAlong(p, ang, effSpd * 1.10);
+      _tryOpportunisticFire(p, m, enemyAlive, ranged, wpn, effSpd);
       break;
     }
     case "TAG_HUNT": {
@@ -20335,8 +21819,10 @@ function executeAIState(p, enemyAlive, m) {
       if (threat && threatD < optimalRange) {
         let backAng = Math.atan2(p.y - threat.y, p.x - threat.x);
         // Bias toward team center if we're near a wall
+        // v37.78: defensive teamCenter check matches the pattern used at
+        // other consumer sites (L21045, L21231, L21705). Was missing here.
         const teamState = m._teamAI && m._teamAI[p.teamId];
-        if (teamState) {
+        if (teamState && teamState.teamCenter) {
           const tc = teamState.teamCenter;
           const tcAng = Math.atan2(tc.y - p.y, tc.x - p.x);
           // Mild blend so we stay near team but still back away
@@ -20400,7 +21886,12 @@ function executeAIState(p, enemyAlive, m) {
         break;
       }
       // Maybe fire a desperate parting shot (suppressed for mode carriers)
-      if (!p._modeCarrier && ranged && p.target && p.attackCooldown <= 0 && p.stunned <= 0
+      // v37.78: added p.target.alive check — was missing here, every other
+      // firing site has it. Without this, FLEE bots fire at dead targets
+      // (target killed by teammate during the multi-frame FLEE state),
+      // spawning ghost projectiles and wasting cooldown.
+      if (!p._modeCarrier && ranged && p.target && p.target.alive
+          && p.attackCooldown <= 0 && p.stunned <= 0
           && hasLineOfSight(p.x, p.y, p.target.x, p.target.y, m.terrain)) {
         fireAttack(p, p.target, m);
         p.attackCooldown = computeCooldown(p, effSpd);
@@ -20448,8 +21939,10 @@ function executeAIState(p, enemyAlive, m) {
         break;
       }
       // Recompute nearest threat at execution time
+      // v37.78: skip corpses left in the stale enemyAlive snapshot.
       let threat = null, threatD = Infinity;
       for (const e of enemyAlive) {
+        if (!e.alive) continue;
         const dd = distance(p, e);
         if (dd < threatD) { threatD = dd; threat = e; }
       }
@@ -20472,22 +21965,20 @@ function executeAIState(p, enemyAlive, m) {
       }
       const ang = Math.atan2(m.powerCore.y - p.y, m.powerCore.x - p.x);
       moveAlong(p, ang, effSpd * 1.05);
-      // Opportunistic shooting while running
-      if (ranged && p.target && p.target.alive && p.attackCooldown <= 0 && p.stunned <= 0) {
-        const d = distance(p, p.target);
-        if (d <= wpn.range && hasLineOfSight(p.x, p.y, p.target.x, p.target.y, m.terrain)) {
-          fireAttack(p, p.target, m);
-          p.attackCooldown = computeCooldown(p, effSpd);
-        }
-      }
+      // v37.77: opportunistic fire — was inline pre-v37.77 (fired at stale
+      // p.target only). Helper version finds closest in-range enemy, so it
+      // also catches enemies that weren't our previous target.
+      _tryOpportunisticFire(p, m, enemyAlive, ranged, wpn, effSpd);
       break;
     }
     case "FINISH_OFF":
     case "ENGAGE":
     default: {
       if (!p.target || !p.target.alive) {
+        // v37.78: skip corpses in the stale enemyAlive snapshot
         let nearest = null, nearestD = Infinity;
         for (const e of enemyAlive) {
+          if (!e.alive) continue;
           const d = distance(p, e);
           if (d < nearestD) { nearestD = d; nearest = e; }
         }
@@ -21076,8 +22567,11 @@ function applyProjectileHit(attacker, defender, pr, m) {
   applyDamage(attacker, defender, dmg, pr.isCrit, m);
 }
 
-/* Shared damage / death pipeline for both melee and projectile hits */
-function applyDamage(attacker, defender, dmg, isCrit, m) {
+/* Shared damage / death pipeline for both melee and projectile hits.
+   opts may contain { noKnockback: true } for damage sources that handle
+   knockback themselves (e.g., grenade detonation, which pushes victims
+   away from the blast center, not from the kill-credit attacker). */
+function applyDamage(attacker, defender, dmg, isCrit, m, opts) {
   const hpFracBefore = defender.hp / defender.stats.hp;
   defender.hp -= dmg;
   const hpFracAfter = defender.hp / defender.stats.hp;
@@ -21094,6 +22588,11 @@ function applyDamage(attacker, defender, dmg, isCrit, m) {
     life: 20,
     color: isCrit ? "#f7c948" : "#ef4d4d",
   });
+  // v37.78: stamp the crit flag on the defender so handleKO's death-cry
+  // logic can read it precisely. Pre-v37.78 used a fragile regex scan on
+  // recent floats (`/!$/.test(f.text)`) which false-positived on "POP!"
+  // and other !-suffix floats.
+  defender._lastHitWasCrit = !!isCrit;
   for (let i = 0; i < (isCrit ? 6 : 3); i++) {
     m.blood.push({
       x: defender.x + R(-6, 6), y: defender.y + R(-6, 6),
@@ -21125,7 +22624,10 @@ function applyDamage(attacker, defender, dmg, isCrit, m) {
   // is purely visual+positional (doesn't break terrain collision; uses
   // moveAlong's wall-slide), but means heavy attacks visibly displace
   // light targets while plate-armored Tanks barely flinch.
-  {
+  // v37.78: callers can opt out via opts.noKnockback when they handle
+  // knockback themselves (e.g., grenade blast pushes from blast center,
+  // not from the kill-credit attacker — see detonateGrenade).
+  if (!(opts && opts.noKnockback)) {
     const defArm = defender.armor || {};
     const totalDef = clamp(defender.stats.def + (defArm.defMod || 0), 0, CAPS.def + 20);
     const kbResist = clamp(totalDef * 0.015, 0, 0.8);
@@ -21315,8 +22817,10 @@ function handleKO(attacker, defender, m) {
   });
 
   const isPermadeath = defender.lives <= 0;
-  // Pull the most recent damage event's crit flag — applyDamage stamped it
-  const wasCrit = (m.floats || []).slice(-3).some(f => /!$/.test(f.text || ""));
+  // v37.78: use the crit flag stamped by applyDamage. Pre-v37.78 scanned
+  // recent floats for /!$/ which false-positived on "POP!" and other
+  // exclamation-suffix UI floats.
+  const wasCrit = !!defender._lastHitWasCrit;
 
   // DEATH CRY — Worms-style last words. Picked by tonal context.
   const cry = deathCryFor(defender, attacker, {
@@ -21354,12 +22858,25 @@ function handleKO(attacker, defender, m) {
       // Mark this knight as pending — joins the team's next wave
       defender._pendingRespawn = true;
       // Drop carrier objects back to the field
-      if (m.flag && m.flag.carrierId === defender.id) {
-        m.flag.carrierId = null;
-        m.flag.carrierTeamId = null;
-        m.flag.x = defender.x;
-        m.flag.y = defender.y;
-        m.flag.returnFrame = (m.roundFrame || 0) + ((LEAGUE_CONFIG.modeConfig?.ctf?.flagReturnSec || 8) * 20);
+      // v37.69: CTF now has two flags — find whichever flag this defender
+      // was carrying (at most one, since pickup logic prevents double-carry)
+      // and drop it at their position. droppedAtFrame starts the safety-net
+      // auto-return timer; the touch-return mechanic in tickCTF will usually
+      // fire first.
+      if (m.flagsByTeam) {
+        for (const flagOwnerId of Object.keys(m.flagsByTeam)) {
+          const f = m.flagsByTeam[flagOwnerId];
+          if (f.carrierId === defender.id) {
+            f.state = "dropped";
+            f.carrierId = null;
+            f.carrierTeamId = null;
+            f.x = defender.x;
+            f.y = defender.y;
+            f.droppedAtFrame = m.roundFrame || 0;
+            feed("match", `🚩 ${defender.name} drops the ${TEAM_BY_ID[flagOwnerId].short} flag!`);
+            break; // a bot can carry at most one flag
+          }
+        }
       }
       if (m.crown && m.crown.carrierId === defender.id) {
         m.crown.carrierId = null;
@@ -21368,13 +22885,19 @@ function handleKO(attacker, defender, m) {
         m.crown.y = defender.y;
       }
       // Schedule team's next respawn wave if no wave is pending yet.
-      // 160 frames @ 20fps = 8 seconds — long enough to feel meaningful,
-      // short enough that a wiped team isn't out of the action long.
+      // v37.70: wave delay now reads from LEAGUE_CONFIG.continuousModeRespawnSec
+      // (default 30s = 600 frames @ 20fps). Pre-v37.70 was hardcoded 160
+      // (8s); the longer cadence gives wiped teams a "fair comeback" wave
+      // rather than perpetual attrition. The wipe-accelerator in
+      // tickRespawns reschedules a team's wave to fire in 2s if that
+      // team is fully wiped, so a wipe never sits idle for the full 30s.
       m._respawnWaves = m._respawnWaves || {};
       const waveKey = defender.teamId;
       if (m._respawnWaves[waveKey] == null) {
-        m._respawnWaves[waveKey] = (m.roundFrame || 0) + 160;
-        feed("spawn", `🔁 ${TEAM_BY_ID[defender.teamId].short} respawn wave incoming in 8 seconds.`);
+        const waveSec = (typeof LEAGUE_CONFIG !== "undefined" && LEAGUE_CONFIG.continuousModeRespawnSec) || 30;
+        const waveFrames = Math.round(waveSec * 1000 / COMBAT.frameMs);
+        m._respawnWaves[waveKey] = (m.roundFrame || 0) + waveFrames;
+        feed("spawn", `🔁 ${TEAM_BY_ID[defender.teamId].short} respawn wave incoming in ${waveSec} seconds.`);
       }
     }
   } else {
@@ -22945,12 +24468,16 @@ function _computeCameraTarget(m) {
     if (m.crown.y > maxY) maxY = m.crown.y;
     count++;
   }
-  if (m.flag) {
-    if (m.flag.x < minX) minX = m.flag.x;
-    if (m.flag.y < minY) minY = m.flag.y;
-    if (m.flag.x > maxX) maxX = m.flag.x;
-    if (m.flag.y > maxY) maxY = m.flag.y;
-    count++;
+  // v37.69: CTF now has two flags — include both in camera framing
+  if (m.flagsByTeam) {
+    for (const flagOwnerId of Object.keys(m.flagsByTeam)) {
+      const f = m.flagsByTeam[flagOwnerId];
+      if (f.x < minX) minX = f.x;
+      if (f.y < minY) minY = f.y;
+      if (f.x > maxX) maxX = f.x;
+      if (f.y > maxY) maxY = f.y;
+      count++;
+    }
   }
 
   // Power core (deathmatch focal point)
@@ -25989,53 +27516,107 @@ function drawModeEntities(m) {
     }
   }
 
-  // ----- CTF flag -----
-  if (mode === "ctf" && m.flag) {
-    const f = m.flag;
-    const fx = Math.floor(f.x), fy = Math.floor(f.y);
-    // Pole
-    ctx.fillStyle = "#3a2a1a";
-    ctx.fillRect(fx, fy - 16, 2, 20);
-    // Flag (color matches carrier team if held, otherwise white)
-    let flagColor = "#ffffff";
-    if (f.carrierTeamId) {
-      flagColor = (TEAM_BY_ID[f.carrierTeamId] && TEAM_BY_ID[f.carrierTeamId].color) || "#ffffff";
-    }
-    ctx.fillStyle = flagColor;
-    // Triangular flag waving
-    const wave = Math.sin(t * 0.18) * 1.5;
-    ctx.beginPath();
-    ctx.moveTo(fx + 2, fy - 16);
-    ctx.lineTo(fx + 14 + wave, fy - 13);
-    ctx.lineTo(fx + 2, fy - 10);
-    ctx.closePath();
-    ctx.fill();
-    // Soft glow
-    if (!f.carrierId) {
-      const grd = ctx.createRadialGradient(fx + 2, fy - 4, 4, fx + 2, fy - 4, 24);
-      grd.addColorStop(0, "rgba(255,255,255,0.30)");
-      grd.addColorStop(1, "rgba(255,255,255,0)");
-      ctx.fillStyle = grd;
-      ctx.fillRect(fx - 22, fy - 26, 48, 32);
+  // ----- CTF flags (classic two-flag, v37.69) -----
+  // Each team has a flag at their own base. Flag color = team color (so
+  // visually unambiguous which flag is which). State affects opacity/glow:
+  //   home    — full color, soft glow halo (uncarried)
+  //   dropped — pulsing color, dashed ring at base position (urgent, retrievable)
+  //   carried — flag follows carrier above their head, no glow
+  if (mode === "ctf" && m.flagsByTeam) {
+    for (const flagOwnerId of Object.keys(m.flagsByTeam)) {
+      const f = m.flagsByTeam[flagOwnerId];
+      const ownerTeam = TEAM_BY_ID[flagOwnerId];
+      const flagColor = (ownerTeam && ownerTeam.color) || "#ffffff";
+      const fx = Math.floor(f.x), fy = Math.floor(f.y);
+      // Pole
+      ctx.fillStyle = "#3a2a1a";
+      ctx.fillRect(fx, fy - 16, 2, 20);
+      // Triangular flag waving (color always = owning team's color)
+      ctx.fillStyle = flagColor;
+      const wave = Math.sin(t * 0.18 + (flagOwnerId === m.teamAId ? 0 : Math.PI)) * 1.5;
+      // Pulse opacity if dropped (urgent visual)
+      let flagAlpha = 1;
+      if (f.state === "dropped") {
+        flagAlpha = 0.65 + 0.35 * Math.sin(t * 0.25);
+      }
+      ctx.globalAlpha = flagAlpha;
+      ctx.beginPath();
+      ctx.moveTo(fx + 2, fy - 16);
+      ctx.lineTo(fx + 14 + wave, fy - 13);
+      ctx.lineTo(fx + 2, fy - 10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      // Soft glow when at home (uncarried, settled state)
+      if (f.state === "home") {
+        const grd = ctx.createRadialGradient(fx + 2, fy - 4, 4, fx + 2, fy - 4, 24);
+        // Glow tinted by team color (parse hex if available, fallback to white)
+        const hexMatch = /^#([0-9a-f]{6})$/i.exec(flagColor);
+        if (hexMatch) {
+          const r = parseInt(hexMatch[1].slice(0, 2), 16);
+          const g = parseInt(hexMatch[1].slice(2, 4), 16);
+          const b = parseInt(hexMatch[1].slice(4, 6), 16);
+          grd.addColorStop(0, `rgba(${r},${g},${b},0.35)`);
+          grd.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        } else {
+          grd.addColorStop(0, "rgba(255,255,255,0.30)");
+          grd.addColorStop(1, "rgba(255,255,255,0)");
+        }
+        ctx.fillStyle = grd;
+        ctx.fillRect(fx - 22, fy - 26, 48, 32);
+      }
+      // Dashed-ring marker at flag position when dropped (helps eye spot
+      // a small dropped flag in the field clutter)
+      if (f.state === "dropped") {
+        ctx.strokeStyle = flagColor;
+        ctx.globalAlpha = 0.5 + 0.3 * Math.sin(t * 0.18);
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.arc(fx + 2, fy - 8, 14, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      }
     }
   }
 
   // ----- CTF bases -----
   if (mode === "ctf" && m.basesById) {
+    // v37.69: detect "capture pending" state for the gold/red denial pulse.
+    // A team's base shows the denial pulse when an enemy bot is carrying
+    // their OWN flag (so any incoming capture from this team will be denied).
+    const denialPendingByTeam = {};
+    if (m.flagsByTeam) {
+      for (const teamId in m.basesById) {
+        const ownFlag = m.flagsByTeam[teamId];
+        denialPendingByTeam[teamId] = !!(ownFlag && ownFlag.state !== "home");
+      }
+    }
     for (const teamId in m.basesById) {
       const b = m.basesById[teamId];
       const team = TEAM_BY_ID[teamId];
       const color = (team && team.color) || "#888";
-      // Base pad — colored ring on the floor
+      const isDenied = denialPendingByTeam[teamId];
+      // Base pad — colored ring on the floor.
+      // v37.69: if denial-pending (own flag stolen), pulse gold/red instead
+      // of the team color so the user immediately sees "captures here won't count".
       const pulse2 = 0.6 + 0.2 * Math.sin(t * 0.08 + (teamId === m.teamAId ? 0 : Math.PI));
-      ctx.strokeStyle = color;
-      ctx.globalAlpha = pulse2;
-      ctx.lineWidth = 3;
+      if (isDenied) {
+        // Alternate gold/red rapid pulse to signal pending denial
+        const denialPulse = 0.55 + 0.45 * Math.sin(t * 0.22);
+        ctx.strokeStyle = "#f7c948"; // gold base
+        ctx.globalAlpha = denialPulse;
+      } else {
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = pulse2;
+      }
+      ctx.lineWidth = isDenied ? 4 : 3;
       ctx.beginPath();
       ctx.arc(b.x, b.y, 24, 0, Math.PI * 2);
       ctx.stroke();
       ctx.globalAlpha = 1;
-      // Inner cross-hatch
+      // Inner cross-hatch (always team color)
       ctx.fillStyle = color;
       ctx.globalAlpha = 0.20;
       ctx.beginPath();
@@ -30671,12 +32252,9 @@ const CAUCUS_VOTES = [
 function _drawCaucusVoteOptions(excludeId) {
   const pool = CAUCUS_VOTES.filter(v => v.id !== excludeId);
   // Fisher-Yates shuffle, take 3
-  const arr = pool.slice();
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr.slice(0, 3);
+  // v37.78 determinism fix: use the seeded shuffle helper instead of
+  // inline Math.random (caucus options affect gameplay rules).
+  return shuffle(pool).slice(0, 3);
 }
 
 /* Show the Caucus Vote modal after the season-end celebration.
@@ -31634,7 +33212,8 @@ function deserializeLeague(jsonStr) {
     const styleIds = Object.keys(AI_PATHING_STYLES);
     for (const teamId of Object.keys(LEAGUE.rosters)) {
       if (!LEAGUE.aiStyles[teamId]) {
-        LEAGUE.aiStyles[teamId] = styleIds[Math.floor(Math.random() * styleIds.length)];
+        // v37.78 determinism fix: was Math.random
+        LEAGUE.aiStyles[teamId] = styleIds[Math.floor(SIM_RNG.next() * styleIds.length)];
       }
     }
   }
