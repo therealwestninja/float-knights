@@ -12369,6 +12369,70 @@ function distSq(a, b) {
 }
 
 /* ============================================================
+   v37.79: AI DIAGNOSTICS
+   Opt-in instrumentation for tracking bot decisions, role changes,
+   score events, win conditions, and round/match end signals.
+
+   Activate by setting LEAGUE_CONFIG.aiDiagnostics:
+     "off"     — disabled (default; zero overhead)
+     "buffer"  — events captured to LEAGUE._aiDiagLog (last 2000 events)
+     "console" — also echoes to console (test-bench use)
+     "verbose" — buffer + console + per-frame state-tick logs
+
+   Event categories (cat field):
+     state    — bot aiState transition (new !== old)
+     role     — bot _modeRole assignment (continuous modes)
+     score    — modeScoreA/B incremented
+     winset   — m.modeWinner assigned
+     roundend — finalizeRound called
+     matchend — finalizeMatch called
+     stuck    — bot in same state for many frames (potential idle)
+
+   Each event: { f, cat, who?, msg, data? }. The who field is bot name
+   or "—" for global events. Field-name brevity is intentional (events
+   pile up fast in long matches).
+   ============================================================ */
+function _aiDiag(cat, who, msg, data) {
+  const lvl = (typeof LEAGUE_CONFIG !== "undefined") ? LEAGUE_CONFIG.aiDiagnostics : "off";
+  if (!lvl || lvl === "off") return;
+  const m = (typeof LEAGUE !== "undefined") ? LEAGUE.match : null;
+  const f = m && m.frame != null ? m.frame : 0;
+  const rec = { f, cat, who: who || "—", msg };
+  if (data !== undefined) rec.data = data;
+  // Buffer
+  if (typeof LEAGUE !== "undefined") {
+    if (!LEAGUE._aiDiagLog) LEAGUE._aiDiagLog = [];
+    LEAGUE._aiDiagLog.push(rec);
+    // Cap at 2000 events to bound memory
+    if (LEAGUE._aiDiagLog.length > 2000) LEAGUE._aiDiagLog.shift();
+  }
+  // Console echo
+  if (lvl === "console" || lvl === "verbose") {
+    const dataStr = data !== undefined ? " " + JSON.stringify(data) : "";
+    console.log(`[f${f}] [${cat}] ${rec.who}: ${msg}${dataStr}`);
+  }
+}
+// Helper to grab the recent diagnostic log (most-recent-first) — useful
+// in a console session after a "stuck" match to see what happened.
+function _aiDiagTail(n) {
+  if (typeof LEAGUE === "undefined" || !LEAGUE._aiDiagLog) return [];
+  const log = LEAGUE._aiDiagLog;
+  return log.slice(Math.max(0, log.length - (n || 50)));
+}
+// Helper to filter the log by category (or category prefix)
+function _aiDiagFilter(catPattern) {
+  if (typeof LEAGUE === "undefined" || !LEAGUE._aiDiagLog) return [];
+  const log = LEAGUE._aiDiagLog;
+  if (!catPattern) return log;
+  return log.filter(r => r.cat === catPattern || r.cat.startsWith(catPattern));
+}
+if (typeof window !== "undefined") {
+  window._aiDiag = _aiDiag;
+  window._aiDiagTail = _aiDiagTail;
+  window._aiDiagFilter = _aiDiagFilter;
+}
+
+/* ============================================================
    NAME GENERATOR
    Embedded from user's "simple random name generator" (4-syllable
    fantasy-style: Capital + lowercase + middle syllable + ending).
@@ -15692,6 +15756,40 @@ function tickGameMode(m) {
     // v28.18: respawn KO'd knights with lives remaining (continuous modes)
     if (typeof tickRespawns === "function") tickRespawns(m);
     checkModeWinCondition(m);
+
+    // v37.79: stuck-state detection — track score changes to surface a
+    // diagnostic if the match runs for a long stretch with no progress.
+    // Helps the user (and the diagnostic log) identify "bots stand around"
+    // states reported in the wild.
+    const totalScore = (m.modeScoreA || 0) + (m.modeScoreB || 0);
+    if (m._lastScoreTotal == null) {
+      m._lastScoreTotal = totalScore;
+      m._lastScoreChangeFrame = m.roundFrame || 0;
+    } else if (totalScore !== m._lastScoreTotal) {
+      m._lastScoreTotal = totalScore;
+      m._lastScoreChangeFrame = m.roundFrame || 0;
+      m._stuckWarningFired = false;
+    } else {
+      // Fire ONCE per match when stuck-threshold is crossed (4 minutes
+      // without scoring). Then again every 4 minutes if still stuck.
+      const STUCK_FRAMES = 4800; // 4 minutes @ 20fps
+      const sinceChange = (m.roundFrame || 0) - (m._lastScoreChangeFrame || 0);
+      if (sinceChange > 0 && sinceChange % STUCK_FRAMES === 0) {
+        const aliveA = m.teamAplayers.filter(p => p.alive).length;
+        const aliveB = m.teamBplayers.filter(p => p.alive).length;
+        _aiDiag("stuck", "—", `no score change for ${sinceChange} frames`, {
+          mode, scoreA: m.modeScoreA || 0, scoreB: m.modeScoreB || 0,
+          aliveA, aliveB,
+          flagStates: m.flagsByTeam
+            ? Object.fromEntries(Object.entries(m.flagsByTeam).map(([k,v]) => [k, v.state]))
+            : null,
+        });
+        if (!m._stuckWarningFired) {
+          m._stuckWarningFired = true;
+          feed("match", `⚠ Match has run ${Math.round(sinceChange / 20)}s without scoring — check console (_aiDiagTail) if this seems stuck.`);
+        }
+      }
+    }
   }
 }
 
@@ -15730,6 +15828,13 @@ function tickKOTH(m) {
       c.pointsAccum -= 1;
       if (c.carrierTeamId === m.teamAId) m.modeScoreA = (m.modeScoreA || 0) + 1;
       else m.modeScoreB = (m.modeScoreB || 0) + 1;
+      // v37.79: diagnostics — only log every 10 points to reduce noise
+      if (((m.modeScoreA || 0) + (m.modeScoreB || 0)) % 10 === 0) {
+        _aiDiag("score", "—", `KOTH point milestone`, {
+          carrier: c.carrierTeamId,
+          scoreA: m.modeScoreA, scoreB: m.modeScoreB,
+        });
+      }
     }
   }
 }
@@ -15837,6 +15942,10 @@ function tickCTF(m) {
             // CAPTURE! Score, reset both flags, respawn grace on both.
             if (p.teamId === m.teamAId) m.modeScoreA = (m.modeScoreA || 0) + 1;
             else                        m.modeScoreB = (m.modeScoreB || 0) + 1;
+            // v37.79: diagnostics
+            _aiDiag("score", p.name, `CTF capture`, {
+              team: p.teamId, scoreA: m.modeScoreA, scoreB: m.modeScoreB,
+            });
             feed("match", `🏆 ${p.name} captures the ${TEAM_BY_ID[enemyTeamId].short} flag! ${TEAM_BY_ID[p.teamId].short} +1`);
             // Reset enemy flag (the one just captured) to its home
             enemyFlag.state = "home";
@@ -16155,6 +16264,12 @@ function checkModeWinCondition(m) {
       else m.modeWinner = "draw";
     }
   }
+  // v37.79: diagnostics — log normal winset
+  if (m.modeWinner) {
+    _aiDiag("winset", "—", `modeWinner=${m.modeWinner} (score threshold)`, {
+      mode, scoreA: m.modeScoreA, scoreB: m.modeScoreB,
+    });
+  }
   // === v28.18: deadlock-detection fallback ===
   // If both teams have no living knights AND no pending respawn waves,
   // declare a winner by current score immediately rather than waiting
@@ -16168,6 +16283,10 @@ function checkModeWinCondition(m) {
       if (sA > sB)      m.modeWinner = m.teamAId;
       else if (sB > sA) m.modeWinner = m.teamBId;
       else              m.modeWinner = "draw";
+      // v37.79: diagnostics
+      _aiDiag("winset", "—", `modeWinner=${m.modeWinner} (deadlock — both teams empty)`, {
+        mode, scoreA: sA, scoreB: sB,
+      });
       feed("match", `⚠ Field empty — match resolved by score (${sA}-${sB}).`);
     }
   }
@@ -17626,9 +17745,38 @@ function tickMatch() {
       finalizeRound();
     }
   } else {
-    // Continuous-mode matches end ONLY when the mode reports a winner.
-    // Tag mode also ends if everyone's dead. Time-cap is much higher
-    // (10x roundMaxFrames) so the match can run to a natural finish.
+    // Continuous-mode matches end as soon as the first team reaches the
+    // mode's score threshold. The PRIMARY path is `m.modeWinner` set by
+    // checkModeWinCondition (called from tickGameMode every frame). The
+    // direct score check below is a defensive REINFORCEMENT: if any path
+    // prevents modeWinner from being set, the threshold breach still
+    // ends the round here, immediately. The match must not be allowed
+    // to drag on past the score that decides it.
+    //
+    // v37.79: added direct threshold check. Previously this gate relied
+    // entirely on m.modeWinner being set elsewhere, which the user
+    // reported as failing in CTF — bots reached capsToWin but the round
+    // never ended. By checking score directly here, the end-state fires
+    // even if modeWinner is somehow null on this frame.
+    if (!m.modeWinner) {
+      const modeCfg = (LEAGUE_CONFIG.modeConfig || {})[mode] || {};
+      const threshold = (mode === "ctf")  ? modeCfg.capsToWin
+                      : (mode === "koth") ? modeCfg.pointsToWin
+                      : null;
+      // v37.79: require threshold > 0. If the settings UI misconfigured
+      // it to 0 (empty string coerces to 0), `score >= 0` would fire
+      // every frame and end the match instantly.
+      if (threshold != null && threshold > 0) {
+        if ((m.modeScoreA || 0) >= threshold) m.modeWinner = m.teamAId;
+        else if ((m.modeScoreB || 0) >= threshold) m.modeWinner = m.teamBId;
+        if (m.modeWinner) {
+          _aiDiag("winset", "—", `modeWinner=${m.modeWinner} (round-end gate direct threshold)`, {
+            mode, scoreA: m.modeScoreA || 0, scoreB: m.modeScoreB || 0, threshold,
+          });
+        }
+      }
+    }
+
     if (m.modeWinner) {
       // Mode declares the winner — synthesize a "round" to record
       m.roundsWonA = (m.modeWinner === m.teamAId) ? m.roundsToWin : 0;
@@ -20094,9 +20242,29 @@ const MODE_AI = (function() {
     assignRoles(m) {
       if (!m) return;
       const mode = m.gameMode;
+      // v37.79: diagnostics — capture pre-assignment roles to detect changes
+      const lvl = (typeof LEAGUE_CONFIG !== "undefined") ? LEAGUE_CONFIG.aiDiagnostics : "off";
+      const diagOn = lvl && lvl !== "off";
+      let priorRoles = null;
+      if (diagOn) {
+        priorRoles = new Map();
+        for (const p of [...m.teamAplayers, ...m.teamBplayers]) {
+          if (p.alive) priorRoles.set(p.id, p._modeRole || null);
+        }
+      }
       if (mode === "koth") assignKothRoles(m);
       else if (mode === "ctf") assignCtfRoles(m);
       else if (mode === "tag") assignTagRoles(m);
+      if (diagOn && priorRoles) {
+        for (const p of [...m.teamAplayers, ...m.teamBplayers]) {
+          if (!p.alive) continue;
+          const oldR = priorRoles.get(p.id);
+          const newR = p._modeRole || null;
+          if (oldR !== newR) {
+            _aiDiag("role", p.name, `${oldR || "—"} → ${newR || "—"}`);
+          }
+        }
+      }
     },
 
     /* Per-bot decision — returns the new aiState if the mode took over,
@@ -21488,6 +21656,26 @@ function _tryOpportunisticFire(p, m, enemyAlive, ranged, wpn, effSpd) {
    AI STATE EXECUTION
    ============================================================ */
 function executeAIState(p, enemyAlive, m) {
+  // v37.79: diagnostics — log state transitions and stuck states
+  if (p._lastDiagState !== p.aiState) {
+    _aiDiag("state", p.name, `${p._lastDiagState || "—"} → ${p.aiState}`, {
+      role: p._modeRole || null,
+      hp: p.hp,
+      target: (p.target && p.target.name) || null,
+    });
+    p._lastDiagState = p.aiState;
+    p._lastDiagStateFrame = m.frame;
+  } else if ((typeof LEAGUE_CONFIG !== "undefined") && LEAGUE_CONFIG.aiDiagnostics === "verbose") {
+    // In verbose mode, detect long-stuck states
+    const stuckFrames = (m.frame || 0) - (p._lastDiagStateFrame || 0);
+    if (stuckFrames > 0 && stuckFrames % 100 === 0) {
+      _aiDiag("stuck", p.name, `in ${p.aiState} for ${stuckFrames} frames`, {
+        role: p._modeRole || null,
+        pos: { x: Math.round(p.x), y: Math.round(p.y) },
+      });
+    }
+  }
+
   // Base effective speed (stat × 1.4 baseline scale + booster)
   let effSpd = (p.stats.spd + (p.boostMods?.spd || 0)) * 1.4;
 
@@ -23340,6 +23528,17 @@ function finalizeRound(forfeit) {
   const m = LEAGUE.match;
   if (!m) return;
 
+  // v37.79: diagnostics
+  _aiDiag("roundend", "—", `finalizeRound called`, {
+    forfeit: !!forfeit,
+    mode: m.gameMode,
+    modeWinner: m.modeWinner || null,
+    scoreA: m.modeScoreA || 0,
+    scoreB: m.modeScoreB || 0,
+    aAlive: m.teamAplayers.filter(p => p.alive).length,
+    bAlive: m.teamBplayers.filter(p => p.alive).length,
+    roundFrame: m.roundFrame,
+  });
   const aAlive = m.teamAplayers.filter(p => p.alive).length;
   const bAlive = m.teamBplayers.filter(p => p.alive).length;
   let roundWinnerId = null, roundLoserId = null, isDraw = false;
@@ -23432,6 +23631,16 @@ function continueAfterRound() {
 function finalizeMatch(matchDraw) {
   const m = LEAGUE.match;
   if (!m) return;
+
+  // v37.79: diagnostics
+  _aiDiag("matchend", "—", `finalizeMatch called`, {
+    matchDraw: !!matchDraw,
+    mode: m.gameMode,
+    roundsWonA: m.roundsWonA,
+    roundsWonB: m.roundsWonB,
+    scoreA: m.modeScoreA || 0,
+    scoreB: m.modeScoreB || 0,
+  });
 
   m.phase = "post";
   // === v37.22: spawn cleanup crew for the post-match break ===
