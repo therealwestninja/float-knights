@@ -33157,7 +33157,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // what the source editor shows). Cache-clear (Ctrl+Shift+R / Cmd+Shift+R)
 // usually resolves it.
 try {
-  console.log("%c[Float Knights] build v37.34 loaded — schema v" + SAVE_SCHEMA_VERSION + " — " + new Date().toISOString(),
+  console.log("%c[Float Knights] build v37.79 loaded — schema v" + SAVE_SCHEMA_VERSION + " — " + new Date().toISOString(),
               "color:#f7c948;font-weight:bold;");
 } catch (e) { /* console may not be available in some sandboxes */ }
 
