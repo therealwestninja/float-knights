@@ -11871,13 +11871,13 @@
 
       <div class="setting-card">
         <h3>Game Mode</h3>
-        <div class="setting-desc">Each match plays under one mode. <strong>Deathmatch</strong> = standard 5v5 best-of-N elimination. <strong>King of the Hill</strong>, <strong>Capture the Flag</strong>, and <strong>Melee Tag</strong> run as single continuous matches with their own scoring. <strong>CTF</strong> is classic two-flag: steal the enemy flag and bring it to your base — but you can only score if your own flag is still at home. Touch your own dropped flag to return it instantly.</div>
+        <div class="setting-desc">Each match plays under one mode. <strong>Deathmatch</strong> = standard 5v5 best-of-N elimination. <strong>King of the Hill</strong> and <strong>Capture the Flag</strong> run as single continuous matches with their own scoring. <strong>CTF</strong> is classic two-flag: steal the enemy flag and bring it to your base — but you can only score if your own flag is still at home. Touch your own dropped flag to return it instantly. <strong>Team Tag</strong> is team-based: one bot starts as "It" and only "It" can tag, only enemies. Becoming "It" applies a slow bleed; pass "It" by tagging an enemy. Round ends when one team is fully eliminated; matches are best-of-N rounds like Deathmatch.</div>
         <div class="setting-row">
           <select id="setGameMode" class="setting-select">
             <option value="deathmatch">Deathmatch (5v5 best-of-N rounds)</option>
             <option value="koth">King of the Hill (first to N points)</option>
             <option value="ctf">Capture the Flag (first to N captures)</option>
-            <option value="tag">Melee Tag (last knight standing)</option>
+            <option value="tag">Team Tag (IT passes; round ends on team wipe)</option>
           </select>
         </div>
         <div class="setting-row" id="kothPointsRow">
@@ -11895,6 +11895,20 @@
             <option value="5" selected>5 captures</option>
             <option value="7">7 captures</option>
             <option value="9">9 captures (lead by 3)</option>
+          </select>
+        </div>
+        <div class="setting-row" id="tagBleedRow">
+          <label class="setting-sub-label">Tag IT bleed (HP/sec)</label>
+          <select id="setTagBleedDps" class="setting-select">
+            <option value="1">1.0 HP/sec (slow — emphasis on passing)</option>
+            <option value="1.5" selected>1.5 HP/sec (balanced)</option>
+            <option value="2">2.0 HP/sec</option>
+            <option value="2.5">2.5 HP/sec</option>
+            <option value="3">3.0 HP/sec (urgent passing)</option>
+            <option value="3.5">3.5 HP/sec</option>
+            <option value="4">4.0 HP/sec</option>
+            <option value="4.5">4.5 HP/sec</option>
+            <option value="5">5.0 HP/sec (lethal — must pass fast)</option>
           </select>
         </div>
       </div>
@@ -12941,14 +12955,35 @@ const LEAGUE_CONFIG = {
       carrierSpeedMult: 0.80,
     },
     tag: {
-      // "Damage scaled high enough that rounds take under 90 seconds"
-      // It stays It, target freezes 3s then unfreezes (per spec). Damage
-      // applied: per-hit (small chunk) + bleed during 3s freeze (heavy).
-      // Total per-tag = tagDamagePerHit + tagDpsWhileFrozen × 3 sec.
-      // With 50 + (130 × 3) = 440 damage, average bots die in 1-2 tags.
-      tagFreezeFrames: 60,    // 3 seconds @ 20fps
-      tagDamagePerHit: 50,    // immediate damage on tag
-      tagDpsWhileFrozen: 130, // bleed dps during 3-second freeze
+      // === v37.94: team-based Tag — IT-passing with no-tag-back ===
+      // The IT bot's team are the chasers; the other team are the runners.
+      // Only IT can tag, and IT can only tag ENEMIES (not teammates). When
+      // IT tags an enemy, the tagged bot freezes briefly then becomes the
+      // new IT (chaser team flips). The previous IT is recorded as `lastIt`
+      // and cannot be immediately tagged back.
+      //
+      // Pre-v37.94 model was "one IT for the entire match, last knight
+      // standing." Tag damage was high enough that one tag = one death;
+      // bots tagged teammates (the bug the user reported); the bracket-
+      // pull tournament structure couldn't apply since matches were
+      // single-round. New model: best-of-N rounds like Deathmatch; round
+      // ends when one team is fully eliminated.
+      //
+      // Death mechanics:
+      //  - Tagging does NOT damage (was tagDamagePerHit: 50 → 0).
+      //  - Being frozen does NOT damage (was tagDpsWhileFrozen: 130 → 0).
+      //  - Being IT slowly bleeds itBleedDps damage/sec (NEW). This is
+      //    the only damage source in Tag mode. Encourages passing IT
+      //    quickly. 0.5 dps means ~200 sec to die at full HP if held
+      //    continuously — passes will normally split that across bots.
+      tagFreezeFrames: 60,    // 3 seconds @ 20fps — stuns the new IT only
+      tagDamagePerHit: 0,     // v37.94: tagging deals no damage
+      tagDpsWhileFrozen: 0,   // v37.94: freeze deals no damage either
+      itBleedDps: 1.5,        // v37.94: slow drain on whoever is currently IT.
+                              //         User-adjustable 1-5 in 0.5 increments via Settings.
+                              //         1.0 = ~67-100s to die (rounds time out first);
+                              //         1.5 = ~67s (matches roundMaxFrames ~75s);
+                              //         5.0 = ~20s (must pass IT fast).
     },
   },
 };
@@ -14677,18 +14712,36 @@ function _drawLineageNameFor(teamId, position) {
    fields the user omitted, so a minimal { id, name, short, emoji, color }
    spec produces a fully working team. */
 function _normalizeCustomTeam(ct) {
+  // === v37.93: HTML sanitization at the data boundary ===
+  // Custom teams flow in from LEAGUE_CONFIG.customTeams (user-editable JSON,
+  // potentially loaded from a shared sync code). Pre-v37.93 these fields
+  // were passed through to TEAMS unsanitized — and many render sites
+  // interpolate team.emoji / .name / .short into innerHTML without escape
+  // (the trusted assumption being that canon teams come from a trusted
+  // source). A malicious sync code with HTML in any field would XSS.
+  // Sanitize once here instead of fixing every render site.
+  const stripHtml = (s) => {
+    if (typeof s !== "string") return "";
+    // Remove anything resembling an HTML tag; pre-2010-style permissive
+    // regex is fine because we're stripping, not parsing — false positives
+    // here just mean overly-aggressive stripping (no security risk).
+    // Also strip on* attribute-like patterns and javascript: URIs.
+    return s.replace(/<[^>]*>/g, "")
+            .replace(/on\w+\s*=/gi, "")
+            .replace(/javascript:/gi, "");
+  };
   return {
-    id: String(ct.id).slice(0, 4).toUpperCase(),
-    name: ct.name,
-    short: ct.short || ct.name,
-    emoji: ct.emoji || "🏳️",
-    color: ct.color || "#888888",
-    secondaryColor: ct.secondaryColor || ct.color || "#888888",
-    city: ct.city || "Custom",
-    venue: ct.venue || "Custom Field",
-    style: ct.style || "balanced",
-    lore: ct.lore || "A custom team added by the trainer.",
-    founded: ct.founded || 36,
+    id: String(ct.id || "").slice(0, 4).toUpperCase(),
+    name: stripHtml(ct.name || ""),
+    short: stripHtml(ct.short || ct.name || ""),
+    emoji: stripHtml(ct.emoji || "🏳️"),
+    color: typeof ct.color === "string" ? ct.color.replace(/[^#a-fA-F0-9]/g, "").slice(0, 7) || "#888888" : "#888888",
+    secondaryColor: typeof ct.secondaryColor === "string" ? ct.secondaryColor.replace(/[^#a-fA-F0-9]/g, "").slice(0, 7) || "#888888" : (typeof ct.color === "string" ? ct.color.replace(/[^#a-fA-F0-9]/g, "").slice(0, 7) || "#888888" : "#888888"),
+    city: stripHtml(ct.city || "Custom"),
+    venue: stripHtml(ct.venue || "Custom Field"),
+    style: stripHtml(ct.style || "balanced"),
+    lore: stripHtml(ct.lore || "A custom team added by the trainer."),
+    founded: (typeof ct.founded === "number" && isFinite(ct.founded)) ? ct.founded : 36,
     isCustom: true,  // flag for UI to mark with a USER badge
   };
 }
@@ -16067,6 +16120,26 @@ function startRound() {
     }
   }
 
+  // === v37.94: per-round Tag refresh ===
+  // _initModeEntities only runs at startMatch, so round 2+ would inherit
+  // round 1's m.tag state (frame-based freeze expirations now invalid,
+  // potentially-dead IT pointer, stale lastIt). Round-based Tag needs a
+  // fresh IT pick and a clean tagFreezes map per round.
+  if (m.gameMode === "tag") {
+    const tagAlive = [...m.teamAplayers, ...m.teamBplayers].filter(p => p.alive);
+    if (tagAlive.length > 0) {
+      const newItIdx = Math.floor(SIM_RNG.next() * tagAlive.length);
+      const newIt = tagAlive[newItIdx];
+      m.tag = {
+        itId: newIt.id,
+        lastIt: null,
+        tagFreezes: Object.create(null),
+        _bleedAcc: 0,
+      };
+      feed("match", `🏷 Round ${m.currentRoundIndex}: ${newIt.name} (${TEAM_BY_ID[newIt.teamId]?.short || "?"}) starts as IT.`);
+    }
+  }
+
   feed("match", `🔔 Round ${m.currentRoundIndex} of ${m.bestOf} — fight!`);
 }
 
@@ -16208,15 +16281,22 @@ function _initModeEntities(m) {
       };
     }
   } else if (mode === "tag") {
-    // Pick a random "It" from team A's roster (deterministic via SIM_RNG).
+    // === v37.94: team-based Tag init ===
+    // Pick a random "It" from any alive bot (deterministic via SIM_RNG).
+    // The IT bot's team are chasers; the other team are runners. m.tag
+    // tracks: itId (current IT), lastIt (previous IT — cannot be re-
+    // tagged), tagFreezes (frozen bots and their thaw frame), and
+    // _bleedAcc (accumulated fractional bleed damage for the IT bot,
+    // applied as integer hits via applyDamage when ≥ 1).
     const all = [...m.teamAplayers, ...m.teamBplayers].filter(p => !p.deceased);
     if (all.length > 0) {
       const itIdx = Math.floor(SIM_RNG.next() * all.length);
       const it = all[itIdx];
       m.tag = {
         itId: it.id,
-        // tagFreezes maps frozenPlayerId → frame the freeze ends.
-        tagFreezes: Object.create(null),
+        lastIt: null,                    // ID of previous IT (cannot be re-tagged)
+        tagFreezes: Object.create(null), // playerId → frame freeze ends
+        _bleedAcc: 0,                    // sub-1 HP bleed accumulator
       };
       // Mark the It bot so AI can branch on it (we read m.tag.itId in AI dispatch).
     }
@@ -16231,8 +16311,9 @@ function tickGameMode(m) {
   if (mode === "koth") tickKOTH(m);
   else if (mode === "ctf") tickCTF(m);
   else if (mode === "tag") tickTag(m);
-  // deathmatch needs no extra tick — round logic handles everything
-  if (mode !== "deathmatch") {
+  // deathmatch + tag (v37.94) need no extra tick — round-end gate in
+  // tickArena handles team-wipe detection for both.
+  if (mode !== "deathmatch" && mode !== "tag") {
     // v28.18: respawn KO'd knights with lives remaining (continuous modes)
     if (typeof tickRespawns === "function") tickRespawns(m);
     checkModeWinCondition(m);
@@ -16377,7 +16458,8 @@ function tickCTF(m) {
     // Skip bots that already carry a flag (can only carry one at a time)
     const alreadyCarrying = Object.values(m.flagsByTeam).some(f => f.carrierId === p.id);
     const ownFlag = m.flagsByTeam[p.teamId];
-    const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+    // v37.93: was inline `(p.teamId === m.teamAId) ? m.teamBId : m.teamAId`
+    const enemyTeamId = enemyTeamIdOf(p, m);
     const enemyFlag = m.flagsByTeam[enemyTeamId];
 
     // (A) Touch own dropped flag → return it home instantly.
@@ -16479,25 +16561,63 @@ function tickCTF(m) {
 function tickTag(m) {
   if (!m.tag) return;
   const all = m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers);
-  const it = all.find(p => p.id === m.tag.itId);
+  const cfg = LEAGUE_CONFIG.modeConfig.tag;
 
-  // If "It" bot died, pick a new one (highest-HP survivor)
+  // === v37.94: IT-death → pass to nearest alive teammate ===
+  // Pre-v37.94 picked highest-HP survivor of ANY team. Now keeps the IT
+  // team intact: when current IT dies, IT-status passes to the nearest
+  // alive teammate on the SAME team. If no teammates are alive, IT stays
+  // dead (round-end gate will detect the team-wipe and end the round).
+  let it = all.find(p => p.id === m.tag.itId);
   if (!it || !it.alive) {
-    const survivors = all.filter(p => p.alive);
-    if (survivors.length > 1) {
-      const newIt = survivors.reduce((a, b) => (a.hp > b.hp ? a : b));
-      m.tag.itId = newIt.id;
-      feed("match", `🏷 ${newIt.name} is now IT!`);
-    } else {
-      // Only one survivor — they've won
+    const itTeamId = it ? it.teamId : null;
+    if (itTeamId) {
+      // Find nearest alive teammate to the dead IT's position
+      const teammates = (itTeamId === m.teamAId ? m.teamAplayers : m.teamBplayers)
+        .filter(p => p.alive && p.id !== m.tag.itId);
+      if (teammates.length > 0) {
+        // Nearest to dead IT's last position
+        let best = teammates[0], bestD = distance(it, best);
+        for (const t of teammates) {
+          const d = distance(it, t);
+          if (d < bestD) { bestD = d; best = t; }
+        }
+        m.tag.itId = best.id;
+        m.tag.lastIt = null;  // chain broken — new IT can tag anyone on enemy team
+        m.tag._bleedAcc = 0;  // fresh bleed accumulator for the new IT
+        feed("match", `🏷 IT passes to ${best.name} (${TEAM_BY_ID[best.teamId]?.short || "?"}) — predecessor down.`);
+        it = best;
+      } else {
+        // No teammates left — IT's team is wiped. Round-end gate fires.
+        // Leave m.tag.itId pointing at the dead bot so the gate sees it.
+        it = null;
+      }
     }
   }
 
-  // Bleed damage on frozen bots — high enough that a single tag is often fatal
-  const cfg = LEAGUE_CONFIG.modeConfig.tag;
-  const dpsTick = (cfg.tagDpsWhileFrozen || 50) / (1000 / COMBAT.frameMs);
-  // Find current "It" bot to credit as the bleed-damage attacker
-  const itBot = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).find(p => p.id === m.tag.itId && p.alive);
+  // === v37.94: IT slow-bleed ===
+  // 0.5 damage per second on whoever is currently IT. At 20fps that's
+  // 0.025 per frame; accumulate in m.tag._bleedAcc and apply 1 HP via
+  // applyDamage when ≥ 1 (so handleKO fires correctly on death).
+  if (it && it.alive && typeof applyDamage === "function") {
+    const itBleedDps = cfg.itBleedDps || 0.5;
+    const perFrame = itBleedDps / (1000 / COMBAT.frameMs);
+    m.tag._bleedAcc = (m.tag._bleedAcc || 0) + perFrame;
+    while (m.tag._bleedAcc >= 1) {
+      // Self-attribution: IT bleed isn't from any specific attacker, but
+      // applyDamage wants one. Use IT themself so handleKO doesn't credit
+      // an enemy with the kill. The deathmatch self-credit path handles
+      // this case (no kill counter incremented).
+      applyDamage(it, it, 1, false, m);
+      m.tag._bleedAcc -= 1;
+      if (!it.alive) break;
+    }
+  }
+
+  // === v37.94: clean up expired freezes (no more freeze-bleed damage) ===
+  // Pre-v37.94 frozen bots took heavy bleed during the 3s freeze, which
+  // is what killed most tagged bots. Now freeze is JUST a stun. Damage
+  // only comes from being-IT bleed.
   for (const id in m.tag.tagFreezes) {
     const target = all.find(p => p.id === Number(id));
     const expireFrame = m.tag.tagFreezes[id];
@@ -16506,45 +16626,50 @@ function tickTag(m) {
       continue;
     }
     if (m.roundFrame >= expireFrame) {
-      // Freeze expired
+      // Freeze expired — bot can act normally again
       target.stunned = 0;
       delete m.tag.tagFreezes[id];
       continue;
     }
-    // Apply bleed via applyDamage so death detection (handleKO) fires
-    // properly — otherwise frozen bots accumulate negative HP but stay
-    // marked alive=true, breaking the win condition.
-    if (itBot && typeof applyDamage === "function") {
-      applyDamage(itBot, target, Math.max(1, Math.round(dpsTick)), false, m);
-    } else {
-      target.hp = Math.max(0, Math.round(target.hp - dpsTick));
-    }
+    // Keep target stunned (no movement, no attack) while frozen
     target.stunned = Math.max(target.stunned || 0, 4);
-    if (target.hp <= 0) {
-      delete m.tag.tagFreezes[id];
-    }
   }
 }
 
-/* Apply a tag — called from melee resolveAttack when in tag mode and
-   the attacker is "It". Per spec: tagger stays "It". Target freezes for
-   3 seconds (during which they take heavy bleed damage), then unfreezes
-   and resumes fleeing. Bots die from cumulative tag damage; the cycle
-   continues until bots fall one by one. Last bot alive = winner.
-   "It" gets reassigned only if the current "It" dies. */
+/* === v37.94: team-based applyTagHit ===
+   Called from melee resolveAttack when in tag mode AND the attacker is
+   currently "It". New semantics:
+     1. Tag may ONLY target enemies (different teamId) — teammates are
+        unhittable. resolveAttack call sites in tag mode already filter
+        for enemies via the AI target selection, but we defend here too.
+     2. Tag may NOT re-target the previous IT (m.tag.lastIt) — the
+        no-tag-back rule. Again, AI filters this but we defend.
+     3. The tagged enemy freezes for `tagFreezeFrames` (3s default).
+     4. IT-status PASSES to the tagged bot: m.tag.lastIt = old IT;
+        m.tag.itId = tagged bot. The freeze keeps the new IT immobile
+        for 3s, giving the old IT (and their team) time to flee.
+     5. NO damage is applied — neither on tag nor during freeze. The
+        only damage source in Tag mode is IT-bleed (0.5 dps in tickTag).
+   Returns true if the tag was applied; false otherwise (so resolveAttack
+   falls through to normal melee — but in practice non-IT bots can't
+   even reach melee range against enemies in this mode because their
+   roles forbid combat). */
 function applyTagHit(attacker, defender, m) {
   if (!m.tag || attacker.id !== m.tag.itId) return false;
+  // v37.94 defense: cannot tag own teammates (the user-reported bug)
+  if (attacker.teamId === defender.teamId) return false;
+  // v37.94 defense: cannot immediately tag back the bot who just tagged us
+  if (m.tag.lastIt != null && defender.id === m.tag.lastIt) return false;
   const cfg = LEAGUE_CONFIG.modeConfig.tag;
-  m.tag.tagFreezes[defender.id] = m.roundFrame + (cfg.tagFreezeFrames || 60);
-  defender.stunned = (cfg.tagFreezeFrames || 60);
+  const freezeFrames = (cfg.tagFreezeFrames || 60);
+  m.tag.tagFreezes[defender.id] = m.roundFrame + freezeFrames;
+  defender.stunned = freezeFrames;
   feed("match", `⚡ ${attacker.name} TAGS ${defender.name}!`);
-  // Route damage through applyDamage so handleKO fires properly on death.
-  if (typeof applyDamage === "function") {
-    applyDamage(attacker, defender, (cfg.tagDamagePerHit || 30), false, m);
-  } else {
-    defender.hp -= (cfg.tagDamagePerHit || 30);
-  }
-  // It does NOT pass on tag — the tagger keeps chasing.
+  // === v37.94: IT-pass ===
+  m.tag.lastIt = m.tag.itId;
+  m.tag.itId = defender.id;
+  m.tag._bleedAcc = 0;  // fresh bleed accumulator for new IT
+  feed("match", `🏷 ${defender.name} (${TEAM_BY_ID[defender.teamId]?.short || "?"}) is now IT — cannot tag ${attacker.name} back.`);
   return true;
 }
 
@@ -16737,18 +16862,12 @@ function checkModeWinCondition(m) {
   } else if (mode === "ctf") {
     if (m.modeScoreA >= cfg.capsToWin) m.modeWinner = m.teamAId;
     else if (m.modeScoreB >= cfg.capsToWin) m.modeWinner = m.teamBId;
-  } else if (mode === "tag") {
-    // Last-bot-standing wins (or last team standing in team-tag)
-    const aliveA = m.teamAplayers.filter(p => p.alive).length;
-    const aliveB = m.teamBplayers.filter(p => p.alive).length;
-    const total = aliveA + aliveB;
-    if (total <= 1) {
-      // Whichever team has the survivor wins
-      if (aliveA > 0) m.modeWinner = m.teamAId;
-      else if (aliveB > 0) m.modeWinner = m.teamBId;
-      else m.modeWinner = "draw";
-    }
   }
+  // === v37.94: Tag no longer sets modeWinner ===
+  // Tag is now round-based like Deathmatch. The round-end gate in
+  // tickArena (mode === "deathmatch" || mode === "tag" branch) detects
+  // team-wipe and calls finalizeRound(), which advances roundsWon{A,B}.
+  // Match ends naturally when roundsWon reaches roundsToWin (best-of-N).
   // v37.79: diagnostics — log normal winset
   if (m.modeWinner) {
     _aiDiag("winset", "—", `modeWinner=${m.modeWinner} (score threshold)`, {
@@ -18069,7 +18188,8 @@ function applyItemTrigger(p) {
       // weapon kill would.
       const m = LEAGUE.match;
       if (!m) break;
-      const enemies = (p.teamId === m.teamAId ? m.teamBplayers : m.teamAplayers).filter(e => e.alive);
+      // v37.93: was inline `(p.teamId === m.teamAId ? m.teamBplayers : m.teamAplayers).filter(...)`
+      const enemies = enemiesOf(p, m).filter(e => e.alive);
       let best = null, bestD = Infinity;
       for (const e of enemies) { const d = distance(p, e); if (d < bestD) { bestD = d; best = e; } }
       if (best) {
@@ -18227,7 +18347,10 @@ function tickMatch() {
   const aAlive = allA.filter(p => p.alive).length;
   const bAlive = allB.filter(p => p.alive).length;
   const mode = m.gameMode || "deathmatch";
-  if (mode === "deathmatch") {
+  if (mode === "deathmatch" || mode === "tag") {
+    // === v37.94: Tag uses deathmatch round-end (was continuous-mode) ===
+    // Round ends when one team has no alive bots, or on timeout.
+    // Best-of-N rounds determines match winner (same as deathmatch).
     if (aAlive === 0 || bAlive === 0 || m.roundFrame >= COMBAT.roundMaxFrames) {
       finalizeRound();
     }
@@ -19072,7 +19195,8 @@ const TEAM_AI = (function() {
           // p.target is consistently a bot reference (see L22011, etc.) so
           // compare to e.target.id. Also guard against stale e.target after
           // ally death.
-          const allies = (p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers);
+          // v37.93: was inline `(p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers)`
+          const allies = teammatesOf(p, m);
           if (allies.some(a => a.alive && a.id === e.target.id)) {
             util += pers.protectAllyBonus;
           }
@@ -19111,8 +19235,8 @@ const TEAM_AI = (function() {
   function findRallyPoint(p, m) {
     const teamState = m._teamAI && m._teamAI[p.teamId];
     if (!teamState) return null;
-    const allies = (p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers)
-      .filter(a => a.alive && a !== p);
+    // v37.93: was inline `(p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers)`
+    const allies = teammatesOf(p, m).filter(a => a.alive && a !== p);
     // Prefer healers above 30% HP, then any teammate above 50% HP.
     let target = null, bestD = Infinity;
     for (const a of allies) {
@@ -19144,7 +19268,8 @@ const TEAM_AI = (function() {
       // alongside them. This gives the wounded bot the maximum benefit
       // of using their teammate as a soft shield while regrouping.
       if (p.attackedBy != null) {
-        const enemies = (p.teamId === m.teamAId ? m.teamBplayers : m.teamAplayers);
+        // v37.93: was inline `(p.teamId === m.teamAId ? m.teamBplayers : m.teamAplayers)`
+        const enemies = enemiesOf(p, m);
         const threat = enemies.find(e => e.alive && e.id === p.attackedBy);
         if (threat) {
           const tdx = target.x - threat.x, tdy = target.y - threat.y;
@@ -19736,13 +19861,14 @@ const MODE_AI = (function() {
   function decideCtf(p, m) {
     if (!m.flagsByTeam) return null;
     const role = p._modeRole || "support";
-    const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
-    const allies  = (p.teamId === m.teamAId) ? m.teamAplayers : m.teamBplayers;
+    // v37.93: was 3-line inline patterns
+    const enemies = enemiesOf(p, m);
+    const allies  = teammatesOf(p, m);
     const enemyAlive = enemies.filter(e => e.alive);
     const ownBase = m.basesById && m.basesById[p.teamId];
     // Per-flag accessors (v37.69 classic two-flag CTF)
     const ownFlag   = m.flagsByTeam[p.teamId];
-    const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+    const enemyTeamId = enemyTeamIdOf(p, m);
     const enemyFlag = m.flagsByTeam[enemyTeamId];
 
     if (role === "carrier") {
@@ -19957,17 +20083,29 @@ const MODE_AI = (function() {
     if (!it) return;
     it._modeRole = "it_predator";
 
-    const prey = allAlive.filter(p => p.id !== it.id);
     const isFrozen = (id) => !!(m.tag.tagFreezes && m.tag.tagFreezes[id]);
+    // === v37.94: team-aware roles ===
+    // IT's TEAM = chasers (but only IT can actually tag; teammates GUARD,
+    // standing as visible team support). Enemy team = runners (prey),
+    // assigned shielded/break/flock as before. Frozen overrides team.
+    const itTeamId = it.teamId;
+    const prey = allAlive.filter(p => p.id !== it.id && p.teamId !== itTeamId);
 
-    for (const p of prey) {
+    for (const p of allAlive) {
+      if (p === it) continue;
       if (isFrozen(p.id)) {
         p._modeRole = "frozen";
         continue;
       }
+      if (p.teamId === itTeamId) {
+        // IT's teammate — guard role (stand still, watch)
+        p._modeRole = "it_team";
+        continue;
+      }
+      // Else: enemy team bot — assign prey role
       // Distance to It
       const dToIt = distance(p, it);
-      // Distance to nearest non-frozen non-it prey peer (herd proximity)
+      // Distance to nearest non-frozen prey peer (herd proximity)
       let nearestPeerD = Infinity;
       for (const peer of prey) {
         if (peer === p || isFrozen(peer.id)) continue;
@@ -20017,27 +20155,54 @@ const MODE_AI = (function() {
       return "FROZEN";
     }
 
+    // === v37.94: IT's teammates — GUARD role ===
+    // Only IT can actually tag. Teammates stand watch as visible team
+    // support; no movement, no attack. They become prey if IT-status
+    // flips to the enemy team (reassessed each tick by assignTagRoles).
+    if (role === "it_team") {
+      p._tag_move_x = p.x;
+      p._tag_move_y = p.y;
+      p.aiState = "TAG_GUARD";
+      p.target = null;  // clear any stale target so they don't attack
+      return "TAG_GUARD";
+    }
+
     if (role === "it_predator") {
-      // Pick easiest target via score: prefer close, slow, low-HP, in front of us
-      // (in our motion cone). Real predators hunt the isolated/weakest.
-      // Once committed to a target, stay committed for ≥60 frames before
-      // re-evaluating — prevents ping-pong between similarly-scored prey.
-      const candidates = allAlive.filter(e => e.id !== p.id && !isFrozen(e.id));
+      // === v37.94: enemy-team filter + no-tag-back ===
+      // Pre-v37.94 the IT predator picked from "any non-self non-frozen"
+      // — meaning the user-reported bug where the IT tagged teammates.
+      // Now strictly enemy-team only, and excludes m.tag.lastIt (the
+      // bot who just tagged us — no immediate re-tag).
+      const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+      const candidates = allAlive.filter(e =>
+        e.teamId === enemyTeamId &&
+        e.id !== p.id &&
+        !isFrozen(e.id) &&
+        e.id !== m.tag.lastIt
+      );
       if (candidates.length === 0) {
-        // Only frozen prey left — pick nearest of those
-        const frozenPrey = allAlive.filter(e => e.id !== p.id && isFrozen(e.id));
-        if (frozenPrey.length > 0) {
-          frozenPrey.sort((a, b) => distance(p, a) - distance(p, b));
-          p.target = frozenPrey[0];
+        // No taggable enemies — fall back to any enemy (frozen ones,
+        // or lastIt if that's all that's left). Frozen enemies are
+        // still chase-targets but won't trigger a useful tag (defensive
+        // gate in applyTagHit handles edge cases).
+        const fallback = allAlive.filter(e =>
+          e.teamId === enemyTeamId && e.id !== p.id
+        );
+        if (fallback.length > 0) {
+          fallback.sort((a, b) => distance(p, a) - distance(p, b));
+          p.target = fallback[0];
           p.aiState = "MELEE";
           return "MELEE";
         }
+        // No enemies at all — round-end gate will fire on next tickArena.
         return null;
       }
       // Commitment timer: if current target is still valid AND we picked
       // them less than 60 frames ago, stick with them.
       const committed =
         p.target && p.target.alive && !isFrozen(p.target.id) &&
+        p.target.teamId === enemyTeamId &&
+        p.target.id !== m.tag.lastIt &&
         (m.roundFrame - (p._tag_targetSince || 0)) < 60;
       let bestTarget = null;
       if (committed) {
@@ -22884,7 +23049,10 @@ function executeAIState(p, enemyAlive, m) {
     }
     case "TAG_SHIELD":
     case "TAG_BREAK":
+    case "TAG_GUARD":
     case "TAG_FLEE": {
+      // v37.94: TAG_GUARD added — IT's teammates. _tag_move_x/y is set
+      // to their current position so they stand still (zero delta).
       // Prey movement — head to stored move target (always exists)
       if (typeof p._tag_move_x === "number") {
         const dx = p._tag_move_x - p.x, dy = p._tag_move_y - p.y;
@@ -24112,9 +24280,17 @@ function handleKO(attacker, defender, m) {
   defender.hp = 0;
   defender.balloonsPopped = 3;
   defender.lives = Math.max(0, (defender.lives || 0) - 1);
-  updateKillStreak(attacker, defender, m);
-  attacker.career.kills++;
-  m.killsByTeam[attacker.teamId]++;
+  // === v37.94 legacy bugfix: gate kill credit on !isSelfDestruct ===
+  // Pre-v37.94 these unconditionally credited the attacker — meaning a
+  // bot's self-destruct (existing edge case) or v37.94's IT-bleed self-
+  // attribution would credit them with "killing themselves." Now matches
+  // the gates already present at L24273 (lastKilledBy) and L24283
+  // (rivalry tracking, also fixed below).
+  if (!isSelfDestruct) {
+    updateKillStreak(attacker, defender, m);
+    attacker.career.kills++;
+    m.killsByTeam[attacker.teamId]++;
+  }
 
   // === v37.88: record killer for the defender's potential revenge ===
   // Stored per-bot, persists across the defender's respawn within this
@@ -24130,7 +24306,8 @@ function handleKO(attacker, defender, m) {
   // direction has also accumulated kills. A "mutual rivalry" is
   // declared when BOTH directions reach 3, and is announced once
   // (the moment the threshold is crossed) via the kill feed.
-  if (typeof attacker.id === "number" && typeof defender.id === "number") {
+  // === v37.94: gate on !isSelfDestruct (rivalry against self is nonsense) ===
+  if (!isSelfDestruct && typeof attacker.id === "number" && typeof defender.id === "number") {
     if (!LEAGUE.rivalries) LEAGUE.rivalries = {};
     const fwdKey = attacker.id + "::" + defender.id;
     const revKey = defender.id + "::" + attacker.id;
@@ -32164,7 +32341,7 @@ function renderLadder() {
     if (champTeam && !champTeam._placeholder) {
       const banner = document.createElement("div");
       banner.className = "ladder-champion";
-      banner.innerHTML = `<span class="em">${champTeam.emoji}</span><b>${champTeam.name}</b> — Season ${LEAGUE.season} Champions`;
+      banner.innerHTML = `<span class="em">${escapeHTML(champTeam.emoji || "")}</span><b>${escapeHTML(champTeam.name || "")}</b> — Season ${LEAGUE.season} Champions`;
       // Defensive parent lookup — works even if display has been detached.
       const wrapParent = display.parentNode;
       if (wrapParent) {
@@ -35088,7 +35265,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // === v37.92: single source of truth for the build label ===
 // Used by the console boot log AND by the save's gameVersion stamp.
 // Bump in ONE place per release.
-const BUILD_LABEL = "v37.93";
+const BUILD_LABEL = "v37.94";
 
 // === v37.34: build-identification stamp ===
 // Prints once on script load. If the user reports crashes and this line is
@@ -36307,12 +36484,17 @@ function bindSettings() {
   const modeSel = $("#setGameMode");
   const kothPointsSel = $("#setKothPoints");
   const ctfCapsSel = $("#setCtfCaps");
+  // v37.94: tag bleed DPS picker (1.0–5.0 in 0.5 increments)
+  const tagBleedSel = $("#setTagBleedDps");
   const kothRow = $("#kothPointsRow");
   const ctfRow = $("#ctfCapsRow");
+  const tagBleedRow = $("#tagBleedRow");
   function _updateModeSubRows() {
     const v = modeSel ? modeSel.value : "deathmatch";
     if (kothRow) kothRow.style.display = (v === "koth") ? "" : "none";
     if (ctfRow)  ctfRow.style.display  = (v === "ctf")  ? "" : "none";
+    // v37.94: tag-specific row only visible when Team Tag mode is active
+    if (tagBleedRow) tagBleedRow.style.display = (v === "tag") ? "" : "none";
   }
   if (modeSel) {
     modeSel.value = (LEAGUE_CONFIG && LEAGUE_CONFIG.gameMode) || "deathmatch";
@@ -36323,6 +36505,11 @@ function bindSettings() {
   }
   if (ctfCapsSel && LEAGUE_CONFIG && LEAGUE_CONFIG.modeConfig) {
     ctfCapsSel.value = String(LEAGUE_CONFIG.modeConfig.ctf.capsToWin || 5);
+  }
+  // v37.94: populate tag bleed dps select with saved value (fallback 1.5)
+  if (tagBleedSel && LEAGUE_CONFIG && LEAGUE_CONFIG.modeConfig) {
+    const saved = LEAGUE_CONFIG.modeConfig.tag && LEAGUE_CONFIG.modeConfig.tag.itBleedDps;
+    tagBleedSel.value = String(saved != null ? saved : 1.5);
   }
   _updateModeSubRows();
 
@@ -36540,6 +36727,14 @@ function bindSettings() {
           if (LEAGUE_CONFIG.modeConfig.ctf) {
             LEAGUE_CONFIG.modeConfig.ctf.capsToWin = +($("#setCtfCaps")?.value || 5);
           }
+          // v37.94: tag bleed DPS — validated to 1.0–5.0 in 0.5 increments
+          if (LEAGUE_CONFIG.modeConfig.tag) {
+            const rawBleed = +($("#setTagBleedDps")?.value || 1.5);
+            // Clamp to spec range and quantize to nearest 0.5
+            const clamped = Math.max(1, Math.min(5, rawBleed));
+            const quantized = Math.round(clamped * 2) / 2;
+            LEAGUE_CONFIG.modeConfig.tag.itBleedDps = quantized;
+          }
         }
       }
       saveLocal();
@@ -36686,6 +36881,11 @@ function bindSettings() {
         if (cc > 0 && LEAGUE_CONFIG.modeConfig.ctf) {
           LEAGUE_CONFIG.modeConfig.ctf.capsToWin = cc;
         }
+        // v37.94: tag bleed DPS — validated, clamped 1.0-5.0, quantized to 0.5 increments
+        const tb = +($("#setTagBleedDps")?.value || 0);
+        if (tb >= 1 && tb <= 5 && LEAGUE_CONFIG.modeConfig.tag) {
+          LEAGUE_CONFIG.modeConfig.tag.itBleedDps = Math.round(tb * 2) / 2;
+        }
       }
       if (typeof saveLocal === "function") saveLocal();
       // Update the top-right save indicator immediately so the user
@@ -36725,6 +36925,7 @@ function bindSettings() {
       { id: "setContinent",      label: "Continent" },
       { id: "setKothPoints",     label: "KOTH points" },
       { id: "setCtfCaps",        label: "CTF captures" },
+      { id: "setTagBleedDps",    label: "Tag IT bleed" },  // v37.94
     ];
     for (const inp of autoSaveInputs) {
       const el = $("#" + inp.id);
