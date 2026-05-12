@@ -1478,6 +1478,12 @@
     transition: all 0.2s;
     position: relative;
   }
+  /* v37.82: ladder cards are clickable — surface affordance on hover */
+  .ladder-match:hover {
+    border-color: var(--gold);
+    background: var(--bg-2);
+    box-shadow: 0 0 0 1px rgba(247, 201, 72, 0.4);
+  }
   .ladder-match.current {
     border-color: var(--gold);
     box-shadow: 0 0 0 1px var(--gold), 0 0 16px rgba(247, 201, 72, 0.25);
@@ -5839,6 +5845,7 @@
           <button data-spd="1" class="active">1×</button>
           <button data-spd="2">2×</button>
           <button data-spd="4">4×</button>
+          <button data-spd="16" id="btnSpeed16x" title="Hyperspeed — runs the simulation 16× wall-clock time. Useful for fast-forwarding intermissions or burning through a long-deferred catchup. Render frame rate stays the same; only the sim accumulator advances faster.">16×</button>
           <button data-spd="0">⏸</button>
         </div>
         <button class="autoplay-toggle on" id="autoplayToggle" title="Auto-advance between rounds and matches">
@@ -6013,6 +6020,18 @@
     <div class="bet-market" style="margin-bottom:18px;">
       <h3>Last Knight Standing <span class="market-state" id="lsState">—</span></h3>
       <div class="pbet-list" id="betMarketPlayerRows"></div>
+    </div>
+
+    <!-- v37.83: Season Champion market — bet on the whole season, with
+         diminishing-returns odds (earlier bets pay more). Resolves at
+         finalizeSeason. -->
+    <div class="bet-market" style="margin-bottom:18px;">
+      <h3>🏆 Season Champion
+        <span class="market-state" id="scState">—</span>
+        <span id="scProgressBonus" style="margin-left:8px;font-size:10px;color:var(--gold);font-weight:normal;letter-spacing:1px;"></span>
+      </h3>
+      <div class="bet-overunder-sub" style="margin-bottom:6px;">Pick the season's eventual champion. Earlier bets pay more — lock in before the bracket starts for the maximum bonus. Odds reflect current standings position; longshot picks pay big.</div>
+      <div class="pbet-list" id="betMarketSeasonRows"></div>
     </div>
 
     <div class="bet-confirm-row">
@@ -11730,27 +11749,27 @@
     <div class="settings-grid">
       <div class="setting-card">
         <h3>Time Between Rounds</h3>
-        <div class="setting-desc">How long the intermission countdown lasts after each round ends. Shorter = faster matches, less time to bet.</div>
+        <div class="setting-desc">How long the intermission countdown lasts after each round ends. Shorter = faster matches, less time to bet. <em style="color:var(--dim);font-size:10px;">When Hitbox Wireframes are on (debug mode), the minimum can drop to 1 second for rapid testing.</em></div>
         <div class="setting-row">
-          <input type="range" id="setRoundCooldown" min="10" max="300" step="5" value="60" />
+          <input type="range" id="setRoundCooldown" min="10" max="300" step="5" value="60" data-debug-min="1" />
           <span class="setting-val" id="setRoundCooldownVal">60s</span>
         </div>
       </div>
 
       <div class="setting-card">
         <h3>Time Between Matches</h3>
-        <div class="setting-desc">Cooldown between full matches. Useful for moving bets between markets, hitting the store, or grabbing a snack.</div>
+        <div class="setting-desc">Cooldown between full matches. Useful for moving bets between markets, hitting the store, or grabbing a snack. <em style="color:var(--dim);font-size:10px;">Debug mode allows 1s minimum.</em></div>
         <div class="setting-row">
-          <input type="range" id="setMatchCooldown" min="10" max="600" step="10" value="60" />
+          <input type="range" id="setMatchCooldown" min="10" max="600" step="10" value="60" data-debug-min="1" />
           <span class="setting-val" id="setMatchCooldownVal">60s</span>
         </div>
       </div>
 
       <div class="setting-card">
         <h3>Time Between Seasons</h3>
-        <div class="setting-desc">Off-season pause. Rookies are called up to replace deceased knights during this window.</div>
+        <div class="setting-desc">Off-season pause. Rookies are called up to replace deceased knights during this window. <em style="color:var(--dim);font-size:10px;">Debug mode allows 1s minimum.</em></div>
         <div class="setting-row">
-          <input type="range" id="setSeasonCooldown" min="10" max="600" step="10" value="60" />
+          <input type="range" id="setSeasonCooldown" min="10" max="600" step="10" value="60" data-debug-min="1" />
           <span class="setting-val" id="setSeasonCooldownVal">60s</span>
         </div>
       </div>
@@ -12808,6 +12827,27 @@ const PERSONALITIES = [
     protectAllyBonus: 0.0,
     fleeThresh: 0.30,
     showboat: false,
+  },
+  // === v37.88: vengeful personality ===
+  // Knight who takes deaths personally. The base revenge mechanic gives
+  // every knight a +6 target bias toward their last killer; vengeful
+  // knights pile an additional +4 on top of that (total +10 — strong
+  // enough to outweigh most positional targeting bonuses). They'll
+  // ignore better tactical options to settle scores. Reads as the
+  // grudge-holder archetype — useful for storytelling, sometimes
+  // costly tactically.
+  {
+    id: "vengeful",
+    label: "Vengeful",
+    icon: "⚔️",
+    desc: "Takes deaths personally. Hunts down whoever killed them last.",
+    distancePref: 0.0,
+    woundedBonus: 0.0,
+    healerBonus: 0.0,
+    protectAllyBonus: 0.0,
+    fleeThresh: 0.25,        // slightly more willing to chase the grudge
+    showboat: false,
+    revengeBonus: 4.0,       // +4 on top of base +6 revenge utility
   },
 ];
 const PERSONALITY_BY_ID = Object.fromEntries(PERSONALITIES.map(p => [p.id, p]));
@@ -13978,6 +14018,8 @@ const LEAGUE = {
   // { teamId: styleId } — rolled fresh each season. Style choices live in
   // AI_PATHING_STYLES (declared in _part2_sim_b.html).
   aiStyles: {},
+  // === v37.82: per-team AI-style history — array of {season, styleId} per team ===
+  aiStyleHistory: {},
   // === v37.23: Knight rivalries ===
   // Pairwise kill counts. Key format: "{killerKnightId}::{victimKnightId}".
   // When both directions reach 3+ kills against each other, the pair is
@@ -14800,6 +14842,20 @@ const SHOP_ITEMS = [
   { id: "sabot",   ico: "🩹", nm: "Saboteur",       cost: 30,  rarity: "common", desc: "Opponent: -3 DMG",
     apply: (boost) => { boost.dmg = (boost.dmg||0)-3; }, target: "opp" },
 
+  // === v37.83: LORE COMMON ===
+  { id: "lobster_basket", ico: "🦞", nm: "Lobster Basket",
+    cost: 45, rarity: "common",
+    desc: "A gift from Reno's lobster vendor. Quietly, +20 HP and +3 DEF, whole team. The lobster is, by every account, good.",
+    apply: (boost) => { boost.hp = (boost.hp||0)+20; boost.def = (boost.def||0)+3; } },
+  { id: "quillsetter_clip", ico: "📎", nm: "Quillsetter's Clip",
+    cost: 60, rarity: "common",
+    desc: "A clip from the broadcast manager's own pen. Opponent loses 4 DMG — the LMG has, on the matter, declined comment.",
+    apply: (boost) => { boost.dmg = (boost.dmg||0)-4; }, target: "opp" },
+  { id: "slatebrush_diagram", ico: "📐", nm: "Slatebrush Wide-Draw Diagram",
+    cost: 55, rarity: "common",
+    desc: "Coach Slatebrush's hand-sketched wide-draw routing. +0.4 SPD and +4 DMG, whole team. The Antlerlords cannot read it.",
+    apply: (boost) => { boost.spd = (boost.spd||0)+0.4; boost.dmg = (boost.dmg||0)+4; } },
+
   // ===== RARE (multi-stat / opponent debuff) =====
   { id: "warpaint",ico: "🎨", nm: "War Paint",      cost: 75,  rarity: "rare",   desc: "+8 DMG and +5 DEF, whole team",
     apply: (boost) => { boost.dmg = (boost.dmg||0)+8; boost.def = (boost.def||0)+5; } },
@@ -14819,11 +14875,45 @@ const SHOP_ITEMS = [
   { id: "fog",     ico: "🌫️", nm: "Smokescreen",    cost: 70,  rarity: "rare",   desc: "Opponent: -2 DMG and -3% crit",
     apply: (boost) => { boost.dmg = (boost.dmg||0)-2; boost.crit = (boost.crit||0)-0.03; }, target: "opp" },
 
+  // === v37.83: LORE RARE ===
+  { id: "caucus_edict", ico: "🏛️", nm: "Caucus Side-Letter",
+    cost: 110, rarity: "rare",
+    desc: "An unofficial 11-4 vote, sealed in the side ledger. +12 DMG and +8 DEF, whole team. The dissenters know what this is.",
+    apply: (boost) => { boost.dmg = (boost.dmg||0)+12; boost.def = (boost.def||0)+8; } },
+  { id: "raccoon_pawn_ticket", ico: "🎫", nm: "Quickfingers' Pawn Ticket",
+    cost: 95, rarity: "rare",
+    desc: "An overnight pawn ticket from Moss Quickfingers' Reno shop. +0.7 SPD whole team, lasts one match. Storage paid in lobster.",
+    apply: (boost) => { boost.spd = (boost.spd||0)+0.7; } },
+  { id: "featherquill_byline", ico: "📰", nm: "Featherquill Byline",
+    cost: 120, rarity: "rare",
+    desc: "A flattering pre-match write-up. +6% crit and +8 HP, whole team. Opponents lose 4 DMG — the press has, on the matter, framed them poorly.",
+    apply: (boost) => { boost.crit = (boost.crit||0)+0.06; boost.hp = (boost.hp||0)+8; },
+    targetSplit: { opp: { dmg: -4 } } },
+  { id: "bristlebeard_shield", ico: "🛡️", nm: "Bristlebeard Riot Shield (replica)",
+    cost: 130, rarity: "rare",
+    desc: "A licensed replica of the Bristlebeard. +14 DEF, +20 HP, whole team. The original held seven owners across six seasons.",
+    apply: (boost) => { boost.def = (boost.def||0)+14; boost.hp = (boost.hp||0)+20; } },
+
   // ===== LEGENDARY (big stacked buff or curse) =====
   { id: "elixir",  ico: "🧉", nm: "Elixir of Endurance", cost: 150, rarity: "legendary", desc: "+50 HP and +10 DEF, whole team",
     apply: (boost) => { boost.hp = (boost.hp||0)+50; boost.def = (boost.def||0)+10; } },
   { id: "curse",   ico: "💀", nm: "Curse of the Loser", cost: 175, rarity: "legendary", desc: "Opponent: -10 HP and -5 DEF and -3 DMG",
     apply: (boost) => { boost.hp = (boost.hp||0)-10; boost.def = (boost.def||0)-5; boost.dmg = (boost.dmg||0)-3; }, target: "opp" },
+
+  // === v37.83: LORE LEGENDARY ===
+  { id: "coronation_brass", ico: "👑", nm: "Coronation Cup (touch)",
+    cost: 280, rarity: "legendary",
+    desc: "A brief, sanctioned moment with the brass crown. +0.5 SPD, +8 DMG, +30 HP whole team. The Raccoons have, on the matter, declined to comment.",
+    apply: (boost) => { boost.spd = (boost.spd||0)+0.5; boost.dmg = (boost.dmg||0)+8; boost.hp = (boost.hp||0)+30; } },
+  { id: "old_bristlebeard_ledger", ico: "📖", nm: "Old Bristlebeard's Inaugural Ledger",
+    cost: 250, rarity: "legendary",
+    desc: "The original Cup-year notebook, opened. +15 DEF, +10 DMG, +10% crit. The first oldest rookie's hand-marginalia is still readable.",
+    apply: (boost) => { boost.def = (boost.def||0)+15; boost.dmg = (boost.dmg||0)+10; boost.crit = (boost.crit||0)+0.10; } },
+  { id: "helena_backyard_oath", ico: "🌳", nm: "Helena Backyard Oath",
+    cost: 220, rarity: "legendary",
+    desc: "Sworn on a non-sanctioned field. Opponent: -8 DMG and -12 HP and -0.4 SPD. The Caucus does not record this.",
+    apply: (boost) => { boost.dmg = (boost.dmg||0)-8; boost.hp = (boost.hp||0)-12; boost.spd = (boost.spd||0)-0.4; },
+    target: "opp" },
 
   // === v37.23.3: Tip the cleanup crew ===
   // Special civic-engagement item. Doesn't buff teams. Doesn't debuff
@@ -14835,6 +14925,23 @@ const SHOP_ITEMS = [
   { id: "tip_janitors", ico: "🧹", nm: "Tip the Crew", cost: 15, rarity: "common",
     desc: "A thank-you to the cleanup crew. They notice. The hats get better.",
     target: "janitors",
+    apply: () => {} },
+
+  // === v37.83: ZERO-EFFECT FLAVOR ITEMS ===
+  // These items cost bits but apply no stat change — pure lore engagement.
+  // The feed line and toast are the entire payload. Similar civic-flavor
+  // to tip_janitors, repeatable, no team-targeting.
+  { id: "lobster_vendor_subscription", ico: "🦞", nm: "Lobster Vendor Annual",
+    cost: 10, rarity: "common",
+    desc: "Subscribe to the lobster vendor's annual rotation. No combat effect. She attends, on average, two Caucus meetings in eight seasons.",
+    target: "flavor",
+    flavorMsg: "🦞 The lobster vendor has, by post, acknowledged the subscription. No further communication is expected.",
+    apply: () => {} },
+  { id: "antlerlord_translation", ico: "📜", nm: "Antlerlord Translation Glossary",
+    cost: 20, rarity: "common",
+    desc: "A glossary of common phrases the Antlerlords can read at one-word-per-second pace. Doesn't help your team. Helps your reading.",
+    target: "flavor",
+    flavorMsg: "📜 The glossary has, by its own preface, been translated from League Common. The Antlerlords have not yet read the preface.",
     apply: () => {} },
 ];
 const SHOP_BY_ID = Object.fromEntries(SHOP_ITEMS.map(s => [s.id, s]));
@@ -15255,6 +15362,12 @@ function startMatch() {
     p.itemUsed = false;
     p.boostMods = null;
     p.balloonsPopped = 0;
+    // === v37.88: clear per-match revenge memory ===
+    // _lastKilledBy persists across deaths within a single match (so
+    // revenge spans multiple lives) but resets at match start so rivalry
+    // bias doesn't leak across matches with unrelated context.
+    delete p._lastKilledBy;
+    delete p._lastKilledByFrame;
     // === v37.23: clear any stale stat penalty cache from prior injury ===
     // (Re-applied below if applicable.)
     if (p._origStats) {
@@ -16202,6 +16315,11 @@ function tickRespawns(m) {
       p.target = null;
       p.attackCooldown = 0;
       p.facing = isLeftTeam ? 1 : -1;
+      // === v37.90: continuous heading angle for FOV / smooth visuals ===
+      // p.facing stays as +1/-1 for sprite-flip; headingAng is the
+      // AI-relevant continuous heading. Initial heading points toward
+      // the arena center (i.e., toward enemy half).
+      p.headingAng = isLeftTeam ? 0 : Math.PI;
       p.stunned = 0;
       p.aiState = "IDLE";
       p.aiStateFrames = 0;
@@ -17538,6 +17656,8 @@ function layoutTeam(players, side) {
     p.target = null;
     p.attackCooldown = 0;
     p.facing = side === "left" ? 1 : -1;
+    // v37.90: continuous heading for FOV / smooth visuals
+    p.headingAng = side === "left" ? 0 : Math.PI;
     p.stunned = 0;
     p.balloonsPopped = 0;
     p.aiState = "IDLE";
@@ -18214,6 +18334,27 @@ function rollSeasonAiStyles() {
     assignments[teamId] = styleIds[idx];
   }
   LEAGUE.aiStyles = assignments;
+
+  // === v37.82: per-team AI-style history ===
+  // Append the just-rolled style to LEAGUE.aiStyleHistory[teamId] so the
+  // League tab can display a team's playbook lineage. Bound to 30 entries
+  // per team to keep the save payload reasonable (30 seasons ≈ 3 years of
+  // play at typical cadence).
+  if (!LEAGUE.aiStyleHistory) LEAGUE.aiStyleHistory = {};
+  const season = LEAGUE.season || 1;
+  for (const teamId of Object.keys(assignments)) {
+    if (!LEAGUE.aiStyleHistory[teamId]) LEAGUE.aiStyleHistory[teamId] = [];
+    const hist = LEAGUE.aiStyleHistory[teamId];
+    // Avoid duplicate entries when rollSeasonAiStyles fires twice for the
+    // same season (defensive — shouldn't happen, but the league supports
+    // mid-season Reset which can re-trigger).
+    if (hist.length > 0 && hist[hist.length - 1].season === season) {
+      hist[hist.length - 1].styleId = assignments[teamId];
+    } else {
+      hist.push({ season, styleId: assignments[teamId] });
+    }
+    if (hist.length > 30) hist.splice(0, hist.length - 30);
+  }
 }
 window.rollSeasonAiStyles = rollSeasonAiStyles;
 
@@ -18239,7 +18380,7 @@ const TEAM_AI = (function() {
 
   /* Score an enemy as a focus-fire target. Lower-HP, higher-streak,
      and isolated-from-allies enemies are higher priority. */
-  function _scoreFocusTarget(enemy, alliesOfEnemy) {
+  function _scoreFocusTarget(enemy, alliesOfEnemy, m) {
     const hpFrac = enemy.hp / enemy.stats.hp;
     // Lower HP = higher score (steeper at low HP)
     let score = (1 - hpFrac) * 50;
@@ -18259,6 +18400,27 @@ const TEAM_AI = (function() {
     }
     if (nearestAllyD > 150) score += 15;
     else if (nearestAllyD > 80) score += 8;
+    // === v37.86: CTF carrier priority ===
+    // If this match is CTF and `enemy` is carrying OUR team's flag,
+    // they're literally about to score on us. Massive priority bonus —
+    // exceeds the cumulative bonuses of low-HP + healer + isolated
+    // combined (50+25+15 = 90 max) so the carrier ALWAYS becomes the
+    // team focus when one exists. Effect: focus-fire piles onto the
+    // carrier, dramatically reducing successful caps.
+    if (m && m.gameMode === "ctf" && m.flagsByTeam) {
+      for (const fteamId of Object.keys(m.flagsByTeam)) {
+        const flag = m.flagsByTeam[fteamId];
+        if (flag && flag.state === "carried" && flag.carrierId === enemy.id) {
+          score += 100;
+          break;
+        }
+      }
+    }
+    // === v37.86: KOTH crown carrier priority ===
+    // Same logic for KOTH: enemy carrying the crown is the literal point-scorer.
+    if (m && m.gameMode === "koth" && m.crown && m.crown.carrierId === enemy.id) {
+      score += 100;
+    }
     return score;
   }
 
@@ -18299,7 +18461,7 @@ const TEAM_AI = (function() {
       let focusTarget = null, bestScore = -Infinity;
       const scores = new Map();
       for (const e of enemies) {
-        const s = _scoreFocusTarget(e, enemies);
+        const s = _scoreFocusTarget(e, enemies, m);
         scores.set(e, s);
         if (s > bestScore) { bestScore = s; focusTarget = e; }
       }
@@ -18383,13 +18545,52 @@ const TEAM_AI = (function() {
     // passes a fresh-filtered list, so the check is a defensive no-op
     // there; legacy decideAIState callsite (L20238) is the stale one.
     const teamState = m._teamAI && m._teamAI[p.teamId];
+
+    // === v37.90: vision-cone (FOV) filter ===
+    // Bots only "see" enemies within ±FOV_HALF of their heading. The
+    // cone is wide (240° total = ±120°) so most enemies are visible;
+    // only directly-behind enemies are blind. Bots must rotate to
+    // engage rear threats — the heading-rotation system gives them a
+    // few frames of recovery.
+    //
+    // Cover (terrain LOS) is also enforced here — bots can't target
+    // through walls. Pre-v37.90 this was done piecemeal at fire sites;
+    // now it's a unified filter that prevents picking "blind" targets.
+    const FOV_HALF = Math.PI * 2/3;  // ±120° = 240° cone
+    const heading = typeof p.headingAng === "number" ? p.headingAng : 0;
+    function _inFov(e) {
+      const ang = Math.atan2(e.y - p.y, e.x - p.x);
+      let d = ang - heading;
+      while (d >  Math.PI) d -= Math.PI * 2;
+      while (d < -Math.PI) d += Math.PI * 2;
+      return Math.abs(d) <= FOV_HALF;
+    }
+    function _visible(e) {
+      // Skip the cover check if no terrain (cheap path)
+      if (!_inFov(e)) return false;
+      if (m.terrain && m.terrain.length > 0) {
+        if (!hasLineOfSight(p.x, p.y, e.x, e.y, m.terrain)) return false;
+      }
+      return true;
+    }
     if (!teamState) {
-      // No team state — naive nearest
+      // No team state — naive nearest, FOV-filtered (v37.90)
       let nearest = null, nd = Infinity;
       for (const e of enemyAlive) {
         if (!e.alive) continue;
+        if (!_visible(e)) continue;
         const d = distance(p, e);
         if (d < nd) { nd = d; nearest = e; }
+      }
+      // If nothing visible, fall back to nearest period (so bots aren't
+      // completely paralyzed when surrounded behind cover — they pick
+      // the closest hidden threat to face).
+      if (!nearest) {
+        for (const e of enemyAlive) {
+          if (!e.alive) continue;
+          const d = distance(p, e);
+          if (d < nd) { nd = d; nearest = e; }
+        }
       }
       return nearest;
     }
@@ -18403,16 +18604,16 @@ const TEAM_AI = (function() {
     // over any other consideration. The "low HP exposed enemy" pattern
     // is the clearest opportunity in the game — we should never pass it
     // up to maintain a sticky non-kill commitment.
+    // v37.90: must be visible (in FOV + LOS).
     let killTarget = null, killD = Infinity;
     for (const e of enemyAlive) {
       if (!e.alive) continue;
+      if (!_visible(e)) continue;
       const eHp = e.hp / e.stats.hp;
       if (eHp >= 0.25) continue;
       const d = distance(p, e);
       const inRange = ranged ? (d <= myWpnRange) : (d <= 90);
       if (!inRange) continue;
-      // LOS check for ranged
-      if (ranged && !hasLineOfSight(p.x, p.y, e.x, e.y, m.terrain)) continue;
       if (d < killD) { killD = d; killTarget = e; }
     }
     if (killTarget) return killTarget;
@@ -18420,18 +18621,21 @@ const TEAM_AI = (function() {
     // Focus target: prefer it if reachable. For ranged bots, "reachable"
     // means within 1.3× weapon range. For melee, within ~250px (close
     // enough to chase to in a few seconds).
+    // v37.90: focus target must also be visible (in FOV + LOS).
     const focus = teamState.focusTarget;
-    if (focus && focus.alive) {
+    if (focus && focus.alive && _visible(focus)) {
       const d = distance(p, focus);
       const reachable = ranged ? (d <= myWpnRange * 1.3) : (d <= 250);
       if (reachable) return focus;
     }
 
     // Sniper-specific: prefer healers in range over team focus
+    // v37.90: healer must be visible
     if (p.position === "sniper") {
       let bestHealer = null, bhd = Infinity;
       for (const e of enemyAlive) {
         if (!e.alive) continue;
+        if (!_visible(e)) continue;
         if (e.position !== "healer") continue;
         const d = distance(p, e);
         if (d < myWpnRange && d < bhd) { bhd = d; bestHealer = e; }
@@ -18445,9 +18649,11 @@ const TEAM_AI = (function() {
     // for those signals so the bot prioritizes engagements that are
     // actually winnable rather than chasing whoever happens to be
     // geographically closest.
+    // v37.90: enemies outside FOV / behind cover are excluded.
     let bestTarget = null, bestUtility = -Infinity;
     for (const e of enemyAlive) {
       if (!e.alive) continue;
+      if (!_visible(e)) continue;
       const d = distance(p, e);
       // Distance penalty (closer = better)
       let util = -d * 0.01;
@@ -18456,6 +18662,21 @@ const TEAM_AI = (function() {
       util += (1 - eHp) * 4.0;
       // Already shooting at us — engage them back (mercy/finish-off)
       if (p.attackedBy === e.id) util += 3.0;
+      // === v37.88: revenge bonus ===
+      // If this enemy killed us earlier in the match, prefer them as a
+      // target on this life. Bonus is +6 — strong enough to break ties
+      // against most other priorities but not so large that it overrides
+      // a clear high-value finish (a wounded healer would still beat it).
+      // The flag clears the moment the revenge kill lands (in handleKO),
+      // so revenge bias lasts exactly one successful retaliation.
+      //
+      // Vengeful personality (v37.88): adds an extra +4 (total +10).
+      // Vengeful knights ignore better tactical options to settle scores.
+      if (typeof p._lastKilledBy === "number" && p._lastKilledBy === e.id) {
+        util += 6.0;
+        const persRev = PERSONALITY_BY_ID[p.personality];
+        if (persRev && persRev.revengeBonus) util += persRev.revengeBonus;
+      }
       // High-value role bonus (Healer = 2.5, Sniper/Grenadier = 1.5)
       if (e.position === "healer") util += 2.5;
       else if (e.position === "sniper" || e.position === "grenadier") util += 1.5;
@@ -18483,6 +18704,20 @@ const TEAM_AI = (function() {
         }
       }
       if (util > bestUtility) { bestUtility = util; bestTarget = e; }
+    }
+    // === v37.90: blind-fallback ===
+    // If nothing is visible in FOV, the bot still needs SOMETHING to
+    // face — pick the closest enemy regardless of FOV so the heading-
+    // rotation system can swing the bot toward them. They'll start
+    // seeing the target once they've rotated enough.
+    if (!bestTarget) {
+      let nearest = null, nd = Infinity;
+      for (const e of enemyAlive) {
+        if (!e.alive) continue;
+        const d = distance(p, e);
+        if (d < nd) { nd = d; nearest = e; }
+      }
+      return nearest;
     }
     return bestTarget;
   }
@@ -19608,6 +19843,64 @@ const MODE_AI = (function() {
        - chaser_b silently no-ops if basesById incomplete; defensive only
   */
   const _ctfTreeImpl = (function() {
+    /* === v37.87: smart CTF role fallback ===
+       Centralized fallback for when a role's specific precondition
+       fails (e.g. carrier died, flag state changed mid-frame). Instead
+       of letting the role's branch return BT.FAILURE and fall through
+       to deathmatch, this helper picks the next-most-useful CTF action
+       so the bot stays mode-aware.
+
+       Priority order:
+         1. Own flag DROPPED → race to touch-return (highest urgency —
+            the flag will auto-return after a timer but every second
+            costs offensive momentum).
+         2. Enemy flag home/dropped (and not carried by us) → race to
+            grab. Acts as backup offense when the original retriever
+            is engaged.
+         3. Drift back to own base via CTF_HOLD — defensive posture,
+            keeps the bot useful without running into a kill zone.
+
+       Returns true if the helper set a state (caller should return
+       BT.SUCCESS). Returns false if nothing fit (caller falls through
+       — but with v37.84+v37.85's clean fallthrough, that's safe). */
+    function _ctfRoleFallback(p, m) {
+      if (!m.flagsByTeam) return false;
+      const ownFlag = m.flagsByTeam[p.teamId];
+      const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+      const enemyFlag = m.flagsByTeam[enemyTeamId];
+      const ownBase = m.basesById && m.basesById[p.teamId];
+
+      // Priority 1: own flag dropped → race to touch-return
+      if (ownFlag && ownFlag.state === "dropped") {
+        p._escort_x = ownFlag.x;
+        p._escort_y = ownFlag.y;
+        p.aiState = "CTF_RACE";
+        return true;
+      }
+      // Priority 2: enemy flag available → grab it (backup offense)
+      if (enemyFlag && enemyFlag.state !== "carried") {
+        p._escort_x = enemyFlag.x;
+        p._escort_y = enemyFlag.y;
+        p.aiState = "CTF_RACE";
+        return true;
+      }
+      // Priority 3: defensive hold near own base
+      if (ownBase) {
+        // 60px out from base toward arena center — same offset used by
+        // actCarrier on denial; keeps multiple defenders from stacking
+        // on the exact base point.
+        const cx = COMBAT.arenaW / 2;
+        const dirX = cx - ownBase.x, dirY = (COMBAT.arenaH / 2) - ownBase.y;
+        const dirLen = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
+        const offset = ((p.id * 0.61803) % 1) * 40;  // per-bot scatter
+        p._escort_x = ownBase.x + (dirX / dirLen) * (60 + offset);
+        p._escort_y = ownBase.y + (dirY / dirLen) * (60 + offset);
+        p.aiState = "CTF_HOLD";
+        return true;
+      }
+      return false;
+    }
+
     // === Action: carrier (CTF_RUSH or CTF_HOLD based on own flag state) ===
     function actCarrier(p, m, bb) {
       const ownFlag = m.flagsByTeam[p.teamId];
@@ -19642,7 +19935,11 @@ const MODE_AI = (function() {
       const carrier = enemyFlag && enemyFlag.carrierId != null
         ? allies.find(a => a.id === enemyFlag.carrierId)
         : null;
-      if (!carrier || !ownBase) return BT.FAILURE;
+      if (!carrier || !ownBase) {
+        // v37.87: smart fallback — carrier died mid-frame. Don't FAIL
+        // into deathmatch; pick a useful CTF action.
+        return _ctfRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
       const pathAng = Math.atan2(ownBase.y - carrier.y, ownBase.x - carrier.x);
       const ux = Math.cos(pathAng), uy = Math.sin(pathAng);
       let bestEnemy = null, bestProj = Infinity;
@@ -19677,7 +19974,10 @@ const MODE_AI = (function() {
       const carrier = enemyFlag && enemyFlag.carrierId != null
         ? allies.find(a => a.id === enemyFlag.carrierId)
         : null;
-      if (!carrier || !ownBase) return BT.FAILURE;
+      if (!carrier || !ownBase) {
+        // v37.87: smart fallback (see actEscortLead)
+        return _ctfRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
       let pursuer = null, bestD = 120 * 120;
       for (const e of enemyAlive) {
         const dx = e.x - carrier.x, dy = e.y - carrier.y;
@@ -19705,13 +20005,32 @@ const MODE_AI = (function() {
       const theirCarrier = ownFlag && ownFlag.carrierId != null
         ? enemyAlive.find(e => e.id === ownFlag.carrierId)
         : null;
-      if (!theirCarrier) return BT.FAILURE;
+      if (!theirCarrier) {
+        // v37.87: carrier died (= our flag just dropped) → race to retrieve
+        return _ctfRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
       p.target = theirCarrier;
       p.aiState = "ENGAGE";
       return BT.SUCCESS;
     }
 
     // === Action: chaser_b (flanking cutoff) ===
+    // v37.86: smarter intercept geometry. Pre-v37.86 chaser_b picked a
+    // fixed point 100px ahead of the carrier along the carrier→base
+    // line. That worked when chaser_b was close, but if chaser_b was
+    // already behind, they'd just chase the carrier's wake — never
+    // catching up.
+    //
+    // New logic:
+    //   1. Estimate time-to-intercept based on chaser's distance to
+    //      the carrier path and the carrier's distance to base. Pick
+    //      a cutoff point FURTHER along the path the further chaser_b
+    //      starts behind — so chaser_b arrives in front of, not behind,
+    //      the carrier.
+    //   2. Offset the cutoff perpendicular to the carrier path so
+    //      chaser_b approaches from the side (a real flank) rather
+    //      than running on the same line. Side picked so chaser_b
+    //      doesn't cross the carrier's line of fire to get there.
     function actChaserB(p, m, bb) {
       const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
       const enemyAlive = enemies.filter(e => e.alive);
@@ -19720,10 +20039,30 @@ const MODE_AI = (function() {
         ? enemyAlive.find(e => e.id === ownFlag.carrierId)
         : null;
       const enemyBase = theirCarrier && m.basesById ? m.basesById[theirCarrier.teamId] : null;
-      if (!theirCarrier || !enemyBase) return BT.FAILURE;
-      const pathAng = Math.atan2(enemyBase.y - theirCarrier.y, enemyBase.x - theirCarrier.x);
-      const cutX = theirCarrier.x + Math.cos(pathAng) * 100;
-      const cutY = theirCarrier.y + Math.sin(pathAng) * 100;
+      if (!theirCarrier || !enemyBase) {
+        // v37.87: same fallback as chaser_a — race to dropped own flag
+        return _ctfRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
+      // Unit vector along carrier→base path
+      const pathDx = enemyBase.x - theirCarrier.x;
+      const pathDy = enemyBase.y - theirCarrier.y;
+      const pathLen = Math.hypot(pathDx, pathDy) || 1;
+      const ux = pathDx / pathLen, uy = pathDy / pathLen;
+      // How far is chaser_b from the carrier? Larger gap → pick a
+      // cutoff point further ahead so we can converge in time.
+      const chaserToCarrierDist = Math.hypot(theirCarrier.x - p.x, theirCarrier.y - p.y);
+      // Adaptive lookahead: 80px minimum + 30% of the chaser gap.
+      // Capped at 60% of path remaining so we don't try to cut off
+      // PAST the carrier's destination.
+      const lookahead = Math.min(80 + chaserToCarrierDist * 0.3, pathLen * 0.6);
+      // Perpendicular offset: pick the side AWAY from the carrier
+      // (so we don't cross their attack arc to get there). Sign
+      // based on which side of the path the chaser currently is on.
+      const perpX = -uy, perpY = ux;
+      const sideSign = ((p.x - theirCarrier.x) * perpX + (p.y - theirCarrier.y) * perpY) >= 0 ? 1 : -1;
+      const flankOffset = 50;  // px to the side
+      const cutX = theirCarrier.x + ux * lookahead + perpX * flankOffset * sideSign;
+      const cutY = theirCarrier.y + uy * lookahead + perpY * flankOffset * sideSign;
       p._escort_x = cutX; p._escort_y = cutY;
       p.target = theirCarrier;
       p.aiState = "CTF_FLANK";
@@ -19738,7 +20077,10 @@ const MODE_AI = (function() {
       const theirCarrier = ownFlag && ownFlag.carrierId != null
         ? enemyAlive.find(e => e.id === ownFlag.carrierId)
         : null;
-      if (!theirCarrier) return BT.FAILURE;
+      if (!theirCarrier) {
+        // v37.87: carrier gone → smart fallback
+        return _ctfRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
       const fx = theirCarrier.x + (theirCarrier.vx || 0) * 30;
       const fy = theirCarrier.y + (theirCarrier.vy || 0) * 30;
       p._escort_x = fx; p._escort_y = fy;
@@ -19754,7 +20096,12 @@ const MODE_AI = (function() {
       const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
       const enemyAlive = enemies.filter(e => e.alive);
       const ownBase = m.basesById && m.basesById[p.teamId];
-      if (!ownBase) return BT.FAILURE;
+      if (!ownBase) {
+        // v37.87: extremely unlikely (corrupt match state). Try other CTF
+        // roles via fallback; if even that fails, return FAILURE for safe
+        // deathmatch cleanup.
+        return _ctfRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
       let approacher = null, bestD = 200 * 200;
       for (const e of enemyAlive) {
         const dx = e.x - ownBase.x, dy = e.y - ownBase.y;
@@ -19772,10 +20119,116 @@ const MODE_AI = (function() {
       return BT.SUCCESS;
     }
 
+    // === Action: support (catch-all fluid role) ===
+    // v37.84: explicit branch for the catch-all "support" role assigned by
+    // assignCtfRoles when nothing more specific applies. Pre-v37.84 the
+    // tree had no branch for this role, so every support-role bot's tick
+    // returned FAILURE — MODE_AI.decide then restored aiState=prevState
+    // (potentially stale CTF_RACE from a prior role assignment) and
+    // returned null. With no fresh _escort_x set, the execute layer's
+    // CTF_RACE case had the bot standing still until v37.80's search-
+    // pattern fallback kicked in. This branch handles the root cause:
+    // we set aiState=null (signals "fall through to deathmatch cleanly")
+    // and clear stale _escort_x so the bot can't accidentally re-enter
+    // a stale movement state.
+    //
+    // === v37.85: smart support behavior ===
+    // The pre-v37.85 version just cleared state and fell through to
+    // deathmatch — which targets the nearest enemy. That's OK in late-game
+    // engagements but ignores the CTF context entirely. v37.85 makes
+    // support productive in priority order:
+    //   1. ENEMY CARRIER PRESENT → join chase (act as secondary chaser).
+    //      A loose ball is the highest-leverage event in CTF.
+    //   2. EMBATTLED ALLY (low HP, surrounded by enemies) → move toward
+    //      them to absorb pressure or provide a kill assist.
+    //   3. NEUTRAL → drift toward the action — enemy flag if it's home/
+    //      dropped, else arena center. Stay available.
+    //   4. LAST RESORT → clean fall-through to deathmatch (unchanged
+    //      from v37.84 — keeps the safety net intact).
+    function actSupport(p, m, bb) {
+      // Clear any stale movement target from a prior role assignment
+      delete p._escort_x;
+      delete p._escort_y;
+
+      const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+      const allies  = (p.teamId === m.teamAId) ? m.teamAplayers : m.teamBplayers;
+      const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+      const enemyAlive = enemies.filter(e => e.alive);
+      const alliesAlive = allies.filter(a => a.alive && a.id !== p.id);
+
+      // === Priority 1: chase enemy carrier ===
+      // Our team's own flag is being taken — converge on the carrier.
+      // This is the highest-leverage action in CTF. Use CTF_RACE so the
+      // bot sprints to the kill (search-pattern fallback covers any
+      // edge case where carrier disappears mid-frame).
+      const ownFlag = m.flagsByTeam[p.teamId];
+      if (ownFlag && ownFlag.state === "carried") {
+        const carrier = enemyAlive.find(e => e.id === ownFlag.carrierId);
+        if (carrier) {
+          p._escort_x = carrier.x;
+          p._escort_y = carrier.y;
+          p.target = carrier;
+          p.aiState = "CTF_RACE";
+          return BT.SUCCESS;
+        }
+      }
+
+      // === Priority 2: rescue embattled ally ===
+      // An ally at <40% HP with ≥2 enemies within 200px is in trouble —
+      // converge to provide pressure relief or finish off attackers.
+      // Use CTF_HOLD so the bot moves at normal speed and can fire at
+      // the target along the way (CTF_RACE is too movement-focused).
+      let embattled = null, bestNeed = 0;
+      for (const a of alliesAlive) {
+        const hpFrac = a.hp / (a.stats?.hp || 100);
+        if (hpFrac > 0.40) continue;
+        // Count enemies near this ally
+        let nearEnemies = 0;
+        let nearestEnemy = null, nearestD2 = Infinity;
+        for (const e of enemyAlive) {
+          const dx = e.x - a.x, dy = e.y - a.y;
+          const d2 = dx*dx + dy*dy;
+          if (d2 < 200*200) nearEnemies++;
+          if (d2 < nearestD2) { nearestD2 = d2; nearestEnemy = e; }
+        }
+        if (nearEnemies < 2) continue;
+        const need = (1 - hpFrac) * 10 + nearEnemies * 2;
+        if (need > bestNeed) {
+          bestNeed = need;
+          embattled = a;
+          // Cache the closest enemy as our suggested target
+          p._supportTarget = nearestEnemy;
+        }
+      }
+      if (embattled) {
+        p._escort_x = embattled.x;
+        p._escort_y = embattled.y;
+        if (p._supportTarget && p._supportTarget.alive) {
+          p.target = p._supportTarget;
+        }
+        p.aiState = "CTF_HOLD";
+        return BT.SUCCESS;
+      }
+
+      // === Priority 3: fall through to IDLE drift-to-fight ===
+      // No carrier chase, no embattled ally — let IDLE's existing
+      // drift-to-fight logic pull the bot toward any engaged teammate
+      // (or hold a guard point if the team is fully idle). This reads
+      // as "patrolling — available if needed" rather than racing across
+      // the map. IDLE manages its own _guardX/_guardY so no escort_x
+      // needed; the deletes above were sufficient cleanup.
+      p.aiState = "IDLE";
+      return BT.SUCCESS;
+    }
+
     // === Action: own_flag_retriever (race to our dropped flag) ===
     function actOwnFlagRetriever(p, m, bb) {
       const ownFlag = m.flagsByTeam[p.teamId];
-      if (!ownFlag || ownFlag.state !== "dropped") return BT.FAILURE;
+      if (!ownFlag || ownFlag.state !== "dropped") {
+        // v37.87: flag returned home or got picked back up by an enemy.
+        // The other CTF actions are still valid options — try them.
+        return _ctfRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
       p._escort_x = ownFlag.x; p._escort_y = ownFlag.y;
       p.aiState = "CTF_RACE";
       return BT.SUCCESS;
@@ -19785,7 +20238,13 @@ const MODE_AI = (function() {
     function actEnemyFlagRetriever(p, m, bb) {
       const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
       const enemyFlag = m.flagsByTeam[enemyTeamId];
-      if (!enemyFlag || enemyFlag.state === "carried") return BT.FAILURE;
+      if (!enemyFlag || enemyFlag.state === "carried") {
+        // v37.87: enemy flag now carried (likely by a teammate). The
+        // fallback will route this bot to defensive duties or own-flag
+        // retrieval — both more useful than racing for a flag that's
+        // already in friendly hands.
+        return _ctfRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
       p._escort_x = enemyFlag.x; p._escort_y = enemyFlag.y;
       p.aiState = "CTF_RACE";
       return BT.SUCCESS;
@@ -19841,6 +20300,15 @@ const MODE_AI = (function() {
         BT.Condition("isRoleEnemyFlagRet", (p) => p._modeRole === "enemy_flag_retriever"),
         BT.Action("ctfEnemyFlagRetriever", actEnemyFlagRetriever),
       ]),
+      // === v37.84: support (catch-all) ===
+      // Final priority — handles any role that doesn't match above.
+      // Most often hit by the "support" role, but also catches any
+      // future role that isn't explicitly handled, preventing the
+      // tree-FAILURE → stale-aiState bug.
+      BT.Sequence([
+        BT.Condition("isRoleSupport", (p) => true),  // accept anything that reaches this branch
+        BT.Action("ctfSupport", actSupport),
+      ]),
     ]);
 
     return { tree };
@@ -19867,6 +20335,48 @@ const MODE_AI = (function() {
      OR to null-return for deathmatch fallback.
   */
   const _kothTreeImpl = (function() {
+    /* === v37.87: smart KOTH role fallback ===
+       Mirror of _ctfRoleFallback for KOTH. When a role's specific
+       precondition fails, route to the best alternative KOTH action.
+
+       Priority:
+         1. Loose crown → race to grab it (highest priority — points
+            stop accruing for everyone when crown is loose).
+         2. Enemy carrier exists → close in to apply pressure (act
+            as flanker / chaser).
+         3. Friendly carrier exists → drift toward center via IDLE
+            (the IDLE drift-to-fight will pull toward engaged teammates).
+
+       Returns true if state was set, false otherwise. */
+    function _kothRoleFallback(p, m) {
+      if (!m.crown) return false;
+      const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+      const enemyAlive = enemies.filter(e => e.alive);
+
+      // Priority 1: loose crown → race for it
+      if (m.crown.carrierId == null) {
+        p._escort_x = m.crown.x;
+        p._escort_y = m.crown.y;
+        p._koth_moveAng = Math.atan2(m.crown.y - p.y, m.crown.x - p.x);
+        p.aiState = "KOTH_RACE";
+        return true;
+      }
+      // Priority 2: enemy carrier → close in (with per-bot offset)
+      const enemyCarrier = enemyAlive.find(e => e.id === m.crown.carrierId);
+      if (enemyCarrier) {
+        const offset = (p.id * 0.61803) % 1;
+        const offAng = offset * Math.PI * 2;
+        p._escort_x = enemyCarrier.x + Math.cos(offAng) * 40;
+        p._escort_y = enemyCarrier.y + Math.sin(offAng) * 40;
+        p.target = enemyCarrier;
+        p.aiState = "CTF_HOLD";
+        return true;
+      }
+      // Priority 3: friendly carrier → drift via IDLE
+      p.aiState = "IDLE";
+      return true;
+    }
+
     // === Action: carrier (kite away from enemies, blend toward center near walls) ===
     function actCarrier(p, m, bb) {
       const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
@@ -19904,9 +20414,16 @@ const MODE_AI = (function() {
       const enemyAlive = enemies.filter(e => e.alive);
       const carrier = (p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers)
                         .find(t => t.id === m.crown.carrierId);
-      if (!carrier) return BT.FAILURE;
+      if (!carrier) {
+        // v37.87: friendly carrier gone (crown loose or grabbed by enemy)
+        return _kothRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
       const threat = _closestTo(carrier.x, carrier.y, enemyAlive);
-      if (!threat) return BT.FAILURE; // no threat → falls through to next branch
+      if (!threat) {
+        // No enemies near carrier — drift via fallback (escort has nothing
+        // to screen; IDLE drift will pull bot toward action if any)
+        return _kothRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
       const tx = carrier.x + (threat.x - carrier.x) * 0.55;
       const ty = carrier.y + (threat.y - carrier.y) * 0.55;
       p._escort_x = tx; p._escort_y = ty;
@@ -19921,7 +20438,10 @@ const MODE_AI = (function() {
       const enemyAlive = enemies.filter(e => e.alive);
       const carrier = (p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers)
                         .find(t => t.id === m.crown.carrierId);
-      if (!carrier || enemyAlive.length === 0) return BT.FAILURE;
+      if (!carrier || enemyAlive.length === 0) {
+        // v37.87: pressure needs both carrier and an enemy to pressure
+        return _kothRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
       let best = null, bestScore = -Infinity;
       for (const e of enemyAlive) {
         const distFromCarrier = distance(e, carrier);
@@ -19929,7 +20449,9 @@ const MODE_AI = (function() {
         const score = distFromCarrier - distFromUs * 0.5;
         if (score > bestScore) { bestScore = score; best = e; }
       }
-      if (!best) return BT.FAILURE;
+      if (!best) {
+        return _kothRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
       p.target = best;
       p.aiState = "ENGAGE";
       return BT.SUCCESS;
@@ -19948,7 +20470,10 @@ const MODE_AI = (function() {
     function actAttacker(p, m, bb) {
       const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
       const carrier = enemies.find(t => t.id === m.crown.carrierId);
-      if (!carrier) return BT.FAILURE;
+      if (!carrier) {
+        // v37.87: enemy carrier gone = crown loose. Fallback races for it.
+        return _kothRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
       p.target = carrier;
       p.aiState = "ENGAGE";
       return BT.SUCCESS;
@@ -19959,7 +20484,10 @@ const MODE_AI = (function() {
     function actFlanker(p, m, bb) {
       const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
       const carrier = enemies.find(t => t.id === m.crown.carrierId);
-      if (!carrier) return BT.FAILURE;
+      if (!carrier) {
+        // v37.87: same fallback as attacker
+        return _kothRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
+      }
       const ang = Math.atan2(carrier.y - p.y, carrier.x - p.x);
       const perpAng = ang + (Math.PI / 2);
       const flankX = carrier.x + Math.cos(perpAng) * 60;
@@ -20021,6 +20549,59 @@ const MODE_AI = (function() {
       BT.Sequence([
         BT.Condition("isRoleInterceptor", (p) => p._modeRole === "interceptor"),
         BT.Action("kothInterceptor", actInterceptor),
+      ]),
+      // === v37.84: support (catch-all) ===
+      // Same root-cause fix as CTF tree. The KOTH role allocator assigns
+      // "support" as catch-all but the tree had no branch — every support
+      // bot's tick returned FAILURE → stale-aiState restoration.
+      //
+      // === v37.85: smart support behavior ===
+      // KOTH support is fluid mid-field; useful behaviors:
+      //   1. Crown is LOOSE → race to grab it (secondary chaser).
+      //      A loose crown is the highest-leverage event in KOTH.
+      //   2. Crown is CARRIED BY ENEMY → flank toward enemy carrier
+      //      (acts as a secondary pressure/flanker).
+      //   3. Crown is CARRIED BY US → drift toward arena center to
+      //      provide screening for the carrier's path.
+      //   4. Default → IDLE drift-to-fight.
+      BT.Sequence([
+        BT.Condition("isRoleSupport", (p) => true),
+        BT.Action("kothSupport", (p, m, bb) => {
+          delete p._escort_x;
+          delete p._escort_y;
+          delete p._koth_moveAng;
+          if (!m.crown) {
+            p.aiState = "IDLE";
+            return BT.SUCCESS;
+          }
+          const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+          const enemyAlive = enemies.filter(e => e.alive);
+          // Priority 1: loose crown → race for it
+          // v37.85 fix: use == null check — carrierId can be 0 (valid id)
+          if (m.crown.carrierId == null) {
+            p._escort_x = m.crown.x;
+            p._escort_y = m.crown.y;
+            p.aiState = "KOTH_RACE";
+            p._koth_moveAng = Math.atan2(m.crown.y - p.y, m.crown.x - p.x);
+            return BT.SUCCESS;
+          }
+          // Priority 2: enemy carrier → close in to apply pressure
+          const enemyCarrier = enemyAlive.find(e => e.id === m.crown.carrierId);
+          if (enemyCarrier) {
+            // Offset slightly so multiple support bots don't stack
+            const offset = (p.id * 0.61803) % 1;
+            const offAng = offset * Math.PI * 2;
+            p._escort_x = enemyCarrier.x + Math.cos(offAng) * 40;
+            p._escort_y = enemyCarrier.y + Math.sin(offAng) * 40;
+            p.target = enemyCarrier;
+            p.aiState = "CTF_HOLD";  // reuses the move-and-fire execute path
+            return BT.SUCCESS;
+          }
+          // Priority 3: friendly carrier → drift toward center for screening
+          // (handled by IDLE drift-to-fight)
+          p.aiState = "IDLE";
+          return BT.SUCCESS;
+        }),
       ]),
     ]);
 
@@ -20281,14 +20862,19 @@ const MODE_AI = (function() {
           if (!m.crown) return null;
           // Clear aiState before ticking so we can detect whether the tree
           // set one (SUCCESS path) or fell through (FAILURE → null return).
-          const prevState = p.aiState;
+          //
+          // === v37.84: do NOT restore prevState on FAILURE ===
+          // Pre-v37.84 this path restored p.aiState = prevState if the
+          // tree returned FAILURE or didn't set aiState. That caused the
+          // "stuck in CTF_RACE / KOTH_RACE with stale _escort_x" freeze
+          // when a bot's role changed mid-frame to one with no tree branch
+          // (e.g. "support"). The proper fix is to leave aiState=null
+          // and let deathmatch decide handle the bot with a clean slate.
           p.aiState = null;
           const bb = p._bt_bb || (p._bt_bb = {});
           const status = _kothTreeImpl.tree.tick(p, m, bb);
           if (status === BT.SUCCESS && p.aiState) return p.aiState;
-          // Tree failed (no role matched, or role returned FAILURE) — restore
-          // previous state and fall through to deathmatch.
-          p.aiState = prevState;
+          // Tree FAILURE or no aiState — leave it null, fall through.
           return null;
         }
         return decideKoth(p, m);
@@ -20300,12 +20886,14 @@ const MODE_AI = (function() {
           : true;
         if (useBT) {
           if (!m.flagsByTeam) return null;
-          const prevState = p.aiState;
+          // v37.84: see KOTH comment above. Same fix applied here —
+          // no stale-state restoration. v37.84 also adds an explicit
+          // "support" branch to the tree so the catch-all role now
+          // SUCCEEDS with aiState=null rather than FAILING outright.
           p.aiState = null;
           const bb = p._bt_bb || (p._bt_bb = {});
           const status = _ctfTreeImpl.tree.tick(p, m, bb);
           if (status === BT.SUCCESS && p.aiState) return p.aiState;
-          p.aiState = prevState;
           return null;
         }
         return decideCtf(p, m);
@@ -21824,13 +22412,79 @@ function executeAIState(p, enemyAlive, m) {
       // Now: still movement-first (1.10x sprint), but fires at any in-range
       // enemy with LOS via _tryOpportunisticFire. True multi-tasking —
       // movement intent and combat intent both execute this tick.
+      //
+      // === v37.80: SEARCH-PATTERN FALLBACK ===
+      // User-reported "bots stand around" symptom: in CTF, after one team
+      // is wiped, the winning team's retrievers occasionally stop making
+      // progress and the match never ends. We couldn't reproduce the
+      // root cause statically — it appears to be a desync between the
+      // role allocator and BT execute paths where `_escort_x` becomes
+      // stale or unset but aiState remains CTF_RACE.
+      //
+      // Defensive solve: never let a CTF_RACE bot just `break` (= stand
+      // still). Always have a movement target. Priority:
+      //   1. Use _escort_x/_escort_y if set (normal happy-path)
+      //   2. Derive a target from _modeRole + flag state (recompute)
+      //   3. Last resort: drift toward enemy base
+      //
+      // Same fix for KOTH_RACE — same possible desync vector.
+      let usedSearchPattern = false;
       let ang;
       if (p.aiState === "KOTH_RACE" && typeof p._koth_moveAng === "number") {
         ang = p._koth_moveAng;
-      } else if (typeof p._escort_x === "number") {
+      } else if (typeof p._escort_x === "number" && typeof p._escort_y === "number") {
         ang = Math.atan2(p._escort_y - p.y, p._escort_x - p.x);
-      } else break;
-      moveAlong(p, ang, effSpd * 1.10);
+      } else {
+        // === v37.80: search-pattern recomputation ===
+        // Derive a target from current world state. This makes the bot
+        // self-heal if _escort_x went stale.
+        let tx = null, ty = null;
+        if (m.gameMode === "ctf" && m.flagsByTeam) {
+          const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+          const role = p._modeRole;
+          if (role === "enemy_flag_retriever" || role === "carrier" || role === "chaser_b") {
+            const enemyFlag = m.flagsByTeam[enemyTeamId];
+            if (enemyFlag && enemyFlag.state !== "carried") {
+              tx = enemyFlag.x; ty = enemyFlag.y;
+            }
+          } else if (role === "own_flag_retriever" || role === "zone_def") {
+            const ownFlag = m.flagsByTeam[p.teamId];
+            if (ownFlag) { tx = ownFlag.x; ty = ownFlag.y; }
+          }
+          // Last-resort fallback: head to enemy base (the capture target).
+          // This guarantees movement in EVERY CTF_RACE case, even when
+          // role is something unexpected.
+          if (tx == null && m.basesById) {
+            const enemyBase = m.basesById[enemyTeamId];
+            if (enemyBase) { tx = enemyBase.x; ty = enemyBase.y; }
+          }
+        }
+        // Ultimate fallback: head to arena center (impossible to stand
+        // still). Should never trigger in normal CTF — only if the match
+        // is in some malformed mode state.
+        if (tx == null) {
+          tx = COMBAT.arenaW / 2;
+          ty = COMBAT.arenaH / 2;
+        }
+        ang = Math.atan2(ty - p.y, tx - p.x);
+        // Cache for next frame so we don't recompute if state stays stuck
+        p._escort_x = tx; p._escort_y = ty;
+        usedSearchPattern = true;
+        // Diagnostic — surfaces this fallback firing in the log so we
+        // can tell from a stuck-state log how often the desync happens.
+        if (typeof _aiDiag === "function") {
+          _aiDiag("stuck", p.name, "CTF_RACE search-pattern fallback fired", {
+            role: p._modeRole, tx: Math.round(tx), ty: Math.round(ty),
+          });
+        }
+      }
+      // === v37.81: full-sprint recovery, no slow drift ===
+      // Normal CTF_RACE is 1.10x (already sprint). When the search-pattern
+      // recovery fires, use 1.30x — explicitly faster than normal — so
+      // the bot visibly hustles back into the action rather than coasting.
+      // This is an action game; recovery should feel decisive.
+      const moveMult = usedSearchPattern ? 1.30 : 1.10;
+      moveAlong(p, ang, effSpd * moveMult);
       _tryOpportunisticFire(p, m, enemyAlive, ranged, wpn, effSpd);
       break;
     }
@@ -22043,12 +22697,73 @@ function executeAIState(p, enemyAlive, m) {
         const ang = Math.atan2(bestHP.y - p.y, bestHP.x - p.x);
         moveAlong(p, ang, effSpd * 1.15); // adrenaline + medkit hope
       } else if (p.target && p.target.alive) {
-        // === v28 fix: bias the flee direction toward the field center,
-        // weighted by how close the bot is to a wall. The pure
-        // "atan2(p.y - target.y, p.x - target.x)" angle frequently
-        // points at a corner; we mix in an angle-toward-center to keep
-        // the bot in playable space. ===
-        let awayAng = Math.atan2(p.y - p.target.y, p.x - p.target.x);
+        // === v37.86: threat-field retreat ===
+        // Pre-v37.86 flee direction was just "away from p.target". That
+        // could run the bot straight into other enemies — they'd flee
+        // from one threat into the kill zone of another. The new logic
+        // computes a "threat field": weighted-average direction toward
+        // all nearby enemies (weight = 1/distance², so closer enemies
+        // dominate), then flees in the OPPOSITE direction.
+        //
+        // Single-enemy case: identical to old behavior (only target
+        // contributes weight). Multi-enemy case: correctly weights
+        // away from the cluster, even if p.target is the further one.
+        const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+        const enemyList = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+        let threatX = 0, threatY = 0, totalWeight = 0;
+        const THREAT_RADIUS = 280;  // px — enemies beyond this don't influence retreat
+        for (const e of enemyList) {
+          if (!e.alive) continue;
+          const dx = e.x - p.x, dy = e.y - p.y;
+          const d2 = dx*dx + dy*dy;
+          if (d2 < 1 || d2 > THREAT_RADIUS * THREAT_RADIUS) continue;
+          // Weight ~ 1/d² so adjacent enemies dominate over distant ones.
+          // Snipers count more (back-line damage continues to chase).
+          let weight = 1 / d2;
+          if (e.position === "sniper") weight *= 1.4;
+          // The threat vector points from us toward the enemy
+          threatX += (dx / Math.sqrt(d2)) * weight;
+          threatY += (dy / Math.sqrt(d2)) * weight;
+          totalWeight += weight;
+        }
+        let awayAng;
+        if (totalWeight > 0) {
+          // Flee OPPOSITE the threat field
+          awayAng = Math.atan2(-threatY, -threatX);
+        } else {
+          // No enemies within threat radius — fall back to old "away from target" path
+          awayAng = Math.atan2(p.y - p.target.y, p.x - p.target.x);
+        }
+
+        // === v37.89: prefer cover-providing direction ===
+        // If there's terrain nearby and a candidate flee direction puts
+        // a rock between us and the threat centroid, redirect there.
+        // The threat centroid is the weighted-mean enemy position (or
+        // p.target.x/y when no weighted threats exist). findCoverDirection
+        // samples 9 angles within ±90° of awayAng and returns the closest
+        // one that's (a) walkable and (b) behind cover.
+        if (m.terrain && m.terrain.length > 0) {
+          // Threat origin for the LOS test
+          let threatOrigX, threatOrigY;
+          if (totalWeight > 0) {
+            // Approximate threat centroid: bot position + threat-field unit × short distance
+            // (The threat field is a unit-ish vector pointing AT the threat).
+            const tMag = Math.hypot(threatX, threatY) || 1;
+            threatOrigX = p.x + (threatX / tMag) * 100;
+            threatOrigY = p.y + (threatY / tMag) * 100;
+          } else {
+            threatOrigX = p.target.x;
+            threatOrigY = p.target.y;
+          }
+          const coverAng = findCoverDirection(
+            p.x, p.y, awayAng, threatOrigX, threatOrigY,
+            m.terrain, COMBAT.arenaW, COMBAT.arenaH
+          );
+          if (coverAng !== null) {
+            awayAng = coverAng;
+          }
+        }
+
         const cxw = COMBAT.arenaW / 2, cyw = COMBAT.arenaH / 2;
         const wallProximity = Math.max(
           (80 - p.x) / 80,
@@ -22362,8 +23077,23 @@ function moveAlong(p, ang, speed) {
     if (SIM_RNG.next() < 0.50) speed = 0;
   }
   const startX = p.x, startY = p.y;
-  let nx = p.x + Math.cos(ang) * speed;
-  let ny = p.y + Math.sin(ang) * speed;
+  // === v37.90: velocity smoothing (accel + coast) ===
+  // Target velocity = the intended cos*speed, sin*speed.
+  // Actual (smoothed) velocity lerps toward target with a fast rate so
+  // the bot has visible accel/decel without losing combat responsiveness.
+  // At rate 0.40, the bot reaches ~95% of intended speed in 7 frames
+  // (~350ms at 20Hz) and coasts to a stop over similar time when
+  // speed=0. p._smoothVx/Vy persist across frames; p.vx/p.vy below are
+  // the actual frame delta (used downstream for facing, projectile lead).
+  const tgtVx = Math.cos(ang) * speed;
+  const tgtVy = Math.sin(ang) * speed;
+  if (typeof p._smoothVx !== "number") p._smoothVx = 0;
+  if (typeof p._smoothVy !== "number") p._smoothVy = 0;
+  const LERP = 0.40;
+  p._smoothVx += (tgtVx - p._smoothVx) * LERP;
+  p._smoothVy += (tgtVy - p._smoothVy) * LERP;
+  let nx = p.x + p._smoothVx;
+  let ny = p.y + p._smoothVy;
 
   // === v28.5 grenade knockback ===
   // If a grenade pushed us this round, apply the residual velocity on
@@ -22435,6 +23165,25 @@ function moveAlong(p, ang, speed) {
   p.y = clamp(ny, 12, COMBAT.arenaH - 12);
   p.facing = p.vx >= 0 ? 1 : -1;
 
+  // === v37.90: smooth heading rotation ===
+  // Continuous headingAng tracks the bot's facing direction. It rotates
+  // smoothly toward the intended movement angle at a fixed max rate per
+  // frame, so the visual + FOV system don't snap. When speed is 0 (no
+  // movement), heading is left alone — the bot retains its prior facing.
+  if (Math.abs(p.vx) > 0.1 || Math.abs(p.vy) > 0.1) {
+    if (typeof p.headingAng !== "number") p.headingAng = ang;
+    // Smallest signed angle delta in (-π, π]
+    let delta = ang - p.headingAng;
+    while (delta >  Math.PI) delta -= Math.PI * 2;
+    while (delta < -Math.PI) delta += Math.PI * 2;
+    const TURN_RATE_PER_FRAME = Math.PI / 6;  // ~30°/frame ~600°/sec
+    const step = Math.max(-TURN_RATE_PER_FRAME, Math.min(TURN_RATE_PER_FRAME, delta));
+    p.headingAng += step;
+    // Normalize back into (-π, π]
+    while (p.headingAng >  Math.PI) p.headingAng -= Math.PI * 2;
+    while (p.headingAng < -Math.PI) p.headingAng += Math.PI * 2;
+  }
+
   // Did we actually move? (Returns false if fully stuck — caller can fall
   // back to perpendicular strafe to round corners.)
   return Math.abs(p.x - startX) > 0.1 || Math.abs(p.y - startY) > 0.1;
@@ -22496,6 +23245,46 @@ function hasLineOfSight(ax, ay, bx, by, terrain) {
   return true;
 }
 
+/* === v37.89: cover-aware retreat ===
+   Given a bot at (px, py), a desired flee angle (idealAng), and a
+   threat origin (threatX, threatY), find the best nearby direction
+   where moving puts terrain between the bot and the threat.
+
+   Algorithm:
+     1. Sample 9 candidate angles: idealAng, ±15°, ±30°, ±60°, ±90°
+        (in order — we prefer staying close to the ideal flee direction).
+     2. For each candidate, project a check point 80px out.
+     3. Check (a) the candidate point isn't inside terrain (walkable),
+        and (b) LOS from candidate point back to threat is BLOCKED.
+     4. Return the first candidate that satisfies both — closest to
+        the ideal flee direction.
+
+   Returns the cover angle, or null if no cover-providing direction
+   exists within the search window.
+
+   Cost: 9 candidates × (1 collidesTerrain + 1 hasLineOfSight) per call,
+   typically ~20 terrain rect-checks total. Negligible at FLEE cadence. */
+function findCoverDirection(px, py, idealAng, threatX, threatY, terrain, arenaW, arenaH) {
+  if (!terrain || !terrain.length) return null;
+  // Sample offsets in order of preference — small deviations first.
+  const offsets = [0, 15, -15, 30, -30, 60, -60, 90, -90];
+  const PROJECT_DIST = 80;
+  for (const offsetDeg of offsets) {
+    const candAng = idealAng + (offsetDeg * Math.PI / 180);
+    const cx = px + Math.cos(candAng) * PROJECT_DIST;
+    const cy = py + Math.sin(candAng) * PROJECT_DIST;
+    // Reject points outside playable area
+    if (cx < 30 || cx > arenaW - 30 || cy < 30 || cy > arenaH - 30) continue;
+    // Reject points inside terrain
+    if (collidesTerrain(cx, cy, terrain)) continue;
+    // The whole point: LOS from candidate to threat must be BLOCKED
+    if (!hasLineOfSight(cx, cy, threatX, threatY, terrain)) {
+      return candAng;
+    }
+  }
+  return null;
+}
+
 function computeCooldown(p, effSpd) {
   const baseCd = Math.max(6, Math.round(18 / Math.max(0.6, effSpd / 1.4)));
   const cdScale = 1 + (p.weapon?.cdMod || 0);
@@ -22509,6 +23298,29 @@ function computeCooldown(p, effSpd) {
 function fireAttack(attacker, target, m) {
   const wpn = attacker.weapon || {};
   const range = wpn.range || 0;
+
+  // === v37.90: defensive FOV + LOS gate ===
+  // Bots can only fire at targets they can see. The bot's vision cone
+  // is ±90° from headingAng (180° total — tighter than the ±120° target-
+  // selection cone, so bots have to be more squarely facing their
+  // target to commit a shot). Also re-checks LOS through cover. This
+  // is defense-in-depth — pickTarget already filters the same way,
+  // but a target can rotate behind cover between target selection and
+  // fire resolution. Without this gate, bots fire ghost shots at
+  // invisible enemies.
+  if (attacker && typeof attacker.headingAng === "number" && target) {
+    const FIRE_FOV_HALF = Math.PI / 2;  // ±90° fire cone
+    const ang = Math.atan2(target.y - attacker.y, target.x - attacker.x);
+    let d = ang - attacker.headingAng;
+    while (d >  Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    if (Math.abs(d) > FIRE_FOV_HALF) return;  // target behind us — no shot
+    if (m && m.terrain && m.terrain.length > 0 && range > 30) {
+      if (!hasLineOfSight(attacker.x, attacker.y, target.x, target.y, m.terrain)) {
+        return;  // cover blocks the shot
+      }
+    }
+  }
 
   if (range <= 30) {
     // Melee — instant resolve as before
@@ -22898,6 +23710,29 @@ function handleKO(attacker, defender, m) {
   const wasStunned = (defender.stunned || 0) > 0;
   const isSelfDestruct = attacker.id === defender.id;
 
+  // === v37.88: revenge detection (BEFORE writing the new _lastKilledBy) ===
+  // If the attacker had been killed by this same defender earlier in
+  // the match, this kill IS the revenge. Emit a flavor feed line and
+  // clear attacker's revenge flag (they completed it).
+  const isRevenge = !isSelfDestruct
+    && typeof attacker._lastKilledBy === "number"
+    && attacker._lastKilledBy === defender.id;
+  if (isRevenge) {
+    // Vengeful personality gets a flavor variant
+    const aPers = typeof PERSONALITY_BY_ID !== "undefined" ? PERSONALITY_BY_ID[attacker.personality] : null;
+    if (aPers && aPers.id === "vengeful") {
+      feed("kill", `⚔️ <b>REVENGE!</b> ${escapeHTML(attacker.name)} has been waiting for this. ${escapeHTML(defender.name)} pays the debt.`);
+    } else {
+      feed("kill", `⚔️ <b>REVENGE!</b> ${escapeHTML(attacker.name)} settles the score with ${escapeHTML(defender.name)}.`);
+    }
+    if (typeof window !== "undefined" && window.toast) {
+      window.toast(`<b>REVENGE!</b> ${escapeHTML(attacker.name)} kills ${escapeHTML(defender.name)}`,
+        "win", { ico: "⚔️", ttl: 5000, subText: "They've evened the score." });
+    }
+    delete attacker._lastKilledBy;
+    delete attacker._lastKilledByFrame;
+  }
+
   defender.alive = false;
   defender.hp = 0;
   defender.balloonsPopped = 3;
@@ -22905,6 +23740,15 @@ function handleKO(attacker, defender, m) {
   updateKillStreak(attacker, defender, m);
   attacker.career.kills++;
   m.killsByTeam[attacker.teamId]++;
+
+  // === v37.88: record killer for the defender's potential revenge ===
+  // Stored per-bot, persists across the defender's respawn within this
+  // match. Self-destructs don't count (no one to revenge against). Will
+  // bias defender's target scoring on next life. Reset at match start.
+  if (!isSelfDestruct && typeof attacker.id === "number") {
+    defender._lastKilledBy = attacker.id;
+    defender._lastKilledByFrame = m.frame || 0;
+  }
 
   // === v37.23: Rivalry tracking ===
   // Increment killer→victim count, then check whether the reverse
@@ -23668,6 +24512,9 @@ function finalizeMatch(matchDraw) {
     // (the league must have a champion). Tracked separately in records.
     const advancingId = SIM_RNG.next() < 0.5 ? m.teamAId : m.teamBId;
     LEAGUE.bracket[m.slot].winner = advancingId;
+    // v37.82: persist score on draw path too
+    LEAGUE.bracket[m.slot].scoreA = m.roundsWonA;
+    LEAGUE.bracket[m.slot].scoreB = m.roundsWonB;
     LEAGUE.bracket[m.slot].casualties = LEAGUE.graveyard
       .filter(g => g.season === LEAGUE.season && g.slot === m.slot);
 
@@ -23715,6 +24562,14 @@ function finalizeMatch(matchDraw) {
   LEAGUE.records[loserId].losses++;
 
   LEAGUE.bracket[m.slot].winner = winnerId;
+  // === v37.82: record final score to the bracket slot ===
+  // renderLadder reads m.scoreA / m.scoreB from each slot to display the
+  // round-score column on completed cards. The fields were never written
+  // before this — completed ladder cards always showed "—" in the score
+  // slot. Now the score is persisted so finished matches display the
+  // correct outcome (e.g. "3 – 2") on the ladder.
+  LEAGUE.bracket[m.slot].scoreA = m.roundsWonA;
+  LEAGUE.bracket[m.slot].scoreB = m.roundsWonB;
   // === v37.23: match-win achievement hooks ===
   if (typeof recordAchievementEvent === "function") {
     recordAchievementEvent("team_match_win", { teamId: winnerId });
@@ -23928,6 +24783,47 @@ function finalizeSeason() {
   }
 
   const seasonCasualties = LEAGUE.graveyard.filter(g => g.season === LEAGUE.season);
+
+  // === v37.83: settle season-champion bets ===
+  // Bets tagged with this season's number resolve now. Winners get
+  // amount × payoutMult; losers are forfeit (stake was already
+  // subtracted at placement). Bets from future seasons (defensive —
+  // shouldn't exist) are preserved for those seasons.
+  if (Array.isArray(LEAGUE.bets) && champion) {
+    const keep = [];
+    for (const bet of LEAGUE.bets) {
+      if (bet.kind !== "season") { keep.push(bet); continue; }
+      if (bet.season !== LEAGUE.season) { keep.push(bet); continue; }
+      const tName = TEAM_BY_ID[bet.target]?.short || bet.target;
+      if (bet.target === champion) {
+        const payout = Math.round(bet.amount * bet.payoutMult);
+        LEAGUE.bits += payout;
+        if (LEAGUE.betStats) {
+          if (LEAGUE.betStats.statsSeason !== LEAGUE.season) {
+            LEAGUE.betStats.seasonNet = 0;
+            LEAGUE.betStats.statsSeason = LEAGUE.season;
+          }
+          LEAGUE.betStats.won         += 1;
+          LEAGUE.betStats.lifetimeNet += payout;
+          LEAGUE.betStats.seasonNet   += payout;
+        }
+        feed("season", `💸 Season bet WON: +${payout} bits on ${tName} (Season ${bet.season} champion @ ${bet.payoutMult}×)`);
+        if (typeof window !== "undefined" && window.toast) {
+          window.toast(`Season bet WON: <b>+${payout}</b> bits on ${tName}`, "win",
+            { ico: "🏆", ttl: 8000, subText: `Season ${bet.season} champion @ ${bet.payoutMult}×` });
+        }
+      } else {
+        if (LEAGUE.betStats) LEAGUE.betStats.lost += 1;
+        feed("season", `💔 Season bet lost: ${bet.amount} bits on ${tName} (champion was ${TEAM_BY_ID[champion]?.short || champion})`);
+        if (typeof window !== "undefined" && window.toast) {
+          window.toast(`Season bet lost: <b>-${bet.amount}</b> bits on ${tName}`, "lose",
+            { ico: "🏆", ttl: 6000, subText: `Champion: ${TEAM_BY_ID[champion]?.short || champion}` });
+        }
+      }
+    }
+    LEAGUE.bets = keep;
+  }
+
   // Save bracket results for season history (all slots)
   const bracketResults = {};
   for (const slot of (LEAGUE.bracket._order || [])) {
@@ -24172,6 +25068,89 @@ function playerOdds(teamA, teamB) {
   return odds;
 }
 
+/* ============================================================
+   v37.83: SEASON-CHAMPION ODDS + BET KIND
+   ============================================================
+   The season-champion market lets the user wager that any given
+   team will win the season. Two key properties:
+
+     1. Odds-by-rank: derived from current standings position.
+        Higher-rank teams pay less; lower-rank teams pay more.
+        Floor of 1.20× (favorite), ceiling of 12× (longshot).
+
+     2. Diminishing-returns multiplier: bets locked in earlier
+        in the season pay a multiplier on top of base odds.
+        Pre-bracket bets pay 2× base; quarter-final bets pay 1.4×;
+        semi-final bets pay 1.1×; the final pays 1.0× (no bonus).
+        This rewards conviction in a long-odds team early.
+
+   Locked once the final match begins (the outcome is essentially
+   sealed by then — see settleBet path below).
+   ============================================================ */
+function seasonOdds() {
+  // Returns { [teamId]: payoutMult } for ALL teams currently in
+  // the league. Uses computeLadderRanking for ordering and the
+  // current bracket progress for the early-bet multiplier.
+  if (typeof TEAMS === "undefined" || !LEAGUE) return {};
+  if (typeof computeLadderRanking !== "function") return {};
+  const ladder = computeLadderRanking();
+  const totalTeams = ladder.length || 1;
+  // Bracket-progress multiplier — query LEAGUE.bracket for the most
+  // advanced ACTIVE round to determine the bonus.
+  const progressBonus = _seasonBetProgressBonus();
+  const out = {};
+  for (let i = 0; i < ladder.length; i++) {
+    const entry = ladder[i];
+    // Base odds by rank: rank 1 (best) = 1.5×, scales up to ~10× at last place.
+    // Power curve so the middle teams have a respectable but not crazy payout.
+    const rankFrac = i / Math.max(1, totalTeams - 1);  // 0 = top, 1 = bottom
+    const baseOdds = 1.2 + Math.pow(rankFrac, 1.7) * 8.0;
+    // Apply early-bet bonus
+    const finalOdds = baseOdds * progressBonus;
+    out[entry.team.id] = +Math.min(20, Math.max(1.05, finalOdds)).toFixed(2);
+  }
+  return out;
+}
+window.seasonOdds = seasonOdds;
+
+/* Returns the multiplier on base season odds based on how much of
+   the bracket has been played. Earlier = more bonus. */
+function _seasonBetProgressBonus() {
+  if (!LEAGUE.bracket) return 2.0;
+  const slots = LEAGUE.bracket._order || [];
+  // Count completed (winner set) slots vs total
+  let completed = 0;
+  for (const s of slots) {
+    if (LEAGUE.bracket[s] && LEAGUE.bracket[s].winner) completed++;
+  }
+  const totalSlots = slots.length || 1;
+  const progress = completed / totalSlots;
+  // Bonus schedule:
+  //   - Pre-bracket (0% complete): 2.0× (full early-conviction bonus)
+  //   - Quarter-finals (25% complete): 1.6×
+  //   - Semi-finals  (50% complete): 1.25×
+  //   - Final        (75% complete): 1.05×
+  //   - Done (100% complete): 1.0× (no bonus, but season-bet market
+  //     is locked at this point anyway — only here for completeness)
+  if (progress < 0.05) return 2.0;
+  if (progress < 0.4)  return 1.6;
+  if (progress < 0.6)  return 1.25;
+  return 1.05;
+}
+
+/* Returns true if the season-bet market is open (i.e., final match
+   has not yet started). */
+function seasonBetMarketOpen() {
+  if (!LEAGUE.bracket) return false;
+  const finalSlot = LEAGUE.bracket.final;
+  if (!finalSlot) return false;
+  // Locked once the final match is live or finalized
+  if (finalSlot.winner) return false;
+  if (LEAGUE.currentSlot === "final" && LEAGUE.match && LEAGUE.match.phase === "round") return false;
+  return true;
+}
+window.seasonBetMarketOpen = seasonBetMarketOpen;
+
 function placeBet(kind, target, amount) {
   // kind: "team"      → target is teamId, resolves at MATCH end
   //       "round"     → target is teamId, resolves at end of NEXT round
@@ -24179,6 +25158,7 @@ function placeBet(kind, target, amount) {
   //       "firstkill" → target is teamId, resolves on first kill of the match
   //       "totalcas"  → target is "over"/"under", resolves at MATCH end (5.5 line)
   //       "rounds"    → target is "over"/"under", resolves at MATCH end (3.5 line)
+  //       "season"    → target is teamId, resolves at SEASON end (v37.83)
 
   // === v28.5: Lock betting during live matches ===
   // Previously allowed bets at any time including mid-match, which lets
@@ -24191,6 +25171,45 @@ function placeBet(kind, target, amount) {
   // "round" bets DO get a per-round window (between rounds) — so you
   // can bet on the next round's winner during intermissions but not
   // while the round is being fought.
+  //
+  // === v37.83: season bets have their own gating logic ===
+  // Allowed at any phase EXCEPT during the final match's live round.
+  // No active slot/match required (you can bet on the season champion
+  // before the bracket even starts).
+  if (kind === "season") {
+    if (!seasonBetMarketOpen()) {
+      feed("item", "🔒 Season-champion market closed — final match has started or concluded.");
+      return false;
+    }
+    if (amount <= 0 || amount > LEAGUE.bits) return false;
+    const odds = seasonOdds();
+    const payoutMult = odds[target];
+    if (!payoutMult) return false;
+    if (!TEAM_BY_ID[target]) return false;
+    LEAGUE.bits -= amount;
+    if (LEAGUE.betStats) {
+      if (LEAGUE.betStats.statsSeason !== LEAGUE.season) {
+        LEAGUE.betStats.seasonNet = 0;
+        LEAGUE.betStats.statsSeason = LEAGUE.season;
+      }
+      LEAGUE.betStats.lifetimeNet -= amount;
+      LEAGUE.betStats.seasonNet   -= amount;
+    }
+    LEAGUE.bets.push({
+      kind: "season",
+      target,
+      amount,
+      payoutMult,
+      // Tag with the season the bet was placed for — settled when that
+      // season's finalizeSeason fires.
+      season: LEAGUE.season,
+    });
+    if (typeof saveLocal === "function") saveLocal();
+    const tn = TEAM_BY_ID[target].short;
+    feed("item", `💰 Season bet: ${amount} bits on ${tn} for Season ${LEAGUE.season} title @ ${payoutMult}×`);
+    return true;
+  }
+
   const liveMatch = LEAGUE.match;
   if (liveMatch && liveMatch.phase === "round") {
     feed("item", "🔒 Betting locked — wait for the round to end.");
@@ -24470,8 +25489,43 @@ function buyItem(itemId, teamId) {
     appliedToTeam = (teamId === m.teamA) ? m.teamB : m.teamA;
   }
 
+  // === v37.83: flavor-target items ===
+  // Zero stat effect — just spend bits to engage with the lore.
+  // The feed line emits the item's flavorMsg, and the toast surfaces
+  // it for one-off visibility. Repeatable.
+  if (item.target === "flavor") {
+    LEAGUE.bits -= item.cost;
+    const msg = item.flavorMsg || `${item.ico} ${item.nm} acknowledged.`;
+    feed("item", msg);
+    if (typeof window !== "undefined" && window.toast) {
+      window.toast(`${item.ico} ${escapeHTML(item.nm)}`, "info", { ttl: 5000, subText: msg });
+    }
+    if (typeof saveLocal === "function") saveLocal();
+    return true;
+  }
+
   const boost = LEAGUE.pendingBoosts[appliedToTeam] || (LEAGUE.pendingBoosts[appliedToTeam] = {});
   item.apply(boost);
+
+  // === v37.83: targetSplit — items that buff your team AND debuff opponent ===
+  // The featherquill_byline item buffs you AND adds a -DMG to the opponent.
+  // We apply the primary buff via item.apply(boost), then walk targetSplit
+  // and apply each sub-target's deltas to their respective pending boost.
+  if (item.targetSplit && typeof item.targetSplit === "object" && LEAGUE.currentSlot) {
+    const m = LEAGUE.bracket[LEAGUE.currentSlot];
+    for (const subTarget of Object.keys(item.targetSplit)) {
+      const deltas = item.targetSplit[subTarget];
+      if (!deltas) continue;
+      const subTeamId = subTarget === "opp"
+        ? ((teamId === m.teamA) ? m.teamB : m.teamA)
+        : teamId;
+      const subBoost = LEAGUE.pendingBoosts[subTeamId] || (LEAGUE.pendingBoosts[subTeamId] = {});
+      for (const stat of Object.keys(deltas)) {
+        subBoost[stat] = (subBoost[stat] || 0) + deltas[stat];
+      }
+    }
+  }
+
   LEAGUE.bits -= item.cost;
   feed("item", `🛒 Purchased ${item.nm} for ${TEAM_BY_ID[appliedToTeam].name}.`);
   if (typeof saveLocal === "function") saveLocal();
@@ -30658,6 +31712,16 @@ function renderLadder() {
         </div>
       `;
       matchList.appendChild(card);
+
+      // === v37.82: wire ladder card → showMatchDetail ===
+      // Cards have always had data-slot but no click handler. Now any
+      // card opens the match-detail modal. Even pending cards open it
+      // (the modal handles the "teams not assigned" state gracefully).
+      card.style.cursor = "pointer";
+      card.title = "Click for match details";
+      card.addEventListener("click", () => {
+        if (typeof showMatchDetail === "function") showMatchDetail(slot);
+      });
     }
     col.appendChild(matchList);
     display.appendChild(col);
@@ -31353,6 +32417,10 @@ function betLabelFor(bet) {
   if (bet.kind === "rounds") {
     return bet.target === "over" ? "4+ rounds" : "≤3 rounds";
   }
+  if (bet.kind === "season") {
+    const t = TEAM_BY_ID[bet.target];
+    return t ? `🏆 ${t.emoji} ${escapeHTML(t.short)} (S${bet.season})` : "?";
+  }
   return "?";
 }
 
@@ -31619,6 +32687,59 @@ function renderBetTab() {
     }
   }
 
+  // === v37.83: Season Champion market ===
+  // Shows ALL teams sorted by current standings rank. Odds derived from
+  // seasonOdds() and adjusted by bracket progress (early bets pay more).
+  const scStateEl = $("#scState");
+  const scProgressEl = $("#scProgressBonus");
+  const scRows = $("#betMarketSeasonRows");
+  if (scStateEl && scRows) {
+    const open = (typeof seasonBetMarketOpen === "function") && seasonBetMarketOpen();
+    scStateEl.textContent = open ? "OPEN" : "LOCKED";
+    // Surface the current progress bonus so users can see what they're getting
+    if (scProgressEl && open) {
+      const bonus = (typeof _seasonBetProgressBonus === "function") ? _seasonBetProgressBonus() : 1.0;
+      if (bonus >= 2.0)      scProgressEl.textContent = "MAX BONUS · 2.0× early-bet";
+      else if (bonus >= 1.6) scProgressEl.textContent = "QF BONUS · 1.6× early-bet";
+      else if (bonus >= 1.25) scProgressEl.textContent = "SF BONUS · 1.25× early-bet";
+      else if (bonus > 1.0)  scProgressEl.textContent = "FINAL · slight bonus";
+      else scProgressEl.textContent = "";
+    } else if (scProgressEl) {
+      scProgressEl.textContent = "";
+    }
+    scRows.innerHTML = "";
+    if (open && typeof seasonOdds === "function" && typeof computeLadderRanking === "function") {
+      const odds = seasonOdds();
+      // Render top-12 by rank — keeps the UI compact on the bet page;
+      // longshots beyond rank 12 are off-screen but can still be bet on
+      // via direct programmatic access. (Surface them if there's room.)
+      const ladder = computeLadderRanking();
+      const teamsToShow = ladder.slice(0, Math.min(12, ladder.length));
+      for (const entry of teamsToShow) {
+        const t = entry.team;
+        const pay = odds[t.id];
+        if (!pay) continue;
+        const row = document.createElement("div");
+        row.className = "bet-team-row" + (BET_PICK.kind === "season" && BET_PICK.target === t.id ? " selected" : "");
+        // Color-code rank to convey favorite vs longshot at a glance
+        const rankColor = entry.rank <= 3 ? "var(--grn)"
+                        : entry.rank <= 8 ? "var(--ink)"
+                        : "var(--gold)";
+        row.innerHTML = `
+          <div class="em">${t.emoji}</div>
+          <div class="info">
+            <div class="nm"><span style="color:${rankColor};font-size:10px;font-family:monospace;">#${entry.rank}</span> ${escapeHTML(t.short)} <span style="color:var(--dim);font-size:10px;">${entry.record.wins}–${entry.record.losses}</span></div>
+            <div class="od">Pays <b>${pay}×</b></div>
+          </div>
+        `;
+        row.addEventListener("click", () => { BET_PICK = { kind: "season", target: t.id }; refreshBetSelection(); });
+        scRows.appendChild(row);
+      }
+    } else {
+      scRows.innerHTML = `<div style="padding:10px;text-align:center;color:var(--dim);font-size:11px;">Market locked — final match in progress or completed. Reopens next season.</div>`;
+    }
+  }
+
   refreshBetSelection();
   renderBetHistory();
 }
@@ -31632,7 +32753,11 @@ function refreshBetSelection() {
   // when no match exists yet.
   const m = LEAGUE.match;
   const liveRound = m && m.phase === "round";
-  if (liveRound) {
+  // v37.83: season bets bypass the round-live lock — they have their
+  // own market-open check (seasonBetMarketOpen) which only locks once
+  // the FINAL match begins.
+  const isSeasonBet = BET_PICK.kind === "season";
+  if (liveRound && !isSeasonBet) {
     labelEl.innerHTML = '<span style="color:var(--warn,#f7c948);">🔒 Betting locked — round in progress</span>';
     placeBtn.disabled = true;
     placeBtn.textContent = "Locked During Round";
@@ -31661,6 +32786,12 @@ function refreshBetSelection() {
   } else if (BET_PICK.kind === "player") {
     const p = Object.values(LEAGUE.rosters).flat().find(x => x.id === BET_PICK.target);
     labelEl.innerHTML = `Last Standing: ${escapeHTML(p?.name || "?")}`;
+  } else if (BET_PICK.kind === "season") {
+    // v37.83: season-champion selection display
+    const t = TEAM_BY_ID[BET_PICK.target];
+    const odds = (typeof seasonOdds === "function") ? seasonOdds() : {};
+    const pay = odds[BET_PICK.target];
+    labelEl.innerHTML = `🏆 Season Champion: ${t?.emoji || ""} ${escapeHTML(t?.name || "?")} <span style="color:var(--gold);">(${pay || "?"}×)</span>`;
   }
   placeBtn.disabled = false;
 }
@@ -31674,11 +32805,22 @@ function renderBetHistory() {
   }
   for (const bet of LEAGUE.bets) {
     const tr = document.createElement("tr");
-    const market = bet.kind === "team" ? "Match Winner" : bet.kind === "round" ? `Round ${bet.roundIndex || "?"} Winner` : "Last Standing";
+    // v37.83: season-market label
+    const market = bet.kind === "team" ? "Match Winner"
+                 : bet.kind === "round" ? `Round ${bet.roundIndex || "?"} Winner`
+                 : bet.kind === "season" ? `Season ${bet.season} Champion`
+                 : bet.kind === "firstkill" ? "First Kill"
+                 : bet.kind === "totalcas" ? "Total Casualties"
+                 : bet.kind === "rounds" ? "Match Length"
+                 : "Last Standing";
     // === v37.45: live winning/losing pill ===
     const status = _liveBetStatus(bet);
+    // v37.83: scope label adapts to season bets
+    const scopeLabel = bet.kind === "round" ? "Round " + (bet.roundIndex || "?")
+                     : bet.kind === "season" ? "Season " + bet.season
+                     : "Match";
     tr.innerHTML = `
-      <td>${bet.kind === "round" ? "Round " + (bet.roundIndex || "?") : "Match"}</td>
+      <td>${scopeLabel}</td>
       <td>${market}</td>
       <td>${betLabelFor(bet)}</td>
       <td style="text-align:right;font-family:'Courier New',monospace;">${bet.amount}</td>
@@ -31721,8 +32863,8 @@ function renderStore() {
     for (const item of byRarity[sec.key]) {
       const btn = document.createElement("button");
       btn.className = "store-card rarity-" + (item.rarity || "common");
-      // Tip the crew is buyable any time except mid-round (no `am` requirement)
-      const needsActiveMatch = item.target !== "janitors";
+      // Tip the crew & flavor items are buyable any time except mid-round (no `am` requirement)
+      const needsActiveMatch = item.target !== "janitors" && item.target !== "flavor";
       btn.disabled = LEAGUE.bits < item.cost || roundLive || (needsActiveMatch && !am);
       if (btn.disabled) btn.setAttribute("aria-disabled", "true");
       const targetTag = item.target === "opp"
@@ -31731,6 +32873,10 @@ function renderStore() {
         ? `<div class="store-target-tag store-target-targeted">pick one knight</div>`
         : item.target === "janitors"
         ? `<div class="store-target-tag store-target-tip">tip the crew</div>`
+        : item.target === "flavor"
+        ? `<div class="store-target-tag store-target-tip">lore / flavor</div>`
+        : item.targetSplit
+        ? `<div class="store-target-tag store-target-buff">team + opponent</div>`
         : `<div class="store-target-tag store-target-buff">buff your team</div>`;
       btn.innerHTML = `
         <div class="ico">${item.ico}</div>
@@ -31743,6 +32889,13 @@ function renderStore() {
         // === v37.23.3: tip-the-crew can be purchased without an active match ===
         if (item.target === "janitors") {
           // Pass any team id — buyItem ignores it for janitors target
+          const anyTeam = am ? am.teamA : (TEAMS[0] && TEAMS[0].id);
+          const ok = buyItem(item.id, anyTeam);
+          if (ok) renderAll();
+          return;
+        }
+        // === v37.83: flavor items also bypass the active-match requirement
+        if (item.target === "flavor") {
           const anyTeam = am ? am.teamA : (TEAMS[0] && TEAMS[0].id);
           const ok = buyItem(item.id, anyTeam);
           if (ok) renderAll();
@@ -33089,6 +34242,287 @@ function openMemorialFor(teamId, name) {
 window.openMemorialFor = openMemorialFor;
 
 /* ============================================================
+   v37.82: LADDER DRILLDOWN MODALS
+   ============================================================
+   Three new modals — match detail (click a ladder card), team
+   detail (click a team in the match modal), and the existing
+   player profile is reachable via player chip clicks. Wires up
+   ladder card interactivity that was always intended (the cards
+   already have data-slot attributes) but never had click handlers.
+   ============================================================ */
+
+/* Show a focused per-team modal. The roster table mirrors the
+   chip-style of renderTeamPanel for visual consistency, plus the
+   team's AI-style history strip beneath. Player chips are clickable
+   and route through _routeKnightClick → showPlayerProfile. */
+function showTeamDetail(teamId) {
+  const t = TEAM_BY_ID[teamId];
+  if (!t) return;
+  const r = (LEAGUE.records && LEAGUE.records[teamId]) || { wins: 0, losses: 0, draws: 0, championships: 0 };
+  const roster = (LEAGUE.rosters && LEAGUE.rosters[teamId]) || [];
+  const aliveCount = roster.filter(p => !p.deceased).length;
+  const currentStyleId = (LEAGUE.aiStyles && LEAGUE.aiStyles[teamId]) || null;
+  const currentStyle = currentStyleId && (typeof AI_PATHING_STYLES !== "undefined") && AI_PATHING_STYLES[currentStyleId];
+  const coach = (typeof getCoachFor === "function") ? getCoachFor(teamId) : null;
+
+  // --- header ---
+  let html = `
+    <div style="display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px;">
+      <span style="font-size:36px;">${t.emoji}</span>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:16px;">${escapeHTML(t.name)}</div>
+        <div style="font-size:11px;color:var(--dim);margin-top:2px;">
+          ${r.wins}–${r.losses}${r.draws ? `–${r.draws}` : ""} · ${r.championships || 0}🏆 · ${aliveCount}/${roster.length} alive
+        </div>
+        ${currentStyle ? `<div style="font-size:11px;color:var(--gold);margin-top:3px;" title="${escapeHTML(currentStyle.desc)}">📋 Playbook: <b>${escapeHTML(currentStyle.label)}</b>${coach ? ` · Coach: ${escapeHTML(coach.name)}` : ""}</div>` : ""}
+      </div>
+    </div>
+  `;
+
+  // --- AI-style history strip ---
+  const hist = (LEAGUE.aiStyleHistory && LEAGUE.aiStyleHistory[teamId]) || [];
+  if (hist.length > 1) {
+    // Show most recent first, capped at 10 seasons
+    const recent = hist.slice(-10).reverse();
+    html += `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:10px;color:var(--mute);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Playbook History</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">
+          ${recent.map(h => {
+            const s = (typeof AI_PATHING_STYLES !== "undefined") && AI_PATHING_STYLES[h.styleId];
+            const label = s ? s.label : h.styleId;
+            const desc = s ? s.desc : "";
+            const isCurrent = h.season === (LEAGUE.season || 1);
+            return `<span style="
+              display:inline-block;padding:2px 6px;font-size:10px;
+              background:${isCurrent ? 'var(--gold)' : 'var(--bg-2)'};
+              color:${isCurrent ? '#1a1a1a' : 'var(--dim)'};
+              border:1px solid ${isCurrent ? 'var(--gold)' : 'var(--line)'};
+              border-radius:2px;
+            " title="${escapeHTML(desc)}">S${h.season}: ${escapeHTML(label)}</span>`;
+          }).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  // --- roster ---
+  html += `
+    <div style="font-size:10px;color:var(--mute);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Roster (click any to view profile)</div>
+    <div id="teamDetailRoster" style="display:flex;flex-direction:column;gap:4px;">
+  `;
+  for (const p of roster) {
+    const pos = (typeof POS_BY_ID !== "undefined") ? POS_BY_ID[p.position] : null;
+    const posIcon = pos ? pos.icon : "·";
+    const posLabel = pos ? pos.label : p.position || "—";
+    const deadCls = p.deceased
+      ? `style="opacity:0.55;text-decoration:line-through;cursor:pointer;"`
+      : `style="cursor:pointer;"`;
+    const kd = p.career.deaths > 0
+      ? (p.career.kills / p.career.deaths).toFixed(2)
+      : (p.career.kills > 0 ? "∞" : "0.00");
+    const streak = p.career.currentStreak || 0;
+    const streakBadge = streak >= 3 ? ` 🔥${streak}` : "";
+    html += `
+      <div ${deadCls}
+           data-knight-id="${p.id}"
+           class="teamdetail-row"
+           style="display:grid;grid-template-columns:24px 1fr auto auto auto;gap:8px;align-items:center;padding:5px 8px;background:var(--bg-2);border:1px solid var(--line);">
+        <span title="${escapeHTML(posLabel)}">${posIcon}</span>
+        <span style="font-size:12px;font-weight:600;">${escapeHTML(p.name)}${streakBadge}</span>
+        <span style="font-size:10px;color:var(--dim);">${posLabel}</span>
+        <span style="font-size:10px;color:var(--dim);font-family:monospace;">K:${p.career.kills} D:${p.career.deaths} (${kd})</span>
+        <span style="font-size:10px;color:var(--mute);">›</span>
+      </div>
+    `;
+  }
+  html += `</div>`;
+
+  openModal(
+    `${t.emoji} ${t.name}`,
+    html,
+    `<button onclick="closeModal()" class="secondary">Close</button>`
+  );
+
+  // Wire roster clicks → showPlayerProfile via _routeKnightClick
+  setTimeout(() => {
+    const rows = document.querySelectorAll("#teamDetailRoster .teamdetail-row");
+    rows.forEach(row => {
+      row.addEventListener("click", () => {
+        const id = +row.dataset.knightId;
+        const k = (typeof findKnightById === "function") ? findKnightById(id) : null;
+        // findKnightById doesn't find deceased — fall back to graveyard
+        const target = k || (function() {
+          const g = (LEAGUE.graveyard || []).find(gx => gx.knightId === id);
+          if (g && typeof _knightFromGraveEntry === "function") {
+            return _knightFromGraveEntry(g);
+          }
+          return null;
+        })();
+        if (target) {
+          if (typeof _routeKnightClick === "function") _routeKnightClick(target);
+          else if (typeof showPlayerProfile === "function") showPlayerProfile(target);
+        }
+      });
+      // Subtle hover affordance
+      row.addEventListener("mouseenter", () => {
+        row.style.background = "var(--bg-3)";
+        row.style.borderColor = "var(--gold)";
+      });
+      row.addEventListener("mouseleave", () => {
+        row.style.background = "var(--bg-2)";
+        row.style.borderColor = "var(--line)";
+      });
+    });
+  }, 0);
+}
+window.showTeamDetail = showTeamDetail;
+
+/* Show a bracket-slot match modal: scoreboard, both team rosters
+   side by side, casualties from THIS match if any. The two team
+   headers are clickable → showTeamDetail. */
+function showMatchDetail(slot) {
+  if (!slot || !LEAGUE.bracket || !LEAGUE.bracket[slot]) return;
+  const m = LEAGUE.bracket[slot];
+  const aT = m.teamA ? TEAM_BY_ID[m.teamA] : null;
+  const bT = m.teamB ? TEAM_BY_ID[m.teamB] : null;
+  if (!aT || !bT) {
+    openModal("Match", `<div style="padding:20px;color:var(--dim);text-align:center;">This bracket slot does not have teams assigned yet.</div>`,
+      `<button onclick="closeModal()" class="secondary">Close</button>`);
+    return;
+  }
+
+  const slotLabel = (() => {
+    if (slot.startsWith("ql")) return "Qualifier " + slot.slice(2);
+    if (slot.startsWith("qf")) return "Quarterfinal " + slot.slice(2);
+    if (slot.startsWith("sf")) return "Semifinal " + slot.slice(2);
+    if (slot.startsWith("semi")) return "Semifinal " + slot.slice(4);
+    if (slot === "final") return "FINAL";
+    return slot.toUpperCase();
+  })();
+
+  const isCurrent = LEAGUE.currentSlot === slot;
+  const isDone = !!m.winner;
+  const aWon = m.winner === m.teamA;
+  const bWon = m.winner === m.teamB;
+
+  // Score: persisted on completed bracket slots; live for current match.
+  let aScore = "—", bScore = "—";
+  if (isDone && m.scoreA != null && m.scoreB != null) {
+    aScore = m.scoreA; bScore = m.scoreB;
+  } else if (isCurrent && LEAGUE.match && LEAGUE.match.slot === slot) {
+    aScore = LEAGUE.match.roundsWonA || 0;
+    bScore = LEAGUE.match.roundsWonB || 0;
+  }
+
+  // Status pill
+  const statusHTML = isCurrent
+    ? `<span style="background:var(--gold);color:#1a1a1a;padding:2px 8px;font-size:10px;letter-spacing:1.5px;">● LIVE</span>`
+    : isDone
+    ? `<span style="background:var(--bg-2);color:var(--dim);padding:2px 8px;font-size:10px;letter-spacing:1.5px;">FINAL</span>`
+    : `<span style="background:var(--bg-2);color:var(--mute);padding:2px 8px;font-size:10px;letter-spacing:1.5px;">PENDING</span>`;
+
+  // Casualties list (this match's perma-deaths)
+  const casualties = Array.isArray(m.casualties) ? m.casualties : [];
+
+  const playerChip = (p, teamId) => {
+    const pos = (typeof POS_BY_ID !== "undefined") ? POS_BY_ID[p.position] : null;
+    const posIcon = pos ? pos.icon : "·";
+    const posLabel = pos ? pos.label : (p.position || "—");
+    const deadStyle = p.deceased ? "opacity:0.55;text-decoration:line-through;" : "";
+    return `
+      <div class="matchdetail-knight"
+           data-knight-id="${p.id}"
+           data-team-id="${teamId}"
+           style="display:grid;grid-template-columns:20px 1fr auto;gap:6px;align-items:center;padding:4px 6px;background:var(--bg-2);border:1px solid var(--line);cursor:pointer;${deadStyle}">
+        <span title="${escapeHTML(posLabel)}" style="font-size:11px;">${posIcon}</span>
+        <span style="font-size:11px;font-weight:600;">${escapeHTML(p.name)}</span>
+        <span style="font-size:9px;color:var(--dim);">K:${p.career.kills}</span>
+      </div>
+    `;
+  };
+
+  const teamColumn = (team, teamId, score, won) => {
+    const roster = (LEAGUE.rosters && LEAGUE.rosters[teamId]) || [];
+    const colorBorder = won ? "var(--grn)" : (isDone ? "var(--red)" : "var(--line)");
+    return `
+      <div style="border:2px solid ${colorBorder};padding:10px;background:var(--bg-3);">
+        <div class="matchdetail-team-header"
+             data-team-id="${teamId}"
+             style="display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px;cursor:pointer;">
+          <span style="font-size:24px;">${team.emoji}</span>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:700;">${escapeHTML(team.name)}</div>
+            <div style="font-size:10px;color:var(--dim);">${escapeHTML(team.short)} · click for details ›</div>
+          </div>
+          <span style="font-size:24px;font-weight:700;color:${won ? 'var(--gold)' : 'var(--dim)'};">${score}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;">
+          ${roster.map(p => playerChip(p, teamId)).join("")}
+        </div>
+      </div>
+    `;
+  };
+
+  let html = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-size:11px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;">${slotLabel}</div>
+      ${statusHTML}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      ${teamColumn(aT, m.teamA, aScore, aWon)}
+      ${teamColumn(bT, m.teamB, bScore, bWon)}
+    </div>
+  `;
+
+  if (casualties.length > 0) {
+    html += `
+      <div style="margin-top:14px;padding:8px 10px;background:var(--bg-2);border:1px solid var(--red);">
+        <div style="font-size:10px;letter-spacing:1px;color:var(--red);text-transform:uppercase;margin-bottom:4px;">⚰ Casualties from this match</div>
+        <div style="font-size:11px;color:var(--dim);">${casualties.map(c => escapeHTML(typeof c === "string" ? c : (c.name || "Unknown"))).join(", ")}</div>
+      </div>
+    `;
+  }
+
+  openModal(`Match Details`, html, `<button onclick="closeModal()" class="secondary">Close</button>`);
+
+  // Wire interactivity
+  setTimeout(() => {
+    // Team header clicks → showTeamDetail
+    document.querySelectorAll(".matchdetail-team-header").forEach(el => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const tid = el.dataset.teamId;
+        if (tid && typeof showTeamDetail === "function") {
+          closeModal();
+          setTimeout(() => showTeamDetail(tid), 50);
+        }
+      });
+    });
+    // Player chips → showPlayerProfile via _routeKnightClick
+    document.querySelectorAll(".matchdetail-knight").forEach(el => {
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = +el.dataset.knightId;
+        const k = (typeof findKnightById === "function") ? findKnightById(id) : null;
+        const target = k || (function() {
+          const g = (LEAGUE.graveyard || []).find(gx => gx.knightId === id);
+          if (g && typeof _knightFromGraveEntry === "function") return _knightFromGraveEntry(g);
+          return null;
+        })();
+        if (target) {
+          if (typeof _routeKnightClick === "function") _routeKnightClick(target);
+          else if (typeof showPlayerProfile === "function") showPlayerProfile(target);
+        }
+      });
+      el.addEventListener("mouseenter", () => { el.style.background = "var(--bg-3)"; });
+      el.addEventListener("mouseleave", () => { el.style.background = "var(--bg-2)"; });
+    });
+  }, 0);
+}
+window.showMatchDetail = showMatchDetail;
+
+/* ============================================================
    BRACKET MODAL (full-size view)
    ============================================================ */
 function showBracket() {
@@ -33157,7 +34591,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // what the source editor shows). Cache-clear (Ctrl+Shift+R / Cmd+Shift+R)
 // usually resolves it.
 try {
-  console.log("%c[Float Knights] build v37.79 loaded — schema v" + SAVE_SCHEMA_VERSION + " — " + new Date().toISOString(),
+  console.log("%c[Float Knights] build v37.90 loaded — schema v" + SAVE_SCHEMA_VERSION + " — " + new Date().toISOString(),
               "color:#f7c948;font-weight:bold;");
 } catch (e) { /* console may not be available in some sandboxes */ }
 
@@ -33211,6 +34645,8 @@ function serializeLeague() {
     bets: LEAGUE.bets,
     // === v28.16: per-team AI style assignments (rolled fresh each season) ===
     aiStyles: LEAGUE.aiStyles || {},
+    // === v37.82: per-team AI-style history (one entry per season) ===
+    aiStyleHistory: LEAGUE.aiStyleHistory || {},
 
     // === v37.16: idol/lineage/vote state ===
     followedKnights: LEAGUE.followedKnights || [],
@@ -33424,6 +34860,23 @@ function deserializeLeague(jsonStr) {
         // v37.78 determinism fix: was Math.random
         LEAGUE.aiStyles[teamId] = styleIds[Math.floor(SIM_RNG.next() * styleIds.length)];
       }
+    }
+  }
+
+  // === v37.82: restore per-team AI-style history ===
+  // Pre-v37.82 saves don't have aiStyleHistory. Seed each team with the
+  // current season's style so the history isn't empty on first render.
+  LEAGUE.aiStyleHistory = (data.aiStyleHistory && typeof data.aiStyleHistory === "object")
+    ? data.aiStyleHistory : {};
+  for (const teamId of Object.keys(LEAGUE.rosters)) {
+    if (!Array.isArray(LEAGUE.aiStyleHistory[teamId])) {
+      LEAGUE.aiStyleHistory[teamId] = [];
+    }
+    const hist = LEAGUE.aiStyleHistory[teamId];
+    const curSeason = LEAGUE.season || 1;
+    const curStyle = LEAGUE.aiStyles[teamId];
+    if (hist.length === 0 && curStyle) {
+      hist.push({ season: curSeason, styleId: curStyle });
     }
   }
 
@@ -34499,6 +35952,204 @@ function bindSettings() {
         toast(`Game mode changing to <b>${modeNames[newMode] || newMode}</b> at next match.`, "warn");
       }
     });
+  }
+
+  // === v37.81: SETTINGS AUTO-SAVE + DEBUG TIMER UNLOCK ===
+  // Three behaviors wired here:
+  //
+  //   1. AUTO-SAVE: every non-mode setting input writes its value to
+  //      AUTOPLAY/MATCH/LEAGUE_CONFIG after a 500ms debounce. No need
+  //      to click Apply.
+  //
+  //   2. MATCH-TYPE CONFIRMATION: changing the gameMode dropdown
+  //      triggers a "Are you sure?" dialog. Confirming resets the
+  //      league (League Reset). Cancelling reverts the dropdown.
+  //
+  //   3. DEBUG TIMER UNLOCK: when the "Show Hitbox Wireframes" toggle
+  //      is on, the three cooldown sliders' min drops to 1 second
+  //      (from 10) so the user can set very-fast cadences for
+  //      testing. Toggling off restores the original min and re-clamps
+  //      the value if it dropped below.
+  //
+  // All three are gated by a feature flag in case anything goes
+  // sideways: LEAGUE_CONFIG.disableSettingsAutoSave = true reverts to
+  // explicit-Apply-only.
+  if (!(typeof LEAGUE_CONFIG !== "undefined" && LEAGUE_CONFIG.disableSettingsAutoSave)) {
+
+    // --- helper: write current settings to game state ---
+    function _applySettingsFromInputs() {
+      const roundV  = +$("#setRoundCooldown")?.value;
+      const matchV  = +$("#setMatchCooldown")?.value;
+      const seasonV = +$("#setSeasonCooldown")?.value;
+      if (roundV  > 0) AUTOPLAY.cooldownRoundMs  = roundV  * 1000;
+      if (matchV  > 0) AUTOPLAY.cooldownMatchMs  = matchV  * 1000;
+      if (seasonV > 0) AUTOPLAY.cooldownSeasonMs = seasonV * 1000;
+      const bestOf = +$("#setBestOf")?.value;
+      if (bestOf > 0) {
+        MATCH.bestOf = bestOf;
+        MATCH.roundsToWin = Math.ceil(bestOf / 2);
+      }
+      const lives = +$("#setLives")?.value;
+      if (lives > 0) MATCH.startingLives = lives;
+      const brk = +($("#setBracketFmt")?.value || 4);
+      if (LEAGUE_CONFIG && brk) LEAGUE_CONFIG.bracketSize = brk;
+      // Per-mode config (mode itself is NOT auto-saved — see confirmation below)
+      if (LEAGUE_CONFIG && LEAGUE_CONFIG.modeConfig) {
+        const kp = +($("#setKothPoints")?.value || 0);
+        if (kp > 0 && LEAGUE_CONFIG.modeConfig.koth) {
+          LEAGUE_CONFIG.modeConfig.koth.pointsToWin = kp;
+        }
+        const cc = +($("#setCtfCaps")?.value || 0);
+        if (cc > 0 && LEAGUE_CONFIG.modeConfig.ctf) {
+          LEAGUE_CONFIG.modeConfig.ctf.capsToWin = cc;
+        }
+      }
+      if (typeof saveLocal === "function") saveLocal();
+      // Update the top-right save indicator immediately so the user
+      // gets visual confirmation alongside the toast.
+      if (typeof _refreshSaveIndicator === "function") _refreshSaveIndicator();
+    }
+
+    // --- debounced auto-save ---
+    let _autoSaveTimer = null;
+    let _pendingChanges = new Set();
+    function _scheduleAutoSave(changeKey) {
+      if (changeKey) _pendingChanges.add(changeKey);
+      if (_autoSaveTimer) clearTimeout(_autoSaveTimer);
+      _autoSaveTimer = setTimeout(() => {
+        _autoSaveTimer = null;
+        try {
+          _applySettingsFromInputs();
+        } catch (e) {
+          console.error("[settings auto-save] error:", e);
+        }
+        if (typeof toast === "function" && _pendingChanges.size > 0) {
+          const changes = Array.from(_pendingChanges).join(", ");
+          toast(`✓ Saved <b>${changes}</b>`, "info", { key: "settings-autosave" });
+        }
+        _pendingChanges.clear();
+      }, 500);
+    }
+
+    // --- bind auto-save to the non-mode sliders/selects ---
+    const autoSaveInputs = [
+      { id: "setRoundCooldown",  label: "Round cooldown" },
+      { id: "setMatchCooldown",  label: "Match cooldown" },
+      { id: "setSeasonCooldown", label: "Season cooldown" },
+      { id: "setBestOf",         label: "Rounds per match" },
+      { id: "setLives",          label: "Starting lives" },
+      { id: "setBracketFmt",     label: "Bracket size" },
+      { id: "setKothPoints",     label: "KOTH points" },
+      { id: "setCtfCaps",        label: "CTF captures" },
+    ];
+    for (const inp of autoSaveInputs) {
+      const el = $("#" + inp.id);
+      if (!el) continue;
+      const evt = (el.tagName === "SELECT") ? "change" : "input";
+      el.addEventListener(evt, () => _scheduleAutoSave(inp.label));
+    }
+
+    // --- match-type confirmation dialog ---
+    const modeSel2 = $("#setGameMode");
+    if (modeSel2) {
+      let _modeRevertValue = modeSel2.value;
+      modeSel2.addEventListener("change", () => {
+        const newMode2 = modeSel2.value;
+        if (newMode2 === _modeRevertValue) return;
+        const modeNames = {
+          deathmatch: "Deathmatch",
+          koth: "King of the Hill",
+          ctf: "Capture the Flag",
+          tag: "Melee Tag",
+        };
+        const oldName = modeNames[_modeRevertValue] || _modeRevertValue;
+        const newName = modeNames[newMode2] || newMode2;
+        // Confirmation modal — uses the existing openModal/closeModal helpers
+        if (typeof openModal === "function") {
+          const bodyHTML = `
+            <div style="line-height:1.6;font-size:13px;">
+              <p>Changing match type from <b>${oldName}</b> to <b>${newName}</b> will reset the current season and start fresh.</p>
+              <p style="color:var(--dim);">All in-flight bets are refunded. The current match (if any) is abandoned. Career stats are preserved.</p>
+              <p><b>Are you sure?</b></p>
+            </div>`;
+          const footerHTML = `
+            <button id="modeConfirmCancel" class="secondary">Cancel</button>
+            <button id="modeConfirmYes" class="primary" style="background:var(--red);">Yes — Reset League</button>`;
+          openModal("Change Match Type?", bodyHTML, footerHTML);
+          // Wire buttons after modal mounts (one frame later)
+          setTimeout(() => {
+            const cancelBtn = document.getElementById("modeConfirmCancel");
+            const yesBtn = document.getElementById("modeConfirmYes");
+            if (cancelBtn) {
+              cancelBtn.addEventListener("click", () => {
+                modeSel2.value = _modeRevertValue;
+                if (typeof _updateModeSubRows === "function") _updateModeSubRows();
+                if (typeof closeModal === "function") closeModal();
+              });
+            }
+            if (yesBtn) {
+              yesBtn.addEventListener("click", () => {
+                if (LEAGUE_CONFIG) LEAGUE_CONFIG.gameMode = newMode2;
+                _modeRevertValue = newMode2;
+                if (typeof saveLocal === "function") saveLocal();
+                if (typeof closeModal === "function") closeModal();
+                if (typeof toast === "function") {
+                  toast(`Game mode changed to <b>${newName}</b>. Resetting league…`, "warn");
+                }
+                // Trigger league reset. Look for the documented entry points.
+                if (typeof resetLeague === "function") {
+                  setTimeout(() => resetLeague(), 100);
+                } else if (typeof window.btnReset === "object" && typeof document !== "undefined") {
+                  // Click the existing Reset League button
+                  const btn = document.getElementById("btnReset");
+                  if (btn) setTimeout(() => btn.click(), 100);
+                }
+              });
+            }
+          }, 0);
+        } else {
+          // No modal helper available — just apply directly
+          if (LEAGUE_CONFIG) LEAGUE_CONFIG.gameMode = newMode2;
+          _modeRevertValue = newMode2;
+          if (typeof saveLocal === "function") saveLocal();
+        }
+      });
+    }
+
+    // --- debug timer unlock (Hitbox Wireframes toggle) ---
+    function _applyDebugTimerUnlock() {
+      const debugOn = !!(LEAGUE_CONFIG && LEAGUE_CONFIG.showHitboxes);
+      const sliderIds = ["setRoundCooldown", "setMatchCooldown", "setSeasonCooldown"];
+      for (const id of sliderIds) {
+        const el = $("#" + id);
+        if (!el) continue;
+        const debugMin = el.dataset.debugMin || "1";
+        const normalMin = (id === "setRoundCooldown") ? "10" : "10";
+        if (debugOn) {
+          el.min = debugMin;
+        } else {
+          el.min = normalMin;
+          // If current value is below the normal min, clamp up
+          if (+el.value < +normalMin) {
+            el.value = normalMin;
+            const valEl = $("#" + id + "Val");
+            if (valEl) valEl.textContent = normalMin + "s";
+            // Apply the clamp to game state immediately
+            _scheduleAutoSave("timer min restored");
+          }
+        }
+      }
+    }
+    // Apply on boot in case showHitboxes was already enabled from a prior session
+    _applyDebugTimerUnlock();
+    // Re-apply whenever the hitbox toggle flips
+    const hitboxEl = $("#setShowHitboxes");
+    if (hitboxEl) {
+      hitboxEl.addEventListener("change", () => {
+        // Defer one tick so the toggles[] handler updates LEAGUE_CONFIG first
+        setTimeout(_applyDebugTimerUnlock, 0);
+      });
+    }
   }
 
   // === v37.3: Formation editor / Custom teams / Custom lore wiring ===
