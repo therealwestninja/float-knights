@@ -40,6 +40,38 @@
        right amount of bottom space regardless of viewport size. */
     --ticker-h: 36px;
   }
+  /* === v37.91: South America theme ===
+     Applied via body.theme-sa or html.theme-sa. Overrides the core
+     palette toward red, white, silver — less blue and gold than the
+     North American default. Backgrounds shift to slightly warmer
+     ink-blacks (a hint of warm red rather than cool blue); accents
+     shift from blue/gold to red/silver. Position-class colors keep
+     their semantic mapping but lean warmer where they were cool.
+     Team colors (--t-* vars) are NOT overridden — those are per-team
+     identity. */
+  .theme-sa {
+    --bg-0: #0c0808;
+    --bg-1: #181010;
+    --bg-2: #211616;
+    --bg-3: #2c1f1f;
+    --line: #3a2a2a;
+    --ink: #f0e8e6;
+    --dim: #b09898;
+    --mute: #7a6262;
+    --gold: #d8d0c4;       /* silver-warm replaces gold */
+    --red: #e83838;        /* punchier red */
+    --grn: #3da872;        /* slightly muted forest green */
+    --blu: #d04444;        /* "blue" var reused for second-red accent */
+    --pur: #c8606a;        /* warmer purple-red */
+    --pos-tank:      #c89c80;  /* warm sand */
+    --pos-striker:   #ef5050;  /* hotter red */
+    --pos-speed:     #e8a850;  /* warm amber */
+    --pos-brawl:     #d8a060;  /* terracotta */
+    --pos-sniper:    #c060a8;  /* warm magenta */
+    --pos-healer:    #80c898;  /* slightly cool — healer keeps green */
+    --pos-grenadier: #e87040;  /* warm orange-red */
+    --crt: #20181a;
+  }
   * { box-sizing: border-box; }
   html, body {
     margin: 0; padding: 0; min-height: 100%;
@@ -1530,6 +1562,22 @@
     padding: 1px 0;
     letter-spacing: 2px;
   }
+  /* === v37.91: continent badges (N/S markers in 16-team N-vs-S bracket) === */
+  .cont-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    font-family: "Courier New", monospace;
+    font-size: 10px; font-weight: 700;
+    color: var(--bg-0);
+    flex-shrink: 0;
+  }
+  .cont-badge.cont-na { background: var(--blu); }   /* North = blue */
+  .cont-badge.cont-sa { background: var(--red); }   /* South = red */
+  /* In SA theme, --blu is reused as second-red, so NA badges become red.
+     That's intentional — the SA theme is meant to override the visual identity. */
   /* Final match emphasis — bigger card, gold tint */
   .ladder-round.is-final .ladder-match {
     border-width: 2px;
@@ -11794,13 +11842,30 @@
 
       <div class="setting-card">
         <h3>Bracket Format</h3>
-        <div class="setting-desc">Number of teams that compete each season. Larger brackets &rarr; more matches, longer seasons.</div>
+        <div class="setting-desc">Number of teams that compete each season. Larger brackets &rarr; more matches, longer seasons. <strong>16-team</strong> is for the North vs South ladder — pair with <em>Continent: Both</em> below.</div>
         <div class="setting-row">
           <select id="setBracketFmt" class="setting-select">
             <option value="4">4 teams (single elim — current default)</option>
             <option value="8">8 teams (qf &rarr; sf &rarr; final)</option>
             <option value="12">12 teams (qualifier &rarr; 8-team ladder)</option>
+            <option value="16">16 teams (round of 16 &rarr; qf &rarr; sf &rarr; final)</option>
           </select>
+        </div>
+      </div>
+
+      <!-- === v37.91: continent selector for the North vs South expansion === -->
+      <div class="setting-card">
+        <h3>Continent</h3>
+        <div class="setting-desc">Which league pool plays this season. The <strong>South American expansion</strong> arrived via the Panama Bridge Migration in Year 37 — eight animal-themed teams from across the continent, each with its own playstyle (Iquitos Anacondas constrict; Atacama Condors stoop-dive; Tucupi Piranhas swarm). Select <em>Both</em> to run the full 16-team North vs South ladder (auto-selects the 16-team bracket).</div>
+        <div class="setting-row">
+          <select id="setContinent" class="setting-select">
+            <option value="na">North America (16 NA teams — original league)</option>
+            <option value="sa">South America (8 SA teams — Panama-migrated expansion)</option>
+            <option value="both">Both (full N vs S — 16-team ladder)</option>
+          </select>
+        </div>
+        <div class="setting-row" id="continentLockNote" style="display:none;">
+          <span class="setting-val" style="font-style:italic;color:var(--dim);font-size:12px;">⏳ A season is in progress. Continent change will apply next season.</span>
         </div>
       </div>
 
@@ -12387,6 +12452,65 @@ function distSq(a, b) {
   return dx*dx + dy*dy;
 }
 
+/* === v37.92: team-relationship helpers ===
+   Consolidates the most-repeated patterns across the sim/AI/UI code:
+     teammatesOf(p, m)  → the player's own team's player array
+     enemiesOf(p, m)    → the OTHER team's player array
+     enemyTeamIdOf(p, m)→ the other team's id (string)
+     hpFrac(p)          → p.hp / p.stats.hp, clamped to [0, 1]
+   Pre-v37.92 these were inlined 20+ times each with subtle variants
+   (sometimes `.filter(e => e.alive)`, sometimes not). The inline
+   variants stay valid; new code should prefer the helper.
+
+   IMPORTANT: returns LIVE arrays, not copies. Caller is responsible
+   for filtering by .alive when needed (matches existing call-site
+   convention so behavior doesn't change). For dead-knight scans
+   (e.g. graveyard logic) the unfiltered array is what's wanted. */
+function teammatesOf(p, m) {
+  if (!p || !m) return [];
+  return (p.teamId === m.teamAId) ? m.teamAplayers : m.teamBplayers;
+}
+function enemiesOf(p, m) {
+  if (!p || !m) return [];
+  return (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
+}
+function enemyTeamIdOf(p, m) {
+  if (!p || !m) return null;
+  return (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+}
+/* HP fraction in [0, 1]. Returns 0 if stats are missing (defensive —
+   should never happen, but a missing stats.hp here would cascade to
+   NaN comparisons throughout the AI tree). */
+function hpFrac(p) {
+  if (!p || !p.stats || !p.stats.hp) return 0;
+  const maxHp = p.stats.hp;
+  const cur = (typeof p.hp === "number") ? p.hp : maxHp;
+  // clamp into [0, 1] — over-heal items can push p.hp above stats.hp,
+  // and we don't want that to leak into utility-scoring math.
+  return Math.max(0, Math.min(1, cur / maxHp));
+}
+/* All players in the match, flat — both teams concatenated.
+   v37.92: consolidates 8+ inline sites that wrote
+   `m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)`. The
+   underlying optimization: a per-tick cache (m._allPlayersFlat) is
+   rebuilt once per AI-tick in tickArena. Callers outside that scope
+   fall back to a fresh concat. Returns empty if m is null/missing
+   either team's array. */
+function allPlayersFlat(m) {
+  if (!m) return [];
+  if (m._allPlayersFlat) return m._allPlayersFlat;
+  const a = m.teamAplayers || [];
+  const b = m.teamBplayers || [];
+  return a.concat(b);
+}
+if (typeof window !== "undefined") {
+  window.teammatesOf = teammatesOf;
+  window.enemiesOf = enemiesOf;
+  window.enemyTeamIdOf = enemyTeamIdOf;
+  window.hpFrac = hpFrac;
+  window.allPlayersFlat = allPlayersFlat;
+}
+
 /* ============================================================
    v37.79: AI DIAGNOSTICS
    Opt-in instrumentation for tracking bot decisions, role changes,
@@ -12558,8 +12682,58 @@ const TEAMS = [
     lore: "From the Sonora high desert south of what the Old Ones drew as a border (admitted Year 36 mid-season). The Coyotes are the League's most travel-hardened roster — they routinely take the longest bracket-travel distances of any team and have, by the Office of the Commissioner's records, never missed a match call. Their tactical style is drift-and-bait, drilled (per the Sonora pack's training records) eleven thousand times: a coyote will appear to retreat, then appear to retreat again, then appear to be alone, then six coyotes will engage from positions the opposing team had thought were already cleared. Featherquill calls this <em>'the desert pattern.'</em> The Boise Brawling Badgers have, in Year 36 R7, run a tactic Coach Slatebrush has named the Wide Draw; the Coyotes are flattered, and have not commented further.", chants: ["ASK THE DESERT!", "SIX FROM NOWHERE!", "COYOTES DON'T LEAVE!"] },
   { id: "qtz", emoji: "🦜", short: "QTZ", name: "Yucatan Vibrant Quetzals", color: "#3ab87a",
     founded: 2024, motto: "Fly bright. Hit harder.",
+    continent: "na",
     lore: "From the Yucatan jungle southeast of what the Old Ones called Cancun. The Quetzals are the League's only two-color-emerald-and-crimson team — their plumage is so distinctive in flight that opposing teams have, on three occasions, claimed it constituted a 'visual obstruction' under League rules. The Caucus dismissed each complaint. Captain Cintzli of the Yucatan canopy is the smallest active knight in the League by mass and the highest-aerial-shot-accuracy Sniper in the League by a margin no other has approached. Her personal rafter-nest at Yucatan Jungle-Canopy Hall is not registered as terrain (and never will be — see the Caucus's three repeated declinations on the matter). Cintzli speaks four languages, three of which she refuses to translate. The Quetzals have not, as of Year 36, lost a knight to permadeath.", chants: ["EMERALD! CRIMSON!", "BRIGHT WINGS!", "QUETZALS SEE FIRST!"] },
+
+  // === v37.91: SOUTH AMERICAN EXPANSION — the Panama Bridge Migration (LY 11) ===
+  // The Foundation's Panama Bridge Project, announced in Caucus Resolution 7-3 of Year
+  // 37, committed to spanning the Darien Gap and connecting the North and South
+  // American leagues. When the construction need traveled south through the Andean
+  // and Amazonian relay networks — by ceremonial runner, then by riverboat, then by
+  // condor-courier through the highlands — eight Southern teams undertook the Great
+  // Migration: a months-long journey of athletes, coaches, equipment, and ceremonial
+  // gear arriving at the Yucatan staging grounds. The Caucus's Year-37 Continental
+  // Expansion Vote formally admitted all eight under the established petition route.
+  // Six of the eight passed their qualifying exhibitions in the first month.
+  { id: "jag", emoji: "🐆", short: "JAG", name: "Manaus Mournful Jaguars", color: "#b85040",
+    founded: 2025, motto: "Stalk in silence. Strike in sunlight.",
+    continent: "sa",
+    lore: "From the Amazonian rainforest north of what the Old Ones called Manaus, where the silt-black tributaries of the Rio Negro meet the milk-brown current of the Solimões — the team's symbol-line is the meeting of the waters, hand-stitched in two contrasting threads onto every helmet. The Jaguars petitioned for League admission in Year 37 after the Panama Bridge announcement; their captain, Iara Tinaja-Smoke, walked the full Migration overland with the team's ceremonial obsidian pawprint stones strapped to her back. The Jaguars play a watch-then-commit style — they will, on average, take twelve seconds longer than any League team to commit to engagement, and arrive in close range with thirty percent fewer wasted projectiles. Manaus Hall is the only League pitch where the canopy is taller than the broadcast tower; the LMG installed a second tower at Iara's request, on the condition that it be lower than the highest kapok.", chants: ["ONÇA! ONÇA!", "BLACK WATER! BROWN WATER!", "JAGUARS WATCH!"] },
+  { id: "llm", emoji: "🦙", short: "LLM", name: "Cusco Climbing Llamas", color: "#d8b88a",
+    founded: 2025, motto: "Up is just another direction.",
+    continent: "sa",
+    lore: "From the Andean highland city of Cusco at four thousand meters, where the air pressure is, per the League medical officer, 'genuinely a problem' for visiting teams. The Llamas trained for the Migration by descending the Inca trail in formation — twelve days, full kit, no incidents — and arrived at the Yucatan staging grounds with their resting heart-rates one-third the League average. Their Tank line are the highest-altitude-acclimatized knights ever to take a League pitch; their Brawlers spit, by ceremony, before every match opening (the Caucus's Decorum Subcommittee voted, in their first hearing, that ceremonial spitting is permitted provided it is directed at the ground and not at officials). Their captain Yawar Quinoa-Step is the oldest active rookie in League history (forty-two), a former pack-train master who took up sanctioned combat after his herd was killed by a rockfall in the Year-36 storms.", chants: ["UP! UP!", "ALTITUDE WINS!", "LLAMA STRONG, LLAMA SLOW, LLAMA WINS!"] },
+  { id: "cmn", emoji: "🐊", short: "CMN", name: "Pantanal Patient Caimans", color: "#6a7a5a",
+    founded: 2025, motto: "We were here before you. We will be here after.",
+    continent: "sa",
+    lore: "From the Pantanal wetlands at the borders of what the Old Ones called Brazil, Bolivia, and Paraguay — the largest inland wetland on the continent, and the only League pitch where home-team Tanks may legally enter water during play (Caucus Rule 7-3-2-a, ratified the season the Caimans were admitted). The Caimans' play style is, by every analyst's read, the most patient in the League: they will hold position for entire rounds, drawing opponents in. Their captain, Saurine Mudstep, holds the record for longest single-match hold (47 minutes, Year 37 R3, against the Bison). The Mudstep family is older than any other captaincy lineage on the continent; the Pantanal Saurians have, by Caucus archive, been governing themselves since before the Old Ones drew borders. Saurine has, in three Caucus appearances, declined to specify how long this is in years, on the grounds that the question is impolite.", chants: ["WE WAIT!", "PANTANAL!", "MUD IS HOME!"] },
+  { id: "anc", emoji: "🐍", short: "ANC", name: "Iquitos Insistent Anacondas", color: "#4a6a3a",
+    founded: 2025, motto: "Constrict, then commit.",
+    continent: "sa",
+    lore: "From the Peruvian Amazon's largest river-port at Iquitos, accessible only by water — the team traveled the entire Migration upstream and overland, a four-month route that included two river crossings and one diplomatic incident at the Panama staging grounds (resolved, per the LMG broadcast booth, by 'a quiet conversation between elders'). The Anacondas play a perimeter-tightening style — they encircle, then constrict, then strike. Their captain Yacumama Riverwide is the only Brawler in League history to use only her arms and tail as weapons; her formal weapon registration lists 'self, the entire knight' under Equipment, and the Caucus has accepted this for three review cycles. The team practices in the flooded forest with the support of the Iquitos riverboat collective, whose ceremonial pennants fly from the Anacondas' bench at every match.", chants: ["TIGHTEN!", "RIVER STRIKES!", "ANACONDA HOLDS!"] },
+  { id: "slt", emoji: "🦥", short: "SLT", name: "Quito Quiet Sloths", color: "#8a7050",
+    founded: 2025, motto: "We arrive. Eventually. Then everything changes.",
+    continent: "sa",
+    lore: "From the cloud-forest highlands above what the Old Ones called Quito, Ecuador. The Sloths are the League's slowest team by movement metric, by a margin so significant that the Caucus's Speed-Stat Subcommittee requested they be allowed a separate metric scale (declined: 'the league is a single scale or it is not'). The Sloths compensate via the longest reach in the League — their three-meter telescoping limb-staves, a regional Quechua design, give them an effective melee range no other team can match. Their captain Itzhak Greenmoss-Bough has not, in two seasons of training and one season of competitive play, ever moved at more than one-half League standard speed. He has also not, in those three seasons, missed a single planned engagement. The Featherquill press has called this 'a kind of patience that is, frankly, terrifying.'", chants: ["WE ARRIVE!", "QUIET! QUIET!", "REACH IS EVERYTHING!"] },
+  { id: "cdr", emoji: "🦅", short: "CDR", name: "Atacama Soaring Condors", color: "#2a2a2a",
+    founded: 2025, motto: "From above. Always.",
+    continent: "sa",
+    lore: "From the Atacama desert highlands on the Chilean-Bolivian altiplano, where the team's home pitch sits at five thousand meters and the air, per the visiting team waivers, 'requires a signed consent form.' The Condors are the only fully aerial team in the League — their Snipers train from the high thermal columns, and their primary tactical maneuver, the Condor Drop, has been classified by the Caucus as a 'sustained controlled descent' rather than a 'fall' (the distinction matters for penalty assessment). Captain Mama-Pacha Soaring-Bone is the tallest knight in the League by a margin, with a wingspan that exceeds two meters and a documented stoop-dive that the Yucatan Quetzals' Cintzli has called, in an LMG interview, <em>'the only attack pattern I have not yet figured out how to defend against.'</em> The two teams have, in three exhibition matches, ended each match within twenty seconds of the other.", chants: ["FROM ABOVE!", "WINGS WIDE!", "CONDORS NEVER LAND!"] },
+  { id: "cap", emoji: "🐒", short: "CAP", name: "Caracas Cunning Capuchins", color: "#b88060",
+    founded: 2025, motto: "Three steps ahead. Always.",
+    continent: "sa",
+    lore: "From the coastal range north of what the Old Ones called Caracas, Venezuela. The Capuchins are the League's most tactically improvisational team — their training drills include 'situations the coach has not previously seen,' a category which the Caucus's Procedural Subcommittee took two full hearings to determine was legal. Their Brawlers have been documented, in match footage, using opposing teams' dropped equipment within the same engagement they retrieved it from — a habit which Coach Slatebrush has called <em>'recreational theft, and effective recreational theft at that.'</em> Captain Ariki Stone-Holder is the only knight in League history to have, in a single match, used four different weapons (her own, two stolen from opponents, and one improvised from a fallen banner-pole). The Caucus's Equipment Subcommittee has, in response, drafted but not ratified the 'one-weapon-per-knight' rule, on the grounds that ratifying it would 'spoil the entertainment.'", chants: ["STEAL IT! USE IT!", "THINK FAST!", "CAPUCHINS WIN!"] },
+  { id: "pir", emoji: "🐠", short: "PIR", name: "Tucupi Tearing Piranhas", color: "#c84030",
+    founded: 2025, motto: "One at a time. All at once.",
+    continent: "sa",
+    lore: "From the freshwater tributary network around what the Old Ones called Belém, where the team's home venue is a constructed shallow-pool pitch and the only League facility where match-day flooding is a planned feature rather than a contingency. The Piranhas are the League's fastest-attacking team — their Strikers commit in coordinated bursts of three or four knights at once on the same target, then disperse before counter-attack can land. Captain Tamburi-Red Quicksilver-Tooth holds the record for shortest engagement-to-disengagement window in League history (0.9 seconds, set in their LY 11 R2 debut against the Frogs — the Frogs have, in interviews, called this 'unfair, but legal'). The team's collective wisdom is held by the elder Mãe-Vermelha Old-Tooth, who has fought no sanctioned matches in two decades but who reviews every Piranha post-match in a brief, intense conference the team calls 'the bite review.'", chants: ["ALL AT ONCE!", "RED WATER!", "PIRANHAS FEED!"] },
 ];
+
+// === v37.91: tag all original teams with continent="na" if not yet tagged ===
+// Backward compat for save data that predates the South American expansion.
+for (const t of TEAMS) {
+  if (!t.continent) t.continent = "na";
+}
 const TEAM_BY_ID = Object.fromEntries(TEAMS.map(t => [t.id, t]));
 
 // === v37.32: safeTeam(id) — defensive lookup ===
@@ -12594,6 +12768,63 @@ function safeTeam(id) {
   };
 }
 if (typeof window !== "undefined") window.safeTeam = safeTeam;
+
+/* === v37.91: formatBracketSlot — canonical slot-id → label helper ===
+   Consolidates the slot-label conversions that lived inline at 6+ UI sites
+   (each implemented slightly differently). The 16-team N-vs-S bracket
+   introduced r1_* slots, and adding them piecemeal at each site was already
+   producing drift between contexts.
+
+   Styles:
+     "long"        → "Round of 16 #1", "Quarterfinal 1", "Final"  (default)
+     "short"       → "R16 #1", "QF 1", "FINAL"  (for tables, scorebugs)
+     "descriptive" → "this round-of-16 slot", "this quarterfinal slot"
+                     (for narrative toasts like the recent-history pop-up)
+   Always safe — falls back to slot.toUpperCase() for unknown formats. */
+function formatBracketSlot(slot, style) {
+  if (!slot) return style === "descriptive" ? "this slot" : "?";
+  style = style || "long";
+  // Tail of the slot id (e.g., "1" from "r1_1", "2" from "qf2")
+  const tail = (prefix) => slot.slice(prefix.length);
+  if (slot === "final") {
+    if (style === "short") return "FINAL";
+    if (style === "descriptive") return "the Final";
+    return "Final";
+  }
+  if (slot.startsWith("r1_")) {
+    if (style === "short") return "R16 #" + tail("r1_");
+    if (style === "descriptive") return "this round-of-16 slot";
+    return "Round of 16 #" + tail("r1_");
+  }
+  if (slot.startsWith("ql")) {
+    if (style === "short") return "QL " + tail("ql");
+    if (style === "descriptive") return "this qualifier slot";
+    return "Qualifier " + tail("ql");
+  }
+  if (slot.startsWith("qf")) {
+    if (style === "short") return "QF " + tail("qf");
+    if (style === "descriptive") return "this quarterfinal slot";
+    return "Quarterfinal " + tail("qf");
+  }
+  if (slot.startsWith("sf")) {
+    if (style === "short") return "SF " + tail("sf");
+    if (style === "descriptive") return "this semifinal slot";
+    return "Semifinal " + tail("sf");
+  }
+  if (slot.startsWith("semi")) {
+    if (style === "short") return "SF " + tail("semi");
+    if (style === "descriptive") return "this semifinal slot";
+    return "Semifinal " + tail("semi");
+  }
+  if (slot.startsWith("qual")) {
+    if (style === "short") return "QL " + tail("qual");
+    if (style === "descriptive") return "this qualifier slot";
+    return "Qualifier " + tail("qual");
+  }
+  // Unknown — last-ditch fallback
+  return style === "descriptive" ? "this slot" : slot.toUpperCase();
+}
+if (typeof window !== "undefined") window.formatBracketSlot = formatBracketSlot;
 
 /* ============================================================
    v28.29: TEAM_PROFILES — canonical lore metadata per team.
@@ -13984,6 +14215,15 @@ window.getCoachFor = getCoachFor;
 const LEAGUE = {
   season: 1,
   bits: 0,
+  // === v37.91: continent selector ===
+  // "na" = North America teams only (default — original behavior)
+  // "sa" = South America teams only
+  // "both" = Full 16-team North vs South tournament
+  continent: "na",
+  // First-time-seen flag for the Panama Bridge Migration narrative beat.
+  // Set true after the migration feed event has fired so it doesn't repeat
+  // on every continent toggle. Persisted via serializeLeague.
+  seenMigrationLore: false,
   // Roster: { fox: [5 players], bvr: [5 players], owl: [5 players], shk: [5 players] }
   rosters: {},
   // Permanent graveyard: array of deceased players (never reaped)
@@ -14177,6 +14417,13 @@ function initLeague(opts) {
   LEAGUE.betStats = { won: 0, lost: 0, refunded: 0, lifetimeNet: 0, seasonNet: 0, statsSeason: 1 };
   // v37.50: reset trade history on fresh league
   LEAGUE.tradeHistory = [];
+  // === v37.91: reset narrative-beat flags so they re-fire on a fresh league ===
+  // LEAGUE.continent is intentionally NOT reset here — the user's continent
+  // choice survives a league reset (treat it as a persistent preference,
+  // like bracket size or game mode). But seenMigrationLore SHOULD reset so
+  // a player who resets and re-selects "both" gets to experience the
+  // Panama Bridge Migration narrative again.
+  LEAGUE.seenMigrationLore = false;
   LEAGUE.startedAt = Date.now();   // when this league was first booted (immutable)
   LEAGUE.lastTickAt = Date.now();  // wall-clock of most recent sim activity (updated each frame)
   // === v28.16: roll initial AI-style assignments for season 1 ===
@@ -14413,7 +14660,11 @@ function _drawLineageNameFor(teamId, position) {
   });
   const chain = candidates[0];
   // Roll for inheritance — 55%
-  if (Math.random() > 0.55) return null;
+  // === v37.92 determinism fix: was Math.random ===
+  // This is called from backfillRosters → startMatch (deterministic sim
+  // path). Math.random made lineage outcomes diverge between replays
+  // of the same seed. SIM_RNG.next() restores reproducibility.
+  if (SIM_RNG.next() > 0.55) return null;
   // Generate a fresh first name + the chain's surname + the next ordinal
   const firstName = (typeof genFirstName === "function") ? genFirstName() : "Knight";
   const ordinal = LINEAGE_ORDINALS[chain.nextOrdinalIndex];
@@ -14453,8 +14704,27 @@ function _normalizeCustomTeam(ct) {
    can step through them generically.
    ============================================================ */
 function buildBracket() {
-  const size = (LEAGUE_CONFIG && LEAGUE_CONFIG.bracketSize) || 4;
-  const teams = shuffle(TEAMS.map(t => t.id));
+  // === v37.91: continent-aware team filtering + size 16 bracket ===
+  const continent = (LEAGUE.continent || "na").toLowerCase();
+  let teamPool;
+  if (continent === "sa") {
+    teamPool = TEAMS.filter(t => t.continent === "sa");
+  } else if (continent === "both") {
+    teamPool = TEAMS.slice();  // all teams
+  } else {
+    teamPool = TEAMS.filter(t => t.continent !== "sa");
+  }
+  // Honor an explicit LEAGUE_CONFIG.bracketSize, otherwise default based on
+  // continent: "both" gets the full 16-team bracket; "na"/"sa" use 8.
+  let size;
+  if (LEAGUE_CONFIG && LEAGUE_CONFIG.bracketSize) {
+    size = LEAGUE_CONFIG.bracketSize;
+  } else if (continent === "both") {
+    size = 16;
+  } else {
+    size = 8;
+  }
+  const teams = shuffle(teamPool.map(t => t.id));
   LEAGUE.bracket = { _order: [] };
 
   if (size === 4) {
@@ -14473,6 +14743,92 @@ function buildBracket() {
     LEAGUE.bracket.sf2 = { teamA: null, teamB: null, winner: null, casualties: [], depends: ["qf3","qf4"] };
     LEAGUE.bracket.final = { teamA: null, teamB: null, winner: null, casualties: [], depends: ["sf1","sf2"] };
     LEAGUE.bracket._order = ["qf1","qf2","qf3","qf4","sf1","sf2","final"];
+  } else if (size === 16) {
+    // === v37.91: Full North-vs-South tournament ===
+    // 16 teams, single elimination, 15 matches total.
+    // First round seeds NA vs SA alternating where possible:
+    //   r1_1..r1_8 = round of 16 (8 matches)
+    //   qf1..qf4 = quarter-finals (4 matches)
+    //   sf1..sf2 = semi-finals (2 matches)
+    //   final = championship
+    //
+    // We split the shuffled pool into NA and SA halves, then alternate
+    // when picking match pairings — round 1 is NA-vs-SA wherever
+    // possible. With 8 NA + 8 SA teams, every first-round match is
+    // a cross-continental clash. (If the pool is uneven — e.g., a future
+    // season removes teams via attrition — we fall back to random
+    // pairings for whatever remains.)
+    //
+    // === v37.91 bugfix: pool-undersize safety ===
+    // If the team pool has fewer than 16 teams (e.g., user picked
+    // continent="sa" which has only 8 teams, then manually set
+    // bracketSize=16 via Settings), we'd previously build r1_*
+    // slots with teamA/teamB = undefined. Now we auto-downsize
+    // to the next-smaller standard bracket (8) and rebuild, so
+    // the bracket structure is always valid.
+    if (teamPool.length < 16) {
+      // Warn via console (one-time per build) and recurse with size 8
+      try {
+        if (typeof console !== "undefined") {
+          console.warn("[v37.91] 16-team bracket requested but only " +
+            teamPool.length + " teams in '" + continent +
+            "' pool; auto-downsizing to 8.");
+        }
+      } catch (_) {}
+      // Honor a temporary size override by recursing into the size===8
+      // branch below. Build it inline to avoid a recursion loop with
+      // LEAGUE_CONFIG.bracketSize.
+      const chosen8 = teams.slice(0, 8);
+      for (let i = 0; i < 4; i++) {
+        LEAGUE.bracket["qf" + (i+1)] = { teamA: chosen8[i*2], teamB: chosen8[i*2+1], winner: null, casualties: [], depends: null };
+      }
+      LEAGUE.bracket.sf1 = { teamA: null, teamB: null, winner: null, casualties: [], depends: ["qf1","qf2"] };
+      LEAGUE.bracket.sf2 = { teamA: null, teamB: null, winner: null, casualties: [], depends: ["qf3","qf4"] };
+      LEAGUE.bracket.final = { teamA: null, teamB: null, winner: null, casualties: [], depends: ["sf1","sf2"] };
+      LEAGUE.bracket._order = ["qf1","qf2","qf3","qf4","sf1","sf2","final"];
+      LEAGUE.currentSlot = LEAGUE.bracket._order[0];
+      return;
+    }
+    let chosen;
+    if (continent === "both") {
+      const naIds = shuffle(teamPool.filter(t => t.continent !== "sa").map(t => t.id));
+      const saIds = shuffle(teamPool.filter(t => t.continent === "sa").map(t => t.id));
+      // Interleave for cross-continental r1 matches: [na, sa, na, sa, ...]
+      chosen = [];
+      const maxLen = Math.max(naIds.length, saIds.length);
+      for (let i = 0; i < maxLen && chosen.length < 16; i++) {
+        if (i < naIds.length && chosen.length < 16) chosen.push(naIds[i]);
+        if (i < saIds.length && chosen.length < 16) chosen.push(saIds[i]);
+      }
+      // If still short, top up with anything left in the pool
+      while (chosen.length < 16 && teams.length > 0) {
+        const next = teams.shift();
+        if (!chosen.includes(next)) chosen.push(next);
+      }
+    } else {
+      chosen = teams.slice(0, 16);
+    }
+    for (let i = 0; i < 8; i++) {
+      LEAGUE.bracket["r1_" + (i+1)] = {
+        teamA: chosen[i*2], teamB: chosen[i*2+1],
+        winner: null, casualties: [], depends: null,
+      };
+    }
+    for (let i = 0; i < 4; i++) {
+      LEAGUE.bracket["qf" + (i+1)] = {
+        teamA: null, teamB: null, winner: null, casualties: [],
+        depends: ["r1_" + (i*2+1), "r1_" + (i*2+2)],
+      };
+    }
+    LEAGUE.bracket.sf1 = { teamA: null, teamB: null, winner: null, casualties: [], depends: ["qf1","qf2"] };
+    LEAGUE.bracket.sf2 = { teamA: null, teamB: null, winner: null, casualties: [], depends: ["qf3","qf4"] };
+    LEAGUE.bracket.final = { teamA: null, teamB: null, winner: null, casualties: [], depends: ["sf1","sf2"] };
+    LEAGUE.bracket._order = [
+      "r1_1","r1_2","r1_3","r1_4","r1_5","r1_6","r1_7","r1_8",
+      "qf1","qf2","qf3","qf4",
+      "sf1","sf2",
+      "final"
+    ];
   } else if (size === 12) {
     // Top 4 by championships (then by wins) get byes; bottom 8 play qualifiers
     const ranked = TEAMS.slice().sort((a, b) => {
@@ -14991,10 +15347,21 @@ function applyBoosts(teamId, players) {
 const FEED = [];
 const FEED_MAX = 60;
 
+/* === v37.92: shared match-clock timestamp helper ===
+   Format is SS:cc — seconds elapsed in the current round, and
+   centiseconds (frame % 20 * 5, since each frame = 50ms at 20fps).
+   Returns "--:--" when no match is live. Pulled out of feed() /
+   commentate() — they had this exact format string inlined twice. */
+function _matchClockTs() {
+  if (!LEAGUE.match) return "--:--";
+  const f = LEAGUE.match.frame || 0;
+  const seconds = Math.floor(f / 20);
+  const centi = (f % 20) * 5;
+  return `${String(seconds).padStart(2, "0")}:${String(centi).padStart(2, "0")}`;
+}
+
 function feed(kind, msg) {
-  const ts = LEAGUE.match
-    ? `${String(Math.floor(LEAGUE.match.frame / 20)).padStart(2,"0")}:${String(LEAGUE.match.frame % 20 * 5).padStart(2,"0")}`
-    : "--:--";
+  const ts = _matchClockTs();
   FEED.unshift({ kind, msg, ts });
   if (FEED.length > FEED_MAX) FEED.length = FEED_MAX;
   if (typeof renderFeed === "function") renderFeed();
@@ -15017,9 +15384,7 @@ const COMMENTARY_MAX = 40;
 function commentate(kind, line, opts) {
   if (!line) return;
   opts = opts || {};
-  const ts = LEAGUE.match
-    ? `${String(Math.floor(LEAGUE.match.frame / 20)).padStart(2,"0")}:${String(LEAGUE.match.frame % 20 * 5).padStart(2,"0")}`
-    : "--:--";
+  const ts = _matchClockTs();
   const entry = {
     kind,                                 // "play"|"color"|"chant"|"opener"
     line,
@@ -15494,6 +15859,8 @@ function startMatch() {
           const slotLabel = (function(s) {
             if (!s) return "this slot";
             if (s === "final") return "the Final";
+            // === v37.91 ripple: round of 16 ===
+            if (s.startsWith("r1_")) return "this round-of-16 slot";
             if (s.startsWith("sf")) return "this semifinal slot";
             if (s.startsWith("qf")) return "this quarterfinal slot";
             if (s.startsWith("ql")) return "this qualifier slot";
@@ -18324,10 +18691,18 @@ window.AI_PATHING_STYLES = AI_PATHING_STYLES;
 
 /* Roll fresh per-team AI assignments at season start. */
 function rollSeasonAiStyles() {
-  if (typeof LEAGUE === "undefined" || !LEAGUE.rosters) return;
+  if (typeof LEAGUE === "undefined") return;
+  if (typeof TEAMS === "undefined" || !Array.isArray(TEAMS) || TEAMS.length === 0) return;
   const styleIds = Object.keys(AI_PATHING_STYLES);
   const assignments = {};
-  for (const teamId of Object.keys(LEAGUE.rosters)) {
+  // === v37.91 defensive: iterate TEAMS (not LEAGUE.rosters) ===
+  // Pre-v37.91 this iterated Object.keys(LEAGUE.rosters), which meant
+  // teams that hadn't yet had rosters built (e.g., SA teams after
+  // upgrading from a pre-v37.91 save) would lack an aiStyle assignment
+  // for the current season — getAiPathingMods would fall back to
+  // "balanced" silently, losing the season's flavor for those teams.
+  for (const team of TEAMS) {
+    const teamId = team.id;
     // v37.78 determinism fix: was Math.random — broke replay reproducibility.
     // Style choice cascades into every match that season.
     const idx = Math.floor(SIM_RNG.next() * styleIds.length);
@@ -24688,16 +25063,8 @@ function settleBetsAsRefund() {
   for (const bet of LEAGUE.bets) {
     if (bet.slot !== m.slot) { remaining.push(bet); continue; }
     LEAGUE.bits += bet.amount;
-    // === v37.42: tally refund — compensates the placeBet stake subtraction ===
-    if (LEAGUE.betStats) {
-      if (LEAGUE.betStats.statsSeason !== LEAGUE.season) {
-        LEAGUE.betStats.seasonNet = 0;
-        LEAGUE.betStats.statsSeason = LEAGUE.season;
-      }
-      LEAGUE.betStats.refunded    += 1;
-      LEAGUE.betStats.lifetimeNet += bet.amount;
-      LEAGUE.betStats.seasonNet   += bet.amount;
-    }
+    // v37.93: was 8-line inline season-reset + tally; now via helper.
+    _applyBetTxn(+bet.amount, "refunded");
     if (typeof window !== "undefined" && window.toast)
       window.toast(`Match drew — bet refunded: <b>+${bet.amount}</b> bits`, "warn");
   }
@@ -24798,22 +25165,16 @@ function finalizeSeason() {
       if (bet.target === champion) {
         const payout = Math.round(bet.amount * bet.payoutMult);
         LEAGUE.bits += payout;
-        if (LEAGUE.betStats) {
-          if (LEAGUE.betStats.statsSeason !== LEAGUE.season) {
-            LEAGUE.betStats.seasonNet = 0;
-            LEAGUE.betStats.statsSeason = LEAGUE.season;
-          }
-          LEAGUE.betStats.won         += 1;
-          LEAGUE.betStats.lifetimeNet += payout;
-          LEAGUE.betStats.seasonNet   += payout;
-        }
+        // v37.93: was 8-line inline; now via helper.
+        _applyBetTxn(+payout, "won");
         feed("season", `💸 Season bet WON: +${payout} bits on ${tName} (Season ${bet.season} champion @ ${bet.payoutMult}×)`);
         if (typeof window !== "undefined" && window.toast) {
           window.toast(`Season bet WON: <b>+${payout}</b> bits on ${tName}`, "win",
             { ico: "🏆", ttl: 8000, subText: `Season ${bet.season} champion @ ${bet.payoutMult}×` });
         }
       } else {
-        if (LEAGUE.betStats) LEAGUE.betStats.lost += 1;
+        // v37.93: stake already debited; only counter changes.
+        _applyBetTxn(0, "lost");
         feed("season", `💔 Season bet lost: ${bet.amount} bits on ${tName} (champion was ${TEAM_BY_ID[champion]?.short || champion})`);
         if (typeof window !== "undefined" && window.toast) {
           window.toast(`Season bet lost: <b>-${bet.amount}</b> bits on ${tName}`, "lose",
@@ -25088,19 +25449,50 @@ function playerOdds(teamA, teamB) {
    sealed by then — see settleBet path below).
    ============================================================ */
 function seasonOdds() {
-  // Returns { [teamId]: payoutMult } for ALL teams currently in
-  // the league. Uses computeLadderRanking for ordering and the
-  // current bracket progress for the early-bet multiplier.
+  // Returns { [teamId]: payoutMult } for teams ELIGIBLE to win this
+  // season — i.e., teams that appear in the current bracket. Uses
+  // computeLadderRanking for ordering and the current bracket progress
+  // for the early-bet multiplier.
+  //
+  // === v37.91 legacy bugfix: filter by bracket eligibility ===
+  // Pre-v37.91 this returned odds for ALL teams in TEAMS. In single-
+  // continent mode (na or sa), teams from the other continent CAN'T
+  // be in the bracket and CAN'T win — but they had odds anyway, with
+  // high payout multipliers (since they had no recent wins). Players
+  // could lose bits placing impossible bets on rank-bottomed teams.
   if (typeof TEAMS === "undefined" || !LEAGUE) return {};
   if (typeof computeLadderRanking !== "function") return {};
+  // Collect the set of team ids actually in the current bracket
+  let eligibleIds = null;
+  if (LEAGUE.bracket && typeof LEAGUE.bracket === "object") {
+    eligibleIds = new Set();
+    for (const k of Object.keys(LEAGUE.bracket)) {
+      if (k === "_order") continue;
+      const slot = LEAGUE.bracket[k];
+      if (!slot || typeof slot !== "object") continue;
+      if (slot.teamA) eligibleIds.add(slot.teamA);
+      if (slot.teamB) eligibleIds.add(slot.teamB);
+      // Include any winner that has resolved into a later slot (the
+      // winner field carries forward — useful for late-stage betting)
+      if (slot.winner) eligibleIds.add(slot.winner);
+    }
+    // If we somehow have no eligible ids (corrupt bracket), bail to old
+    // behavior so the user can still see SOMETHING. Defensive fallback.
+    if (eligibleIds.size === 0) eligibleIds = null;
+  }
   const ladder = computeLadderRanking();
-  const totalTeams = ladder.length || 1;
+  // Filter ladder to eligible teams BEFORE computing rank-fraction so
+  // rank ordering is correct within the eligible set.
+  const eligibleLadder = eligibleIds
+    ? ladder.filter(e => eligibleIds.has(e.team.id))
+    : ladder;
+  const totalTeams = eligibleLadder.length || 1;
   // Bracket-progress multiplier — query LEAGUE.bracket for the most
   // advanced ACTIVE round to determine the bonus.
   const progressBonus = _seasonBetProgressBonus();
   const out = {};
-  for (let i = 0; i < ladder.length; i++) {
-    const entry = ladder[i];
+  for (let i = 0; i < eligibleLadder.length; i++) {
+    const entry = eligibleLadder[i];
     // Base odds by rank: rank 1 (best) = 1.5×, scales up to ~10× at last place.
     // Power curve so the middle teams have a respectable but not crazy payout.
     const rankFrac = i / Math.max(1, totalTeams - 1);  // 0 = top, 1 = bottom
@@ -25151,6 +25543,37 @@ function seasonBetMarketOpen() {
 }
 window.seasonBetMarketOpen = seasonBetMarketOpen;
 
+/* === v37.93: bet-stats transaction helper ===
+   Consolidates the 7-site season-reset + counter-bump + net-delta pattern
+   that lived inline in placeBet / settleBets / settleRoundBets / etc.
+   Behavior:
+     - If LEAGUE.betStats is missing, no-op (defensive).
+     - If the stats season has rolled over (statsSeason !== LEAGUE.season),
+       zero out seasonNet first and stamp the new season.
+     - If counterField is supplied ("won"|"lost"|"refunded"), increment it
+       by 1.
+     - If netDelta is non-zero, add it to BOTH lifetimeNet and seasonNet.
+   Usage:
+     _applyBetTxn(-amount, null)       // stake debit (counter elsewhere)
+     _applyBetTxn(+payout, "won")      // settled win
+     _applyBetTxn(0,       "lost")     // settled loss (stake already debited)
+     _applyBetTxn(+amount, "refunded") // draw refund                  */
+function _applyBetTxn(netDelta, counterField) {
+  if (!LEAGUE.betStats) return;
+  if (LEAGUE.betStats.statsSeason !== LEAGUE.season) {
+    LEAGUE.betStats.seasonNet = 0;
+    LEAGUE.betStats.statsSeason = LEAGUE.season;
+  }
+  if (counterField) {
+    LEAGUE.betStats[counterField] = (LEAGUE.betStats[counterField] || 0) + 1;
+  }
+  if (netDelta) {
+    LEAGUE.betStats.lifetimeNet += netDelta;
+    LEAGUE.betStats.seasonNet   += netDelta;
+  }
+}
+if (typeof window !== "undefined") window._applyBetTxn = _applyBetTxn;
+
 function placeBet(kind, target, amount) {
   // kind: "team"      → target is teamId, resolves at MATCH end
   //       "round"     → target is teamId, resolves at end of NEXT round
@@ -25187,14 +25610,8 @@ function placeBet(kind, target, amount) {
     if (!payoutMult) return false;
     if (!TEAM_BY_ID[target]) return false;
     LEAGUE.bits -= amount;
-    if (LEAGUE.betStats) {
-      if (LEAGUE.betStats.statsSeason !== LEAGUE.season) {
-        LEAGUE.betStats.seasonNet = 0;
-        LEAGUE.betStats.statsSeason = LEAGUE.season;
-      }
-      LEAGUE.betStats.lifetimeNet -= amount;
-      LEAGUE.betStats.seasonNet   -= amount;
-    }
+    // v37.93: was 7-line inline; now via helper.
+    _applyBetTxn(-amount, null);
     LEAGUE.bets.push({
       kind: "season",
       target,
@@ -25263,15 +25680,8 @@ function placeBet(kind, target, amount) {
   } else return false;
 
   LEAGUE.bits -= amount;
-  // === v37.42: tally stake against lifetimeNet + seasonNet ===
-  if (LEAGUE.betStats) {
-    if (LEAGUE.betStats.statsSeason !== LEAGUE.season) {
-      LEAGUE.betStats.seasonNet = 0;
-      LEAGUE.betStats.statsSeason = LEAGUE.season;
-    }
-    LEAGUE.betStats.lifetimeNet -= amount;
-    LEAGUE.betStats.seasonNet   -= amount;
-  }
+  // v37.93: was 7-line inline season-reset + tally; now via helper.
+  _applyBetTxn(-amount, null);
   const m = LEAGUE.match;
   const roundIndex = (kind === "round" && m) ? (m.currentRoundIndex + (m.phase === "betweenRounds" || m.phase === "preRound" ? 1 : 0)) : null;
   LEAGUE.bets.push({ kind, target, amount, payoutMult, slot: LEAGUE.currentSlot, roundIndex });
@@ -25302,22 +25712,14 @@ function settleRoundBets(roundWinnerTeamId) {
     if (bet.target === roundWinnerTeamId) {
       const payout = Math.round(bet.amount * bet.payoutMult);
       LEAGUE.bits += payout;
-      // === v37.42: tally win + payout net ===
-      if (LEAGUE.betStats) {
-        if (LEAGUE.betStats.statsSeason !== LEAGUE.season) {
-          LEAGUE.betStats.seasonNet = 0;
-          LEAGUE.betStats.statsSeason = LEAGUE.season;
-        }
-        LEAGUE.betStats.won         += 1;
-        LEAGUE.betStats.lifetimeNet += payout;
-        LEAGUE.betStats.seasonNet   += payout;
-      }
+      // v37.93: was 7-line inline season-reset + tally; now via helper.
+      _applyBetTxn(+payout, "won");
       feed("item", `💸 Round bet won! +${payout} bits (round ${m.currentRoundIndex})`);
       if (typeof window !== "undefined" && window.toast)
         window.toast(`Round ${m.currentRoundIndex} bet WON: <b>+${payout}</b> bits on ${tName}`, "win");
     } else {
-      // === v37.42: tally loss (stake already subtracted on placeBet) ===
-      if (LEAGUE.betStats) LEAGUE.betStats.lost += 1;
+      // v37.93: stake already debited at placeBet; only counter changes.
+      _applyBetTxn(0, "lost");
       feed("item", `💔 Round bet lost: ${bet.amount} bits.`);
       if (typeof window !== "undefined" && window.toast)
         window.toast(`Round ${m.currentRoundIndex} bet lost: <b>-${bet.amount}</b> bits on ${tName}`, "lose");
@@ -25347,16 +25749,8 @@ function settleBets(winnerTeamId) {
     }
     if (bet.kind === "round") {
       LEAGUE.bits += bet.amount;
-      // === v37.42: tally refund — compensates the placeBet stake subtraction ===
-      if (LEAGUE.betStats) {
-        if (LEAGUE.betStats.statsSeason !== LEAGUE.season) {
-          LEAGUE.betStats.seasonNet = 0;
-          LEAGUE.betStats.statsSeason = LEAGUE.season;
-        }
-        LEAGUE.betStats.refunded    += 1;
-        LEAGUE.betStats.lifetimeNet += bet.amount;
-        LEAGUE.betStats.seasonNet   += bet.amount;
-      }
+      // v37.93: was 9-line inline; now via helper.
+      _applyBetTxn(+bet.amount, "refunded");
       feed("item", `↩️ Unsettled round bet refunded: ${bet.amount} bits.`);
       if (typeof window !== "undefined" && window.toast)
         window.toast(`Round bet refunded: <b>+${bet.amount}</b> bits (match ended early)`, "warn");
@@ -25393,22 +25787,14 @@ function settleBets(winnerTeamId) {
     if (win) {
       const payout = Math.round(bet.amount * bet.payoutMult);
       LEAGUE.bits += payout;
-      // === v37.42: tally win + payout net ===
-      if (LEAGUE.betStats) {
-        if (LEAGUE.betStats.statsSeason !== LEAGUE.season) {
-          LEAGUE.betStats.seasonNet = 0;
-          LEAGUE.betStats.statsSeason = LEAGUE.season;
-        }
-        LEAGUE.betStats.won         += 1;
-        LEAGUE.betStats.lifetimeNet += payout;
-        LEAGUE.betStats.seasonNet   += payout;
-      }
+      // v37.93: was 9-line inline; now via helper.
+      _applyBetTxn(+payout, "won");
       feed("item", `💸 Bet won! +${payout} bits (${bet.kind})`);
       if (typeof window !== "undefined" && window.toast)
         window.toast(`Match bet WON: <b>+${payout}</b> bits on ${label}`, "win");
     } else {
-      // === v37.42: tally loss (stake already subtracted on placeBet) ===
-      if (LEAGUE.betStats) LEAGUE.betStats.lost += 1;
+      // v37.93: stake already debited; only counter changes.
+      _applyBetTxn(0, "lost");
       feed("item", `💔 Bet lost: ${bet.amount} bits on ${bet.kind}.`);
       if (typeof window !== "undefined" && window.toast)
         window.toast(`Match bet lost: <b>-${bet.amount}</b> bits on ${label}`, "lose");
@@ -31555,6 +31941,8 @@ function renderBracketStrip() {
   const order = LEAGUE.bracket._order || ["semi1", "semi2", "final"];
   // Build labels dynamically based on slot prefix
   const labelFor = (slot) => {
+    // === v37.91: round of 16 (16-team continental bracket) ===
+    if (slot.startsWith("r1_")) return "Round of 16 · #" + slot.slice(3);
     if (slot.startsWith("ql")) return "Qualifier " + slot.slice(2);
     if (slot.startsWith("qf")) return "Quarterfinal " + slot.slice(2);
     if (slot.startsWith("sf")) return "Semifinal " + slot.slice(2);
@@ -31586,16 +31974,27 @@ function renderBracketStrip() {
       bScore = LEAGUE.match.killsByTeam[bId] || 0;
     }
 
+    // === v37.91: continent badge (only shown in N-vs-S mode) ===
+    const showContBadge = (LEAGUE.continent === "both");
+    const aCont = aTeam?.continent || "na";
+    const bCont = bTeam?.continent || "na";
+    const aBadge = showContBadge && aTeam
+      ? `<span class="cont-badge cont-${aCont}">${aCont === "sa" ? "S" : "N"}</span>`
+      : "";
+    const bBadge = showContBadge && bTeam
+      ? `<span class="cont-badge cont-${bCont}">${bCont === "sa" ? "S" : "N"}</span>`
+      : "";
+
     el.innerHTML = `
       <div class="label">${labelFor(slot)}</div>
       <div class="team-row ${aClass}">
-        <span class="em">${aTeam?.emoji || "❓"}</span>
+        ${aBadge}<span class="em">${aTeam?.emoji || "❓"}</span>
         <span class="nm">${aTeam?.short || "TBD"}</span>
         <span class="sc">${aScore}</span>
       </div>
       <div class="vs-divider">VS</div>
       <div class="team-row ${bClass}">
-        <span class="em">${bTeam?.emoji || "❓"}</span>
+        ${bBadge}<span class="em">${bTeam?.emoji || "❓"}</span>
         <span class="nm">${bTeam?.short || "TBD"}</span>
         <span class="sc">${bScore}</span>
       </div>
@@ -31628,24 +32027,28 @@ function renderLadder() {
 
   // Group matches by round prefix
   const rounds = {
+    // === v37.91: 16-team round of 16 (Round 1) — North vs South bracket ===
+    round1:    { label: "Round of 16",   matches: [], slotPrefix: "r1_" },
     qualifier: { label: "Qualifiers",   matches: [], slotPrefix: "ql" },
     quarter:   { label: "Quarterfinals", matches: [], slotPrefix: "qf" },
     semi:      { label: "Semifinals",    matches: [], slotPrefix: "sf" },
     final:     { label: "Final",         matches: [], slotPrefix: "final" },
   };
   for (const slot of order) {
-    if (slot.startsWith("ql"))      rounds.qualifier.matches.push(slot);
+    if (slot.startsWith("r1_"))     rounds.round1.matches.push(slot);
+    else if (slot.startsWith("ql")) rounds.qualifier.matches.push(slot);
     else if (slot.startsWith("qf")) rounds.quarter.matches.push(slot);
     else if (slot.startsWith("sf") || slot.startsWith("semi")) rounds.semi.matches.push(slot);
     else if (slot === "final")      rounds.final.matches.push(slot);
   }
 
   // Build the round columns — drop empty rounds (e.g., 4-team brackets have no QFs)
-  const activeRounds = ["qualifier", "quarter", "semi", "final"]
+  const activeRounds = ["round1", "qualifier", "quarter", "semi", "final"]
     .filter(r => rounds[r].matches.length > 0);
 
   // Slot label helper
   const slotLabel = (slot) => {
+    if (slot.startsWith("r1_")) return "R16 #" + slot.slice(3);
     if (slot.startsWith("ql")) return "QL " + slot.slice(2);
     if (slot.startsWith("qf")) return "QF " + slot.slice(2);
     if (slot.startsWith("sf")) return "SF " + slot.slice(2);
@@ -31697,16 +32100,31 @@ function renderLadder() {
         bScore = LEAGUE.match.roundsWonB || 0;
       }
 
+      // === v37.91: continent badge for ladder cards in "both" mode ===
+      // Only shown when continent === "both" so it doesn't clutter the
+      // standard NA-only or SA-only displays. Small N/S marker keyed
+      // by team continent. Cross-continental r1 matches stand out
+      // visually with N vs S coloring.
+      const showContBadge = (LEAGUE.continent === "both");
+      const aCont = aTeam?.continent || "na";
+      const bCont = bTeam?.continent || "na";
+      const aBadge = showContBadge && aTeam
+        ? `<span class="cont-badge cont-${aCont}">${aCont === "sa" ? "S" : "N"}</span>`
+        : "";
+      const bBadge = showContBadge && bTeam
+        ? `<span class="cont-badge cont-${bCont}">${bCont === "sa" ? "S" : "N"}</span>`
+        : "";
+
       card.innerHTML = `
         <div class="match-label">${slotLabel(slot)}</div>
         <div class="match-team-row ${aClass}">
-          <span class="em">${aTeam?.emoji || "❓"}</span>
+          ${aBadge}<span class="em">${aTeam?.emoji || "❓"}</span>
           <span class="nm">${aTeam?.short || "TBD"}</span>
           <span class="sc">${aScore}</span>
         </div>
         <div class="match-vs">VS</div>
         <div class="match-team-row ${bClass}">
-          <span class="em">${bTeam?.emoji || "❓"}</span>
+          ${bBadge}<span class="em">${bTeam?.emoji || "❓"}</span>
           <span class="nm">${bTeam?.short || "TBD"}</span>
           <span class="sc">${bScore}</span>
         </div>
@@ -31826,10 +32244,16 @@ function renderStandings() {
     } else if (delta < 0) {
       deltaIcon = `<span style="color:var(--red);font-size:9px;" title="down ${-delta} from last season">▼</span>`;
     }
+    // === v37.91: continent badge in standings (only "both" mode) ===
+    const showContBadge = (LEAGUE && LEAGUE.continent === "both");
+    const cont = t.continent || "na";
+    const contBadge = showContBadge
+      ? `<span class="cont-badge cont-${cont}" style="width:12px;height:12px;font-size:8px;">${cont === "sa" ? "S" : "N"}</span>`
+      : "";
     row.innerHTML = `
       <span style="color:var(--mute);">${rank}</span>
       ${deltaIcon}
-      <span>${t.emoji} ${escapeHTML(t.short)}</span>
+      <span style="display:flex;align-items:center;gap:4px;">${contBadge}${t.emoji} ${escapeHTML(t.short)}</span>
       <span style="font-family:'Courier New',monospace;color:var(--dim);">${r.wins}-${r.losses} · ${r.championships}🏆</span>
     `;
     list.appendChild(row);
@@ -32915,6 +33339,30 @@ function renderStore() {
   }
 }
 
+/* === v37.91: continent-driven theme application ===
+   Idempotent helper that syncs document.body's .theme-sa class with
+   LEAGUE.continent. Called from renderAll so it stays in sync with
+   every UI refresh — load, settings-apply, season-rollover, etc.
+
+   Theme mapping:
+     "na"   → default palette (NA cool blue/gold)
+     "sa"   → theme-sa palette (warm red/silver/white)
+     "both" → default palette (the unified league shows NA palette;
+              SA teams' identity colors still pop through naturally)
+
+   Safe to call before document.body exists (early boot); silently no-ops.
+   Safe to call multiple times — classList operations are idempotent. */
+function applyContinentTheme() {
+  if (typeof document === "undefined" || !document.body) return;
+  const c = (typeof LEAGUE !== "undefined" && LEAGUE && LEAGUE.continent) || "na";
+  if (c === "sa") {
+    document.body.classList.add("theme-sa");
+  } else {
+    document.body.classList.remove("theme-sa");
+  }
+}
+if (typeof window !== "undefined") window.applyContinentTheme = applyContinentTheme;
+
 function renderAll() {
   // === v37.32: try/catch wrapping ===
   // Each child renderer is wrapped so a single broken renderer (typically
@@ -32924,6 +33372,12 @@ function renderAll() {
   // see the rest of the UI and use Reset League → keep achievements to
   // recover.
   if (!window._renderErrorWarned) window._renderErrorWarned = {};
+  // === v37.91: continent theme — apply on every renderAll ===
+  // Cheap idempotent toggle on body.classList. Called here so theme
+  // is correctly applied (a) on initial render after loadLocal, and
+  // (b) after Settings apply triggers a re-render. Calling it from
+  // a single place avoids drift between save-load and live-toggle.
+  if (typeof applyContinentTheme === "function") applyContinentTheme();
   function _safeRender(fnName, fn) {
     if (typeof fn !== "function") return;
     try {
@@ -33484,6 +33938,11 @@ function showIntermission() {
   // and 12-team (qualifier/qf/sf/final) brackets without crashing on unknowns.
   const slotLabels = {
     "qual1": "Qualifier 1", "qual2": "Qualifier 2", "qual3": "Qualifier 3", "qual4": "Qualifier 4",
+    // === v37.91 ripple: 16-team N-vs-S bracket ===
+    "r1_1": "Round-of-16 Match 1", "r1_2": "Round-of-16 Match 2",
+    "r1_3": "Round-of-16 Match 3", "r1_4": "Round-of-16 Match 4",
+    "r1_5": "Round-of-16 Match 5", "r1_6": "Round-of-16 Match 6",
+    "r1_7": "Round-of-16 Match 7", "r1_8": "Round-of-16 Match 8",
     "qf1": "Quarterfinal 1", "qf2": "Quarterfinal 2", "qf3": "Quarterfinal 3", "qf4": "Quarterfinal 4",
     "sf1": "Semifinal 1", "sf2": "Semifinal 2",
     "semi1": "Semifinal 1", "semi2": "Semifinal 2",
@@ -34038,12 +34497,23 @@ function showKnightMemorial(p) {
     </div>`;
   }
   if (lineage.length > 0) {
+    // === v37.91: inline slot-label helper (was showing raw "r1_1") ===
+    const _slotLabel = (s) => {
+      if (!s) return "?";
+      if (s.startsWith("r1_")) return "R16 #" + s.slice(3);
+      if (s.startsWith("ql"))  return "QL "  + s.slice(2);
+      if (s.startsWith("qf"))  return "QF "  + s.slice(2);
+      if (s.startsWith("sf"))  return "SF "  + s.slice(2);
+      if (s.startsWith("semi")) return "SF "  + s.slice(4);
+      if (s === "final") return "FINAL";
+      return s.toUpperCase();
+    };
     body += `<table class="dt" style="font-size:10px;">
       <tr><th>Season</th><th>Slot</th><th>Gear</th><th>Lineage</th></tr>`;
     for (const g of lineage) {
       body += `<tr>
         <td>S${g.season}</td>
-        <td>${g.slot}</td>
+        <td>${escapeHTML(_slotLabel(g.slot))}</td>
         <td>${g.ico || "·"} ${escapeHTML(g.to)}</td>
         <td style="color:var(--dim);font-size:9px;">${(g.scavenged || 0) >= 3 ? `<span style="color:var(--pur);">⭐ ${g.scavenged}×</span>` : g.scavenged + "×"}</td>
       </tr>`;
@@ -34084,10 +34554,17 @@ function showTeams() {
     const r = LEAGUE.records[t.id];
     const roster = LEAGUE.rosters[t.id];
     const aliveCount = roster.filter(p => !p.deceased).length;
+    // === v37.91: continent badge for the teams directory ===
+    // Always show (regardless of LEAGUE.continent) so users can browse
+    // the full league roster and see at a glance which continent each
+    // team is from. Color matches the bracket badges.
+    const cont = t.continent || "na";
+    const contBadge = `<span class="cont-badge cont-${cont}" title="${cont === "sa" ? "South America" : "North America"}">${cont === "sa" ? "S" : "N"}</span>`;
     html += `
       <div style="margin-bottom:14px;">
         <div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:6px;">
           <span style="font-size:24px;">${t.emoji}</span>
+          ${contBadge}
           <div style="flex:1;">
             <div style="font-weight:700;">${escapeHTML(t.name)}</div>
             <div style="font-size:11px;color:var(--dim);">${r.wins}–${r.losses} · ${r.championships}🏆 · ${aliveCount}/5 alive</div>
@@ -34124,6 +34601,28 @@ function showHistory() {
       `<button onclick="closeModal()" class="secondary">Close</button>`);
     return;
   }
+  // === v37.91: slot label helper (mirror of the bracket-side labels) ===
+  // Pre-v37.91 this rendered raw slot ids ("r1_1"); now it renders
+  // human-readable labels. Kept inline since showHistory is the only
+  // consumer (showMatchDetail/renderLadder each have their own labeler
+  // by convention from the original 4/8/12 bracket eras).
+  const slotShortLabel = (s) => {
+    if (!s) return "?";
+    if (s.startsWith("r1_")) return "R16 #" + s.slice(3);
+    if (s.startsWith("ql"))  return "QL "  + s.slice(2);
+    if (s.startsWith("qf"))  return "QF "  + s.slice(2);
+    if (s.startsWith("sf"))  return "SF "  + s.slice(2);
+    if (s.startsWith("semi")) return "SF "  + s.slice(4);
+    if (s === "final") return "FINAL";
+    return s.toUpperCase();
+  };
+  // === v37.91 legacy hardening: defensive team lookup ===
+  // Pre-fix: c.emoji crashed when h.champion wasn't in TEAM_BY_ID
+  // (e.g., save from a fork with custom teams). Now falls back to a
+  // placeholder so the row still renders.
+  const safeT = (id) =>
+    (typeof safeTeam === "function") ? safeTeam(id)
+    : (TEAM_BY_ID[id] || { emoji: "❓", short: id || "?", name: id || "?" });
   let html = "";
 
   // Season-level history
@@ -34132,7 +34631,7 @@ function showHistory() {
     html += `<table class="dt">
       <tr><th>S</th><th>Champion</th><th>Runner-up</th><th>Casualties</th></tr>`;
     for (const h of LEAGUE.history.slice().reverse()) {
-      const c = TEAM_BY_ID[h.champion], r = TEAM_BY_ID[h.runnerup];
+      const c = safeT(h.champion), r = safeT(h.runnerup);
       html += `<tr>
         <td>${h.season}</td>
         <td>${c.emoji} ${escapeHTML(c.short)}</td>
@@ -34150,16 +34649,16 @@ function showHistory() {
     html += `<table class="dt" style="font-size:11px;">
       <tr><th>S</th><th>Slot</th><th>Matchup</th><th>Score</th><th>Winner</th><th>K☠</th><th style="font-family:'Courier New',monospace;">Seed</th></tr>`;
     for (const mh of LEAGUE.matchHistory.slice().reverse().slice(0, 30)) {
-      const w = TEAM_BY_ID[mh.winner];
-      const ta = TEAM_BY_ID[mh.teamA], tb = TEAM_BY_ID[mh.teamB];
+      const w = safeT(mh.winner);
+      const ta = safeT(mh.teamA), tb = safeT(mh.teamB);
       const seedHex = "0x" + (mh.seed >>> 0).toString(16).padStart(8, "0");
       html += `<tr>
         <td>${mh.season}</td>
-        <td>${escapeHTML(mh.slot)}</td>
+        <td>${escapeHTML(slotShortLabel(mh.slot))}</td>
         <td>${ta.emoji} vs ${tb.emoji}</td>
         <td>${mh.score}</td>
         <td>${w.emoji} ${escapeHTML(w.short)}</td>
-        <td class="num">${mh.casualties.length}</td>
+        <td class="num">${(mh.casualties || []).length}</td>
         <td style="font-family:'Courier New',monospace;color:var(--dim);">${seedHex}</td>
       </tr>`;
     }
@@ -34393,6 +34892,8 @@ function showMatchDetail(slot) {
   }
 
   const slotLabel = (() => {
+    // === v37.91 bugfix: was missing r1_ handling (showed "R1_1") ===
+    if (slot.startsWith("r1_")) return "Round of 16 — Match " + slot.slice(3);
     if (slot.startsWith("ql")) return "Qualifier " + slot.slice(2);
     if (slot.startsWith("qf")) return "Quarterfinal " + slot.slice(2);
     if (slot.startsWith("sf")) return "Semifinal " + slot.slice(2);
@@ -34584,6 +35085,11 @@ function showBracket() {
    ============================================================ */
 const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries, personalities
 
+// === v37.92: single source of truth for the build label ===
+// Used by the console boot log AND by the save's gameVersion stamp.
+// Bump in ONE place per release.
+const BUILD_LABEL = "v37.93";
+
 // === v37.34: build-identification stamp ===
 // Prints once on script load. If the user reports crashes and this line is
 // NOT in their console, they're running a stale-cached build (their browser
@@ -34591,7 +35097,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // what the source editor shows). Cache-clear (Ctrl+Shift+R / Cmd+Shift+R)
 // usually resolves it.
 try {
-  console.log("%c[Float Knights] build v37.90 loaded — schema v" + SAVE_SCHEMA_VERSION + " — " + new Date().toISOString(),
+  console.log("%c[Float Knights] build " + BUILD_LABEL + " loaded — schema v" + SAVE_SCHEMA_VERSION + " — " + new Date().toISOString(),
               "color:#f7c948;font-weight:bold;");
 } catch (e) { /* console may not be available in some sandboxes */ }
 
@@ -34621,13 +35127,22 @@ function serializeLeague() {
   return JSON.stringify({
     // === Schema metadata ===
     v: SAVE_SCHEMA_VERSION,
-    gameVersion: "v28.13",        // displayed game version, for diagnostics
+    // === v37.92: derive gameVersion from the build label so it's always
+    // current. Pre-v37.92 this was hard-coded to "v28.13" — a stale stamp
+    // from years ago that was misleading on every save written since.
+    // Diagnostic-only; not consumed by the load path.
+    gameVersion: BUILD_LABEL,
     savedAt: new Date().toISOString(), // wall-clock timestamp of the push
     teamPool: TEAMS.map(t => t.id), // snapshot of which teams existed at save time
 
     // === League state ===
     season: LEAGUE.season,
     bits: LEAGUE.bits,
+    // === v37.91: continent selector (na / sa / both) ===
+    continent: LEAGUE.continent || "na",
+    // First-time seen flags for narrative beats — keeps season feed events
+    // from re-firing on every load. Once a beat fires it's flagged true here.
+    seenMigrationLore: !!LEAGUE.seenMigrationLore,
     rosters: cleanRosters,
     graveyard: LEAGUE.graveyard,
     records: LEAGUE.records,
@@ -34722,6 +35237,11 @@ function deserializeLeague(jsonStr) {
   // === Core League state ===
   LEAGUE.season = data.season || 1;
   LEAGUE.bits = data.bits || 0;
+  // === v37.91: continent selector — restore + validate ===
+  // Defensive: only accept known values. Invalid/legacy values default to "na".
+  const loadedContinent = (data.continent || "na").toLowerCase();
+  LEAGUE.continent = (loadedContinent === "sa" || loadedContinent === "both") ? loadedContinent : "na";
+  LEAGUE.seenMigrationLore = !!data.seenMigrationLore;
 
   // Rehydrate rosters with default match-time fields. The match-time fields
   // (x/y/vx/vy, hp, alive, target, cooldowns, stunned, balloons popped) are
@@ -34853,9 +35373,15 @@ function deserializeLeague(jsonStr) {
   // (forward-pool drift), roll fresh styles. This way old saves load and
   // immediately get a season's worth of style variety on the next tick.
   LEAGUE.aiStyles = data.aiStyles || {};
-  if (typeof AI_PATHING_STYLES !== "undefined") {
+  if (typeof AI_PATHING_STYLES !== "undefined" && typeof TEAMS !== "undefined") {
     const styleIds = Object.keys(AI_PATHING_STYLES);
-    for (const teamId of Object.keys(LEAGUE.rosters)) {
+    // === v37.92 ripple: iterate TEAMS not LEAGUE.rosters ===
+    // Pre-v37.92 this iterated Object.keys(LEAGUE.rosters), but SA teams
+    // (and any future team additions) may not yet have rosters built —
+    // backfillRosters runs LATER in the boot sequence. Iterating TEAMS
+    // ensures every team in the current pool gets an aiStyle entry.
+    for (const team of TEAMS) {
+      const teamId = team.id;
       if (!LEAGUE.aiStyles[teamId]) {
         // v37.78 determinism fix: was Math.random
         LEAGUE.aiStyles[teamId] = styleIds[Math.floor(SIM_RNG.next() * styleIds.length)];
@@ -34866,17 +35392,22 @@ function deserializeLeague(jsonStr) {
   // === v37.82: restore per-team AI-style history ===
   // Pre-v37.82 saves don't have aiStyleHistory. Seed each team with the
   // current season's style so the history isn't empty on first render.
+  // v37.92: also iterate TEAMS so SA teams pick up history slots even
+  // before their rosters are built.
   LEAGUE.aiStyleHistory = (data.aiStyleHistory && typeof data.aiStyleHistory === "object")
     ? data.aiStyleHistory : {};
-  for (const teamId of Object.keys(LEAGUE.rosters)) {
-    if (!Array.isArray(LEAGUE.aiStyleHistory[teamId])) {
-      LEAGUE.aiStyleHistory[teamId] = [];
-    }
-    const hist = LEAGUE.aiStyleHistory[teamId];
-    const curSeason = LEAGUE.season || 1;
-    const curStyle = LEAGUE.aiStyles[teamId];
-    if (hist.length === 0 && curStyle) {
-      hist.push({ season: curSeason, styleId: curStyle });
+  if (typeof TEAMS !== "undefined") {
+    for (const team of TEAMS) {
+      const teamId = team.id;
+      if (!Array.isArray(LEAGUE.aiStyleHistory[teamId])) {
+        LEAGUE.aiStyleHistory[teamId] = [];
+      }
+      const hist = LEAGUE.aiStyleHistory[teamId];
+      const curSeason = LEAGUE.season || 1;
+      const curStyle = LEAGUE.aiStyles[teamId];
+      if (hist.length === 0 && curStyle) {
+        hist.push({ season: curSeason, styleId: curStyle });
+      }
     }
   }
 
@@ -35735,6 +36266,42 @@ function bindSettings() {
     bracketSel.value = String((typeof LEAGUE_CONFIG !== "undefined" && LEAGUE_CONFIG.bracketSize) || 4);
   }
 
+  // === v37.91: continent selector wiring ===
+  // Init from LEAGUE.continent. The dropdown stays enabled (deferred-effect
+  // model: choices apply at next season-roll, just like bracket size).
+  // The lock note appears when a season is in progress to make the
+  // deferral explicit. Auto-pairs 16-team bracket when "both" is picked
+  // (since the 16-team bracket is the whole point of "both"). Auto-bumps
+  // a too-large bracket back down when switching to a continent with
+  // fewer teams.
+  const continentSel = $("#setContinent");
+  const continentLockNote = $("#continentLockNote");
+  if (continentSel) {
+    continentSel.value = (typeof LEAGUE !== "undefined" && LEAGUE && LEAGUE.continent) || "na";
+    // Show the lock note iff a season has been started (currentSlot is set)
+    if (continentLockNote) {
+      const seasonInProgress = !!(typeof LEAGUE !== "undefined" && LEAGUE && LEAGUE.currentSlot);
+      continentLockNote.style.display = seasonInProgress ? "" : "none";
+    }
+    continentSel.addEventListener("change", () => {
+      // Auto-pair with bracket-size sensible default
+      const v = continentSel.value;
+      if (bracketSel) {
+        if (v === "both") {
+          // "Both" is meaningful only with the 16-team format — auto-suggest
+          // (still user-overridable on the bracket dropdown afterward)
+          bracketSel.value = "16";
+        } else if (v === "sa" && +bracketSel.value > 8) {
+          // SA pool is only 8 teams — cap at 8
+          bracketSel.value = "8";
+        } else if (v === "na" && +bracketSel.value > 16) {
+          // NA pool is 16 teams (cap at 16 not above)
+          bracketSel.value = "16";
+        }
+      }
+    });
+  }
+
   // Game mode selector (v28). Populate from current LEAGUE_CONFIG.gameMode
   // and show/hide the mode-specific sub-options based on the active value.
   const modeSel = $("#setGameMode");
@@ -35913,15 +36480,53 @@ function bindSettings() {
   const applyBtn = $("#settingsApply");
   if (applyBtn) {
     applyBtn.addEventListener("click", () => {
-      AUTOPLAY.cooldownRoundMs  = (+$("#setRoundCooldown").value)  * 1000;
-      AUTOPLAY.cooldownMatchMs  = (+$("#setMatchCooldown").value)  * 1000;
-      AUTOPLAY.cooldownSeasonMs = (+$("#setSeasonCooldown").value) * 1000;
-      MATCH.bestOf = +$("#setBestOf").value;
-      MATCH.roundsToWin = Math.ceil(MATCH.bestOf / 2);
-      MATCH.startingLives = +$("#setLives").value;
+      // === v37.93: validate numeric inputs (was missing in Apply path) ===
+      // The autosave path already gated each assign with > 0; the Apply
+      // path did not. A malformed input (empty field, non-numeric paste,
+      // negative number) would corrupt MATCH.bestOf to NaN/0/etc., which
+      // then cascades: roundsToWin = Math.ceil(NaN/2) = NaN, and rounds
+      // never finish. Now validated in line with autosave.
+      const _roundV  = +$("#setRoundCooldown").value;
+      const _matchV  = +$("#setMatchCooldown").value;
+      const _seasonV = +$("#setSeasonCooldown").value;
+      if (_roundV  > 0) AUTOPLAY.cooldownRoundMs  = _roundV  * 1000;
+      if (_matchV  > 0) AUTOPLAY.cooldownMatchMs  = _matchV  * 1000;
+      if (_seasonV > 0) AUTOPLAY.cooldownSeasonMs = _seasonV * 1000;
+      const _bestOf = +$("#setBestOf").value;
+      if (_bestOf > 0) {
+        MATCH.bestOf = _bestOf;
+        MATCH.roundsToWin = Math.ceil(_bestOf / 2);
+      }
+      const _lives = +$("#setLives").value;
+      if (_lives > 0) MATCH.startingLives = _lives;
       const newBracketSize = +($("#setBracketFmt")?.value || 4);
       const oldBracketSize = (typeof LEAGUE_CONFIG !== "undefined" && LEAGUE_CONFIG.bracketSize) || 4;
       if (typeof LEAGUE_CONFIG !== "undefined") LEAGUE_CONFIG.bracketSize = newBracketSize;
+
+      // === v37.91: continent persistence + first-time migration lore ===
+      const newContinent = ($("#setContinent")?.value || "na").toLowerCase();
+      const oldContinent = (typeof LEAGUE !== "undefined" && LEAGUE && LEAGUE.continent) || "na";
+      let continentChanged = false;
+      if (typeof LEAGUE !== "undefined" && LEAGUE) {
+        if (newContinent !== oldContinent) {
+          LEAGUE.continent = newContinent;
+          continentChanged = true;
+          // First time the user picks "both" — fire the Panama Bridge
+          // Migration narrative beat. The flag persists so it fires once
+          // per save (not on every toggle). Reset on League Reset.
+          if (newContinent === "both" && !LEAGUE.seenMigrationLore) {
+            LEAGUE.seenMigrationLore = true;
+            if (typeof feed === "function") {
+              feed("season", `📢 <b>LEAGUE EXPANSION:</b> The Panama Bridge Migration is complete. Eight teams from the southern continent — Manaus Jaguars, Cusco Llamas, Pantanal Caimans, Iquitos Anacondas, Quito Sloths, Atacama Condors, Caracas Capuchins, Tucupi Piranhas — join the ladder. The first cross-continental season begins next.`);
+              feed("season", `🌎 The 16-team North vs South bracket has been authorized by Caucus Resolution 7-3 (Year 37). May the best continent win.`);
+            }
+            if (typeof toast === "function") {
+              toast("<b>Welcome the South!</b> Eight new teams. 16-team N-vs-S ladder begins next season.",
+                "win", { ico: "🌎", ttl: 8000 });
+            }
+          }
+        }
+      }
 
       // Game mode + per-mode config (v28)
       const newMode = ($("#setGameMode")?.value) || "deathmatch";
@@ -35951,7 +36556,54 @@ function bindSettings() {
         const modeNames = { deathmatch: "Deathmatch", koth: "King of the Hill", ctf: "Capture the Flag", tag: "Melee Tag" };
         toast(`Game mode changing to <b>${modeNames[newMode] || newMode}</b> at next match.`, "warn");
       }
+      // === v37.91: continent toast + theme refresh ===
+      if (continentChanged) {
+        const contNames = { na: "North America (NA)", sa: "South America (SA)", both: "Both — N vs S" };
+        if (typeof toast === "function") {
+          toast(`Continent: <b>${contNames[newContinent] || newContinent}</b>. Applies at next season.`, "warn", { ico: "🌎" });
+        }
+        // Apply theme immediately so the user sees the palette flip — the
+        // bracket itself defers to next season but the visual confirmation
+        // helps make the change feel real.
+        if (typeof applyContinentTheme === "function") applyContinentTheme();
+      }
+      // === v37.91: rebuild bracket NOW if no progress has been made yet ===
+      // If the user changes continent (or bracket size) on a brand-new
+      // league before playing any matches, rebuild the bracket so the
+      // change takes effect immediately. The "defer to next season"
+      // behavior only matters when there's a real season in progress.
+      const needsRebuild = (continentChanged || newBracketSize !== oldBracketSize);
+      if (needsRebuild) {
+        _maybeRebuildBracketEarly(/*announce=*/true);
+      }
     });
+  }
+
+  /* === v37.91: shared "rebuild if no progress yet" helper ===
+     Called from both the explicit Apply handler and the autosave path
+     so a continent / bracket-size change made before any matches play
+     out takes effect immediately. Refuses to rebuild if there's any
+     match progress to preserve (winners recorded, live match running).
+     announce=true shows a confirming toast; autosave passes false to
+     stay silent. */
+  function _maybeRebuildBracketEarly(announce) {
+    if (typeof LEAGUE === "undefined" || !LEAGUE || !LEAGUE.bracket) return;
+    const anyWinners = Object.keys(LEAGUE.bracket).some(k => {
+      if (k === "_order") return false;
+      const slot = LEAGUE.bracket[k];
+      return slot && slot.winner;
+    });
+    const matchInFlight = !!(LEAGUE.match && LEAGUE.match.phase !== "post");
+    if (anyWinners || matchInFlight) return;
+    try {
+      if (typeof buildBracket === "function") buildBracket();
+      if (typeof renderAll === "function") renderAll();
+      if (announce && typeof toast === "function") {
+        toast("Bracket rebuilt with new settings (no matches played yet).", "info", { ttl: 4000, key: "bracket-rebuilt" });
+      }
+    } catch (e) {
+      console.warn("[v37.91] mid-init bracket rebuild failed:", e);
+    }
   }
 
   // === v37.81: SETTINGS AUTO-SAVE + DEBUG TIMER UNLOCK ===
@@ -35992,7 +36644,38 @@ function bindSettings() {
       const lives = +$("#setLives")?.value;
       if (lives > 0) MATCH.startingLives = lives;
       const brk = +($("#setBracketFmt")?.value || 4);
+      const _oldBrk = LEAGUE_CONFIG ? LEAGUE_CONFIG.bracketSize : 0;
       if (LEAGUE_CONFIG && brk) LEAGUE_CONFIG.bracketSize = brk;
+      // === v37.91: continent auto-save ===
+      // Mirror the explicit-Apply path: persist LEAGUE.continent, fire the
+      // migration lore beat once on first "both" selection, refresh theme.
+      const newContAS = ($("#setContinent")?.value || "na").toLowerCase();
+      let _continentChangedAS = false;
+      if (typeof LEAGUE !== "undefined" && LEAGUE) {
+        const oldContAS = LEAGUE.continent || "na";
+        if (newContAS !== oldContAS &&
+            (newContAS === "na" || newContAS === "sa" || newContAS === "both")) {
+          LEAGUE.continent = newContAS;
+          _continentChangedAS = true;
+          if (newContAS === "both" && !LEAGUE.seenMigrationLore) {
+            LEAGUE.seenMigrationLore = true;
+            if (typeof feed === "function") {
+              feed("season", `📢 <b>LEAGUE EXPANSION:</b> The Panama Bridge Migration is complete. Eight teams from the southern continent — Manaus Jaguars, Cusco Llamas, Pantanal Caimans, Iquitos Anacondas, Quito Sloths, Atacama Condors, Caracas Capuchins, Tucupi Piranhas — join the ladder. The first cross-continental season begins next.`);
+              feed("season", `🌎 The 16-team North vs South bracket has been authorized by Caucus Resolution 7-3 (Year 37). May the best continent win.`);
+            }
+          }
+          if (typeof applyContinentTheme === "function") applyContinentTheme();
+        }
+      }
+      // === v37.91: silent mid-init rebuild — matches the Apply handler ===
+      // If the bracket can be safely rebuilt (no winners yet, no live match),
+      // do it. The helper is a no-op otherwise. Quiet — no toast, since the
+      // user is mid-typing in Settings and a toast would feel intrusive.
+      if (_continentChangedAS || brk !== _oldBrk) {
+        if (typeof _maybeRebuildBracketEarly === "function") {
+          _maybeRebuildBracketEarly(/*announce=*/false);
+        }
+      }
       // Per-mode config (mode itself is NOT auto-saved — see confirmation below)
       if (LEAGUE_CONFIG && LEAGUE_CONFIG.modeConfig) {
         const kp = +($("#setKothPoints")?.value || 0);
@@ -36039,6 +36722,7 @@ function bindSettings() {
       { id: "setBestOf",         label: "Rounds per match" },
       { id: "setLives",          label: "Starting lives" },
       { id: "setBracketFmt",     label: "Bracket size" },
+      { id: "setContinent",      label: "Continent" },
       { id: "setKothPoints",     label: "KOTH points" },
       { id: "setCtfCaps",        label: "CTF captures" },
     ];
@@ -37541,6 +38225,16 @@ function refreshSettingsUI() {
   const bracketSel = $("#setBracketFmt");
   if (bracketSel) {
     bracketSel.value = String((LEAGUE_CONFIG && LEAGUE_CONFIG.bracketSize) || 4);
+  }
+
+  // === v37.91: continent re-sync ===
+  const continentSel = $("#setContinent");
+  if (continentSel) {
+    continentSel.value = (LEAGUE && LEAGUE.continent) || "na";
+  }
+  const continentLockNote = $("#continentLockNote");
+  if (continentLockNote) {
+    continentLockNote.style.display = (LEAGUE && LEAGUE.currentSlot) ? "" : "none";
   }
 
   // === Game mode + sub-options ===
@@ -39806,6 +40500,17 @@ function renderLeagueTab() {
   const lootEl = document.getElementById("leagueLootList");
   if (lootEl) {
     const liveLoot = (LEAGUE.lostItems || []).slice().sort((a, b) => b.scavengedCount - a.scavengedCount);
+    // === v37.91: inline slot-label helper ===
+    const _slotLabel = (s) => {
+      if (!s) return "?";
+      if (s.startsWith("r1_")) return "R16 #" + s.slice(3);
+      if (s.startsWith("ql"))  return "QL "  + s.slice(2);
+      if (s.startsWith("qf"))  return "QF "  + s.slice(2);
+      if (s.startsWith("sf"))  return "SF "  + s.slice(2);
+      if (s.startsWith("semi")) return "SF "  + s.slice(4);
+      if (s === "final") return "FINAL";
+      return s.toUpperCase();
+    };
 
     if (!liveLoot.length) {
       lootEl.innerHTML = '<div class="league-loot-empty">No legendary items lost in your league yet. The canon entries above are seeded.</div>';
@@ -39815,7 +40520,7 @@ function renderLeagueTab() {
           <div class="ico">${li.ico || "·"}</div>
           <div class="body">
             <div class="name">${escapeHTML(li.name)}</div>
-            <div class="lineage">Lost in S${li.season} ${escapeHTML(li.slot)} · last carried by <b>${escapeHTML(li.lostBy || "the void")}</b></div>
+            <div class="lineage">Lost in S${li.season} ${escapeHTML(_slotLabel(li.slot))} · last carried by <b>${escapeHTML(li.lostBy || "the void")}</b></div>
           </div>
           <div class="scav-count">
             <div class="big">${li.scavengedCount}×</div>
