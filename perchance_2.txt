@@ -7029,6 +7029,62 @@
         <p>The Quetzals are the southernmost team the League has ever admitted, and (as of Year 36) the southernmost in the League's foreseeable future. The Yucatan jungle community — which descended from a continuous quetzal population that survived the Long Quiet in the upper canopy of the Yucatan basin — applied for admission in Year 34 and was admitted in Year 36, after a two-season negotiation that resolved, primarily, the question of whether the Quetzals' habitual canopy nesting could be accommodated in non-Yucatan venues. The Caucus's resolution: every venue must provide at least one elevated nesting position for the Quetzals' Sniper, with the position registered as terrain rather than equipment. The Quetzals' captain, Cintzli, brings her own moss to every venue. The Quetzals have, in their inaugural season, fielded the highest aerial-shot accuracy rate in the League by a margin no other team has approached. They have not, as of this writing, lost a match to a non-Continental-Expansion team. The League's tactical analysts believe this is because the existing twelve teams have not yet learned to play against an opponent whose Sniper is, by registered terrain, in the rafters. The Quetzals believe the same. The Quetzals are, in their patient way, willing to wait for the existing teams to catch up.</p>
       </article>
 
+      <!-- ===== v37.96: SOUTH AMERICAN EXPANSION — admitted Year 37 ===== -->
+      <!-- The Panama Bridge Migration. Eight teams crossed the Darien Gap
+           by ceremonial runner → riverboat → condor-courier relay and
+           arrived at the Yucatan staging grounds over the course of LY 11.
+           The Caucus's Continental Expansion Vote formally admitted all
+           eight; six passed their qualifying exhibitions in the first
+           month. Bio prose distilled from each team's lore in the TEAMS
+           array. -->
+      <article class="bio">
+        <h3>Manaus Mournful Jaguars · JAG · founded Year 37 (admission)</h3>
+        <div class="meta">The meeting of the waters · obsidian pawprint stones · the canopy taller than the broadcast tower</div>
+        <p>The Jaguars hail from the Amazonian rainforest north of what the Old Ones called Manaus, where the silt-black tributaries of the Rio Negro meet the milk-brown current of the Solimões. The team's symbol-line — the meeting of the waters — is hand-stitched in two contrasting threads onto every helmet. The Jaguars petitioned for League admission in Year 37 after the Panama Bridge announcement; their captain, Iara Tinaja-Smoke, walked the full Migration overland with the team's ceremonial obsidian pawprint stones strapped to her back. The Jaguars play a watch-then-commit style — they will, on average, take twelve seconds longer than any League team to commit to engagement, and arrive in close range with thirty percent fewer wasted projectiles. Manaus Hall is the only League pitch where the canopy is taller than the broadcast tower; the LMG installed a second tower at Iara's request, on the condition that it be lower than the highest kapok.</p>
+      </article>
+
+      <article class="bio">
+        <h3>Cusco Climbing Llamas · LLM · founded Year 37 (admission)</h3>
+        <div class="meta">Four thousand meters · resting heart-rate one-third the League average · the Decorum Subcommittee's spitting ruling</div>
+        <p>The Llamas hail from the Andean highland city of Cusco at four thousand meters, where the air pressure is, per the League medical officer, "genuinely a problem" for visiting teams. The Llamas trained for the Migration by descending the Inca trail in formation — twelve days, full kit, no incidents — and arrived at the Yucatan staging grounds with their resting heart-rates one-third the League average. Their Tank line are the highest-altitude-acclimatized knights ever to take a League pitch; their Brawlers spit, by ceremony, before every match opening (the Caucus's Decorum Subcommittee voted, in their first hearing, that ceremonial spitting is permitted provided it is directed at the ground and not at officials). Their captain Yawar Quinoa-Step is the oldest active rookie in League history (forty-two), a former pack-train master who took up sanctioned combat after his herd was killed by a rockfall in the Year-36 storms.</p>
+      </article>
+
+      <article class="bio">
+        <h3>Pantanal Patient Caimans · CMN · founded Year 37 (admission)</h3>
+        <div class="meta">"We were here before you. We will be here after." · the only pitch where home Tanks may enter water · 47-minute hold record</div>
+        <p>The Caimans hail from the Pantanal wetlands at the borders of what the Old Ones called Brazil, Bolivia, and Paraguay — the largest inland wetland on the continent, and the only League pitch where home-team Tanks may legally enter water during play (Caucus Rule 7-3-2-a, ratified the season the Caimans were admitted). The Caimans' play style is, by every analyst's read, the most patient in the League: they will hold position for entire rounds, drawing opponents in. Their captain, Saurine Mudstep, holds the record for longest single-match hold (47 minutes, Year 37 R3, against the Bison). The Mudstep family is older than any other captaincy lineage on the continent; the Pantanal Saurians have, by Caucus archive, been governing themselves since before the Old Ones drew borders. Saurine has, in three Caucus appearances, declined to specify how long this is in years, on the grounds that the question is impolite.</p>
+      </article>
+
+      <article class="bio">
+        <h3>Iquitos Insistent Anacondas · ANC · founded Year 37 (admission)</h3>
+        <div class="meta">Constrict, then commit · "self, the entire knight" registered as Equipment · the riverboat collective's pennants</div>
+        <p>The Anacondas hail from the Peruvian Amazon's largest river-port at Iquitos, accessible only by water — the team traveled the entire Migration upstream and overland, a four-month route that included two river crossings and one diplomatic incident at the Panama staging grounds (resolved, per the LMG broadcast booth, by "a quiet conversation between elders"). The Anacondas play a perimeter-tightening style — they encircle, then constrict, then strike. Their captain Yacumama Riverwide is the only Brawler in League history to use only her arms and tail as weapons; her formal weapon registration lists "self, the entire knight" under Equipment, and the Caucus has accepted this for three review cycles. The team practices in the flooded forest with the support of the Iquitos riverboat collective, whose ceremonial pennants fly from the Anacondas' bench at every match.</p>
+      </article>
+
+      <article class="bio">
+        <h3>Quito Quiet Sloths · SLT · founded Year 37 (admission)</h3>
+        <div class="meta">The slowest team by movement metric · three-meter telescoping limb-staves · a kind of patience that is, frankly, terrifying</div>
+        <p>The Sloths hail from the cloud-forest highlands above what the Old Ones called Quito, Ecuador. The Sloths are the League's slowest team by movement metric, by a margin so significant that the Caucus's Speed-Stat Subcommittee requested they be allowed a separate metric scale (declined: "the league is a single scale or it is not"). The Sloths compensate via the longest reach in the League — their three-meter telescoping limb-staves, a regional Quechua design, give them an effective melee range no other team can match. Their captain Itzhak Greenmoss-Bough has not, in two seasons of training and one season of competitive play, ever moved at more than one-half League standard speed. He has also not, in those three seasons, missed a single planned engagement. The Featherquill press has called this "a kind of patience that is, frankly, terrifying."</p>
+      </article>
+
+      <article class="bio">
+        <h3>Atacama Soaring Condors · CDR · founded Year 37 (admission)</h3>
+        <div class="meta">Five thousand meters · the Condor Drop reclassified as 'sustained controlled descent' · the only fully aerial team</div>
+        <p>The Condors hail from the Atacama desert highlands on the Chilean-Bolivian altiplano, where the team's home pitch sits at five thousand meters and the air, per the visiting team waivers, "requires a signed consent form." The Condors are the only fully aerial team in the League — their Snipers train from the high thermal columns, and their primary tactical maneuver, the Condor Drop, has been classified by the Caucus as a "sustained controlled descent" rather than a "fall" (the distinction matters for penalty assessment). Captain Mama-Pacha Soaring-Bone is the tallest knight in the League by a margin, with a wingspan that exceeds two meters and a documented stoop-dive that the Yucatan Quetzals' Cintzli has called, in an LMG interview, "the only attack pattern I have not yet figured out how to defend against." The two teams have, in three exhibition matches, ended each match within twenty seconds of the other.</p>
+      </article>
+
+      <article class="bio">
+        <h3>Caracas Cunning Capuchins · CAP · founded Year 37 (admission)</h3>
+        <div class="meta">Three steps ahead · 'recreational theft, and effective recreational theft at that' · the unratified one-weapon rule</div>
+        <p>The Capuchins hail from the coastal range north of what the Old Ones called Caracas, Venezuela. The Capuchins are the League's most tactically improvisational team — their training drills include "situations the coach has not previously seen," a category which the Caucus's Procedural Subcommittee took two full hearings to determine was legal. Their Brawlers have been documented, in match footage, using opposing teams' dropped equipment within the same engagement they retrieved it from — a habit which Coach Slatebrush has called "recreational theft, and effective recreational theft at that." Captain Ariki Stone-Holder is the only knight in League history to have, in a single match, used four different weapons (her own, two stolen from opponents, and one improvised from a fallen banner-pole). The Caucus's Equipment Subcommittee has, in response, drafted but not ratified the "one-weapon-per-knight" rule, on the grounds that ratifying it would "spoil the entertainment."</p>
+      </article>
+
+      <article class="bio">
+        <h3>Tucupi Tearing Piranhas · PIR · founded Year 37 (admission)</h3>
+        <div class="meta">One at a time. All at once. · the only League facility where match-day flooding is planned · the bite review</div>
+        <p>The Piranhas hail from the freshwater tributary network around what the Old Ones called Belém, where the team's home venue is a constructed shallow-pool pitch and the only League facility where match-day flooding is a planned feature rather than a contingency. The Piranhas are the League's fastest-attacking team — their Strikers commit in coordinated bursts of three or four knights at once on the same target, then disperse before counter-attack can land. Captain Tamburi-Red Quicksilver-Tooth holds the record for shortest engagement-to-disengagement window in League history (0.9 seconds, set in their LY 11 R2 debut against the Frogs — the Frogs have, in interviews, called this "unfair, but legal"). The team's collective wisdom is held by the elder Mãe-Vermelha Old-Tooth, who has fought no sanctioned matches in two decades but who reviews every Piranha post-match in a brief, intense conference the team calls "the bite review."</p>
+      </article>
+
       <article class="history">
         <h3>The Whittlestone Address — Year 31 founding-bell convocation, Boston</h3>
         <div class="meta">A speech · delivered by Pell Whittlestone (then Foundation Counsel; now Caucus chair-emeritus) · 14 minutes · transcribed from the LMG broadcast feed and the Foundation's archival recording · the speech is, by Caucus standing convention, the only public address required in the League's bylaws · it is delivered at the founding-bell convocation of every season the League adds a new team or changes the standing rule book · the canonical version below is from Year 31, the season the Foxes joined</div>
@@ -11888,6 +11944,19 @@
             <option value="100">100 points</option>
           </select>
         </div>
+        <div class="setting-row" id="kothSpeedRow">
+          <label class="setting-sub-label">KOTH crown speed boost</label>
+          <select id="setCrownSpeedMult" class="setting-select">
+            <option value="0.6">0.6× (heavy burden — easy to catch)</option>
+            <option value="0.8">0.8× (modest burden)</option>
+            <option value="1">1.0× (no boost; baseline)</option>
+            <option value="1.05" selected>1.05× (mild buff — default)</option>
+            <option value="1.1">1.1× (light boost)</option>
+            <option value="1.2">1.2× (notable boost)</option>
+            <option value="1.3">1.3× (strong boost)</option>
+            <option value="1.5">1.5× (lightning — hard to catch)</option>
+          </select>
+        </div>
         <div class="setting-row" id="ctfCapsRow">
           <label class="setting-sub-label">CTF captures to win</label>
           <select id="setCtfCaps" class="setting-select">
@@ -11909,6 +11978,19 @@
             <option value="4">4.0 HP/sec</option>
             <option value="4.5">4.5 HP/sec</option>
             <option value="5">5.0 HP/sec (lethal — must pass fast)</option>
+          </select>
+        </div>
+        <div class="setting-row" id="tagFreezeRow">
+          <label class="setting-sub-label">Tag freeze duration (seconds)</label>
+          <select id="setTagFreezeSec" class="setting-select">
+            <option value="0.5">0.5 sec (snap — instant pass-back risk)</option>
+            <option value="1">1.0 sec</option>
+            <option value="1.5">1.5 sec</option>
+            <option value="2">2.0 sec</option>
+            <option value="2.5">2.5 sec</option>
+            <option value="3" selected>3.0 sec (default)</option>
+            <option value="4">4.0 sec</option>
+            <option value="5">5.0 sec (heavy — long recovery)</option>
           </select>
         </div>
       </div>
@@ -12884,6 +12966,20 @@ const TEAM_PROFILES = {
   mos: { captain: "Marc-Olivier Brisefer",      venue: "Saint-Laurent Antlerlords Hall",        style: "L'Ancrage — stationary anchor, perimeter rotation",    focus: "Tank",      leagueYear: 36, notable: "Théodred Brisefer III, L'Ancrage (heaviest knight in League history)" },
   cyt: { captain: "Coach Reyes (head coach, on-field captain rotates)", venue: "Sonora Basin Pitch",  style: "The drift — la borradura, el sexto",                   focus: "Speedster", leagueYear: 36, notable: "Coach Reyes (28-year practice predates League admission)" },
   qtz: { captain: "Cintzli of the Yucatan canopy", venue: "Yucatan Jungle-Canopy Hall",         style: "Aerial nesting — Snipers in the rafters",              focus: "Sniper",    leagueYear: 36, notable: "Cintzli (smallest active knight in League by mass; speaks four languages)" },
+
+  // === v37.96: South American Continental Expansion (admitted Year 37) ===
+  // Eight teams admitted under Caucus Resolution 7-3 (the Panama Bridge
+  // Project). Sourced from each team's lore in the TEAMS array. Pre-v37.96
+  // these were missing from TEAM_PROFILES, leaving the Lore tab's
+  // "Teams at a Glance" grid showing only the 20 NA teams.
+  jag: { captain: "Iara Tinaja-Smoke",               venue: "Manaus Hall (Amazonian Meeting of the Waters)",   style: "Watch-then-commit — 12s delayed engagement, 30% fewer wasted projectiles", focus: "Sniper",    leagueYear: 37, notable: "Iara Tinaja-Smoke (walked the Migration overland with obsidian pawprint stones)" },
+  llm: { captain: "Yawar Quinoa-Step",               venue: "Cusco Altitude Hall (4000m)",                     style: "High-altitude acclimatized — resting heart-rate one-third League average",  focus: "Tank",      leagueYear: 37, notable: "Yawar Quinoa-Step (oldest active rookie in League history at 42)" },
+  cmn: { captain: "Saurine Mudstep",                 venue: "Pantanal Wetlands Pitch",                         style: "Patient hold — record 47-minute single-match hold",                         focus: "Tank",      leagueYear: 37, notable: "Saurine Mudstep (Pantanal Saurian captaincy lineage older than Old-Ones borders)" },
+  anc: { captain: "Yacumama Riverwide",              venue: "Iquitos Flooded-Forest Pitch",                    style: "Perimeter constrict — encircle, tighten, strike",                           focus: "Brawler",   leagueYear: 37, notable: "Yacumama Riverwide (only Brawler to use 'self, the entire knight' as Equipment)" },
+  slt: { captain: "Itzhak Greenmoss-Bough",          venue: "Quito Cloud-Forest Hall",                         style: "Three-meter telescoping limb-staves — longest reach in League",             focus: "Brawler",   leagueYear: 37, notable: "Itzhak Greenmoss-Bough (never moved at more than half League standard speed)" },
+  cdr: { captain: "Mama-Pacha Soaring-Bone",         venue: "Atacama Altiplano Pitch (5000m)",                 style: "Condor Drop — sustained controlled descent (not a fall)",                   focus: "Sniper",    leagueYear: 37, notable: "Mama-Pacha Soaring-Bone (tallest knight in League; 2m+ wingspan)" },
+  cap: { captain: "Ariki Stone-Holder",              venue: "Caracas Coastal-Range Pitch",                     style: "Recreational theft — uses opponents' dropped equipment mid-engagement",    focus: "Brawler",   leagueYear: 37, notable: "Ariki Stone-Holder (used four different weapons in a single match)" },
+  pir: { captain: "Tamburi-Red Quicksilver-Tooth",   venue: "Belém Shallow-Pool Pitch (flooded by design)",   style: "Coordinated burst — three-or-four knights commit on same target, disperse",  focus: "Striker",   leagueYear: 37, notable: "Tamburi-Red Quicksilver-Tooth (0.9s engage-disengage League record vs Frogs)" },
 };
 // Make available to render and event layers
 const TEAM_PROFILE_BY_ID = TEAM_PROFILES;
@@ -12937,6 +13033,9 @@ const LEAGUE_CONFIG = {
     koth: {
       pointsToWin: 50,    // 25 / 50 / 100 supported
       tickPointsPerSec: 1, // points per second for crown holder
+      // v37.97: carrier speed multiplier — settable 0.6×–1.5× via Settings.
+      // Default 1.05 preserves pre-v37.97 behavior (mild buff while crowned).
+      crownSpeedMult: 1.05,
     },
     ctf: {
       // === v37.69: classic two-flag CTF ===
@@ -14394,8 +14493,9 @@ function initLeague(opts) {
     const customTeams = (LEAGUE_CONFIG && Array.isArray(LEAGUE_CONFIG.customTeams)) ? LEAGUE_CONFIG.customTeams : [];
     for (const ct of customTeams) {
       if (!ct || !ct.id || !ct.name) continue;
-      // Skip if id collides with a canon team
-      if (TEAMS.some(t => t.id === ct.id)) continue;
+      // v37.95: case-insensitive dedup so "FOX" can't coexist with canon "fox"
+      const ctIdLower = String(ct.id).toLowerCase();
+      if (TEAMS.some(t => String(t.id).toLowerCase() === ctIdLower)) continue;
       TEAMS.push(_normalizeCustomTeam(ct));
     }
     // Refresh TEAM_BY_ID lookup
@@ -14731,7 +14831,15 @@ function _normalizeCustomTeam(ct) {
             .replace(/javascript:/gi, "");
   };
   return {
-    id: String(ct.id || "").slice(0, 4).toUpperCase(),
+    // v37.95: removed .toUpperCase() — v37.93 had uppercased here as part
+    // of XSS hardening, but this broke dedup against canon teams (all
+    // canon ids are lowercase). A custom team with id="FOX" would slip
+    // past `TEAMS.some(t => t.id === ct.id)` (raw check) and then both
+    // "fox" (canon) and "FOX" (custom) would end up in TEAMS. Length
+    // cap and HTML stripping handle the security concern without case
+    // coercion. (For belt-and-suspenders, downstream dedup is now
+    // case-insensitive too — see v37.95 update at the dedup call site.)
+    id: String(ct.id || "").slice(0, 4),
     name: stripHtml(ct.name || ""),
     short: stripHtml(ct.short || ct.name || ""),
     emoji: stripHtml(ct.emoji || "🏳️"),
@@ -14883,12 +14991,40 @@ function buildBracket() {
       "final"
     ];
   } else if (size === 12) {
+    // === v37.95: continent filter — use teamPool not TEAMS ===
+    // Pre-v37.95 this branch used `TEAMS.slice()` directly, ignoring the
+    // continent filter at the top of buildBracket. After v37.91's SA
+    // expansion (28 total teams), this meant a continent="na" user with
+    // bracketSize=12 would see SA teams (jaguars, llamas, etc.) sneak
+    // into their bracket via the rank-by-championships sort. Now matches
+    // the size-8 and size-16 branches by working off the filtered pool.
     // Top 4 by championships (then by wins) get byes; bottom 8 play qualifiers
-    const ranked = TEAMS.slice().sort((a, b) => {
+    const ranked = teamPool.slice().sort((a, b) => {
       const ra = LEAGUE.records[a.id] || { championships: 0, wins: 0 };
       const rb = LEAGUE.records[b.id] || { championships: 0, wins: 0 };
       return (rb.championships - ra.championships) || (rb.wins - ra.wins);
     }).map(t => t.id);
+    // Defensive: undersized pool (e.g., continent="sa" has only 8 teams)
+    // — fall back to 8-team format instead of leaving qualifier slots empty
+    if (teamPool.length < 12) {
+      try {
+        if (typeof console !== "undefined") {
+          console.warn("[v37.95] 12-team bracket requested but only " +
+            teamPool.length + " teams in '" + continent +
+            "' pool; auto-downsizing to 8.");
+        }
+      } catch (_) {}
+      const chosen8 = teams.slice(0, 8);
+      for (let i = 0; i < 4; i++) {
+        LEAGUE.bracket["qf" + (i+1)] = { teamA: chosen8[i*2], teamB: chosen8[i*2+1], winner: null, casualties: [], depends: null };
+      }
+      LEAGUE.bracket.sf1 = { teamA: null, teamB: null, winner: null, casualties: [], depends: ["qf1","qf2"] };
+      LEAGUE.bracket.sf2 = { teamA: null, teamB: null, winner: null, casualties: [], depends: ["qf3","qf4"] };
+      LEAGUE.bracket.final = { teamA: null, teamB: null, winner: null, casualties: [], depends: ["sf1","sf2"] };
+      LEAGUE.bracket._order = ["qf1","qf2","qf3","qf4","sf1","sf2","final"];
+      LEAGUE.currentSlot = LEAGUE.bracket._order[0];
+      return;
+    }
     const byeTeams = ranked.slice(0, 4);
     const qualifierTeams = shuffle(ranked.slice(4));
     // 4 qualifier matches → 4 winners join the 4 byes for the 8-team ladder
@@ -17427,6 +17563,125 @@ const CITY_PALETTES = {
     ambient: "leaf",
     lore: "Yucatan jungle-canopy venue. The overgrown rafters above the field are the Quetzals' sniper nests; visiting Snipers are welcome to the rafters but should be aware that the Quetzals know which beams are load-bearing and which are not.",
   },
+
+  // === v37.96: South American venue palettes — added with the LY-11 expansion ===
+  jag: {
+    code: "JAG", name: "Manaus", adjective: "Meeting-of-Waters",
+    floorTop: "#1a2818", floorBot: "#2a4528",
+    stripeHue: "rgba(140,90,50,0.10)",
+    scatter: {
+      pebble:    { count: 24, color1: "#0e1810", color2: "#1c2818" },
+      grassTuft: { count: 60, color1: "#2a4828", color2: "#3a6838" },
+      vine:      { count: 28, color1: "#1a3010", color2: "#2c5020" },
+      leaf:      { count: 22, color1: "#3a5828", color2: "#5a7838" },
+    },
+    accents: { lineColor: "rgba(220,180,120,0.50)", brandColor: "rgba(184,80,64,0.30)" },
+    skyTint: "rgba(30,55,30,0.45)",
+    ambient: "leaf",
+    lore: "Manaus Hall, where the Rio Negro's silt-black water meets the Solimões's milk-brown current at the field's south boundary. The canopy is taller than the broadcast tower; the secondary tower the LMG built at Iara Tinaja-Smoke's request is, by ratified arrangement, lower than the highest kapok.",
+  },
+  llm: {
+    code: "LLM", name: "Cusco", adjective: "Altitude-Hall",
+    floorTop: "#7a6848", floorBot: "#988458",
+    stripeHue: "rgba(255,255,255,0.05)",
+    scatter: {
+      pebble:    { count: 35, color1: "#5a4828", color2: "#7a6838" },
+      grassTuft: { count: 30, color1: "#8a7a48", color2: "#a89858" },
+      sandTuft:  { count: 18, color1: "#a08868", color2: "#c8a888" },
+    },
+    accents: { lineColor: "rgba(240,220,180,0.55)", brandColor: "rgba(216,184,138,0.28)" },
+    skyTint: "rgba(180,200,220,0.20)",
+    ambient: "shimmer",
+    lore: "Cusco at four thousand meters. Visiting teams receive a signed altitude waiver and an oxygen-rest period before each match. The Llamas' Brawlers spit, by ceremony, toward the ground before the opening bell (the Caucus Decorum Subcommittee ratified this in their first hearing).",
+  },
+  cmn: {
+    code: "CMN", name: "Pantanal", adjective: "Wetlands-Pitch",
+    floorTop: "#3a4828", floorBot: "#586838",
+    stripeHue: "rgba(120,140,80,0.08)",
+    scatter: {
+      pebble:    { count: 18, color1: "#1c2818", color2: "#2c3a28" },
+      grassTuft: { count: 80, color1: "#4a5828", color2: "#6a7838" },
+      seaweed:   { count: 28, color1: "#3a5a30", color2: "#5a7a48" },
+      leaf:      { count: 18, color1: "#5a7038", color2: "#7a8a55" },
+    },
+    accents: { lineColor: "rgba(220,220,160,0.50)", brandColor: "rgba(106,122,90,0.28)" },
+    skyTint: "rgba(80,100,60,0.30)",
+    ambient: null,
+    lore: "Pantanal wetlands pitch — the only League venue where home-team Tanks may enter water during play (Caucus Rule 7-3-2-a). Match-day surfaces vary by season; the pitch is, by Caucus archive, the only venue with a 'wet line' marked annually by the Pantanal elders.",
+  },
+  anc: {
+    code: "ANC", name: "Iquitos", adjective: "Flooded-Forest",
+    floorTop: "#1a3a28", floorBot: "#2a5638",
+    stripeHue: "rgba(80,160,120,0.08)",
+    scatter: {
+      pebble:    { count: 16, color1: "#0e2818", color2: "#1c3828" },
+      grassTuft: { count: 55, color1: "#2a4830", color2: "#3a6840" },
+      vine:      { count: 32, color1: "#1a3818", color2: "#2c5028" },
+      seaweed:   { count: 22, color1: "#2a4830", color2: "#3a6240" },
+    },
+    accents: { lineColor: "rgba(180,220,160,0.50)", brandColor: "rgba(74,106,58,0.30)" },
+    skyTint: "rgba(40,80,50,0.40)",
+    ambient: "leaf",
+    lore: "Iquitos flooded-forest pitch. Reachable only by water for two months of the year; the Anacondas' bench is built on stilts and the visiting bench is, by convention, also built on stilts (the Anacondas insist on parity).",
+  },
+  slt: {
+    code: "SLT", name: "Quito", adjective: "Cloud-Forest",
+    floorTop: "#2a3828", floorBot: "#3c4e38",
+    stripeHue: "rgba(140,160,120,0.06)",
+    scatter: {
+      pebble:    { count: 22, color1: "#1a2218", color2: "#2a3228" },
+      grassTuft: { count: 65, color1: "#3a5028", color2: "#586838" },
+      mushroom:  { count: 24, color1: "#7a5a3a", color2: "#a48868" },
+      leaf:      { count: 16, color1: "#4a6038", color2: "#6a7848" },
+    },
+    accents: { lineColor: "rgba(200,200,160,0.50)", brandColor: "rgba(138,112,80,0.28)" },
+    skyTint: "rgba(140,160,140,0.30)",
+    ambient: "leaf",
+    lore: "Quito cloud-forest hall. Mist sits on the pitch through most of the match; the Sloths consider it home weather, and the LMG broadcast team has, on three occasions, lost their cameras to it for entire rounds.",
+  },
+  cdr: {
+    code: "CDR", name: "Atacama", adjective: "Altiplano",
+    floorTop: "#3a2a22", floorBot: "#583a2c",
+    stripeHue: "rgba(255,200,160,0.05)",
+    scatter: {
+      pebble:    { count: 38, color1: "#2a1810", color2: "#3a2818" },
+      sandTuft:  { count: 22, color1: "#5a3a28", color2: "#7a5638" },
+      crystal:   { count: 10, color1: "#a08868", color2: "#d0b888" },
+    },
+    accents: { lineColor: "rgba(240,200,160,0.50)", brandColor: "rgba(42,42,42,0.32)" },
+    skyTint: "rgba(120,80,60,0.20)",
+    ambient: "shimmer",
+    lore: "Atacama altiplano pitch at five thousand meters. The air, by visiting-team waiver, 'requires a signed consent form.' The Condor Drop above this pitch is registered as terrain, not equipment; the Caucus has classified it as a 'sustained controlled descent.'",
+  },
+  cap: {
+    code: "CAP", name: "Caracas", adjective: "Coastal-Range",
+    floorTop: "#3a4a30", floorBot: "#586a48",
+    stripeHue: "rgba(180,150,100,0.06)",
+    scatter: {
+      pebble:    { count: 26, color1: "#2a2a1c", color2: "#3a3a2c" },
+      grassTuft: { count: 50, color1: "#3a5828", color2: "#587838" },
+      leaf:      { count: 24, color1: "#4a6838", color2: "#6a8050" },
+      petal:     { count: 18, color1: "#f4c542", color2: "#ff8848" },
+    },
+    accents: { lineColor: "rgba(255,220,180,0.50)", brandColor: "rgba(184,128,96,0.28)" },
+    skyTint: "rgba(60,80,50,0.30)",
+    ambient: "leaf",
+    lore: "Caracas coastal-range pitch. The home bench is, by Capuchin tradition, kept conspicuously under-equipped at the start of each match; the equipment arrives during play, from the opposing team's bench, via routes the Caucus Procedural Subcommittee has spent two hearings trying to define.",
+  },
+  pir: {
+    code: "PIR", name: "Belém", adjective: "Shallow-Pool",
+    floorTop: "#2a3848", floorBot: "#3a5068",
+    stripeHue: "rgba(80,160,200,0.10)",
+    scatter: {
+      pebble:    { count: 18, color1: "#1c2838", color2: "#2c3848" },
+      seaweed:   { count: 36, color1: "#2a4a48", color2: "#3a6868" },
+      grassTuft: { count: 28, color1: "#3a5848", color2: "#587858" },
+    },
+    accents: { lineColor: "rgba(180,220,220,0.55)", brandColor: "rgba(200,64,48,0.32)" },
+    skyTint: "rgba(60,90,110,0.30)",
+    ambient: null,
+    lore: "Belém shallow-pool pitch — the only League facility where match-day flooding is a planned feature, not a contingency. The pool depth varies by tide; the Piranhas know the tide, the visiting teams have learned the tide, and the LMG broadcast booth posts the tide on the scoreboard for the audience.",
+  },
 };
 
 const SPORT_TYPES = {
@@ -19533,30 +19788,49 @@ const MODE_AI = (function() {
     const enemyAlive = enemies.filter(e => e.alive);
 
     if (role === "carrier") {
-      // Carrier kites to safe space. Find direction with most distance to
-      // ALL enemies (not just nearest) — vector sum away. Cap movement
-      // toward the field's interior to avoid corner-trapping.
+      // === v37.97: carrier escape rewrite to fix the perimeter-scoot bug ===
+      // Pre-v37.97 the carrier fled from ALL enemies with inverse-distance
+      // weighting, plus a center-bias that only kicked in within 80px of
+      // walls. Equilibrium under continuous chase: kite to the wall, then
+      // run along the perimeter. User reported this as "bots scoot along
+      // the parameter of the field; the crown wearer is only caught by
+      // bots spawning in unexpected."
+      //
+      // Three changes:
+      //   1. FLEE_RANGE — only react to enemies within ~250px. Distant
+      //      enemies don't push the carrier across the arena.
+      //   2. Constant center-bias (30%) — the carrier ALWAYS wants to
+      //      pull toward the field's interior, not just when cornered.
+      //   3. Wall ramp starts at 200px (was 80/60) — the carrier turns
+      //      INWARD while there's still space, not after it's hit the wall.
       const cxw = COMBAT.arenaW / 2, cyw = COMBAT.arenaH / 2;
+      const FLEE_RANGE_SQ = 250 * 250;
       let avgX = 0, avgY = 0, count = 0;
       for (const e of enemyAlive) {
         const dx = p.x - e.x, dy = p.y - e.y;
-        const d = Math.hypot(dx, dy) || 1;
+        const dsq = dx*dx + dy*dy;
+        if (dsq > FLEE_RANGE_SQ) continue;  // ignore distant enemies
+        const d = Math.sqrt(dsq) || 1;
         // Inverse-distance weighted (closer enemies push harder)
         avgX += (dx / d) * (200 / Math.max(40, d));
         avgY += (dy / d) * (200 / Math.max(40, d));
         count++;
       }
-      // Blend with toward-center bias proportional to wall proximity
+      // Earlier wall ramp + larger reach (was 80/60, now 200/160)
       const wallProx = Math.max(
-        (80 - p.x) / 80,
-        (p.x - (COMBAT.arenaW - 80)) / 80,
-        (60 - p.y) / 60,
-        (p.y - (COMBAT.arenaH - 60)) / 60,
+        (200 - p.x) / 200,
+        (p.x - (COMBAT.arenaW - 200)) / 200,
+        (160 - p.y) / 160,
+        (p.y - (COMBAT.arenaH - 160)) / 160,
         0
       );
       const fleeAng = (count > 0) ? Math.atan2(avgY, avgX) : Math.atan2(cyw - p.y, cxw - p.x);
       const centerAng = Math.atan2(cyw - p.y, cxw - p.x);
-      const blend = clamp(wallProx * 0.85, 0, 0.95);
+      // Constant 30% pull toward center + escalating wall-prox bias on top.
+      // Capped at 0.95 so the carrier still moves SOMEWHAT away from enemies.
+      const constantCenterBias = 0.30;
+      const wallBias = clamp(wallProx * 0.65, 0, 0.70);
+      const blend = clamp(constantCenterBias + wallBias, 0, 0.95);
       const moveAng = _blendAngles(fleeAng, centerAng, blend);
       // Set a virtual target ~120px in chosen direction
       p._koth_moveAng = moveAng;
@@ -19572,11 +19846,15 @@ const MODE_AI = (function() {
       if (!carrier) return null;
       const threat = _closestTo(carrier.x, carrier.y, enemyAlive);
       if (threat) {
-        // Stand at midpoint between carrier and threat (slightly closer to threat)
-        const tx = carrier.x + (threat.x - carrier.x) * 0.55;
-        const ty = carrier.y + (threat.y - carrier.y) * 0.55;
+        // === v37.98: split escorts to opposite perpendiculars ===
+        // See BT actEscort for rationale.
+        const ang = Math.atan2(threat.y - carrier.y, threat.x - carrier.x);
+        const side = (p.id % 2 === 0) ? 1 : -1;
+        const perpAng = ang + (Math.PI / 2) * side;
+        const tx = carrier.x + Math.cos(ang) * 35 + Math.cos(perpAng) * 45;
+        const ty = carrier.y + Math.sin(ang) * 35 + Math.sin(perpAng) * 45;
         p._escort_x = tx; p._escort_y = ty;
-        p.target = threat;  // attack the threat we're screening from
+        p.target = threat;
         p.aiState = "KOTH_ESCORT";
         return "KOTH_ESCORT";
       }
@@ -19627,10 +19905,12 @@ const MODE_AI = (function() {
       const carrier = enemies.find(t => t.id === m.crown.carrierId);
       if (carrier) {
         const ang = Math.atan2(carrier.y - p.y, carrier.x - p.x);
-        // Pick a flank side based on which side we're on relative to the line
-        const perpAng = ang + (Math.PI / 2);
-        const flankX = carrier.x + Math.cos(perpAng) * 60;
-        const flankY = carrier.y + Math.sin(perpAng) * 60;
+        // === v37.98: flanker split to opposite sides + wider radius ===
+        // See BT actFlanker for full rationale.
+        const flankSide = (p.id % 2 === 0) ? 1 : -1;
+        const perpAng = ang + (Math.PI / 2) * flankSide;
+        const flankX = carrier.x + Math.cos(perpAng) * 110;
+        const flankY = carrier.y + Math.sin(perpAng) * 110;
         // If we're far, head to flank; if close, just attack
         const d = distance(p, carrier);
         if (d > 90) {
@@ -20140,6 +20420,33 @@ const MODE_AI = (function() {
         // Default flock — stay near peers and away from It
         p._modeRole = "prey_flock";
       }
+      // === v38.01: hysteresis on role transitions (Sweetie-bot pattern) ===
+      // Pre-v38.01 the role recomputed every frame from instantaneous
+      // distances. Tiny IT movement could flip prey_shielded → prey_break
+      // → prey_flock in 3 consecutive frames, with completely different
+      // action code firing each time. Sweetie's RealPerception uses a
+      // hysteresis band on quadrant-near transitions for exactly this
+      // reason: an obstacle has to move from "near" past a wider
+      // threshold before "left" fires. Same idea: prefer keeping the
+      // previous role unless conditions changed significantly. The
+      // entry thresholds above are strict; below we widen exit
+      // thresholds to defend against per-frame thrash.
+      const prev = p._tagRolePrev;
+      if (prev && prev !== p._modeRole) {
+        // Defend the previous role across small fluctuations
+        if (prev === "prey_shielded" && hasShield && dToIt > 40) {
+          // had shield, was shielded — stay shielded unless distance
+          // closes hard (40px instead of 50px entry) or shield is gone
+          p._modeRole = "prey_shielded";
+        } else if (prev === "prey_break" && dToIt < 110 && nearestPeerD < 200) {
+          // stay in break unless IT got far (>110px instead of 90px entry)
+          // or herd dispersed past 200px (instead of 180px entry)
+          p._modeRole = "prey_break";
+        }
+        // prey_flock has no defensive hysteresis — it's the default
+        // fallback and we'd rather react quickly to a closing threat.
+      }
+      p._tagRolePrev = p._modeRole;
     }
   }
 
@@ -20332,19 +20639,22 @@ const MODE_AI = (function() {
         // Blend: 70% away from It, 30% toward herd
         moveAng = _blendAngles(fromIt, toHerd, 0.30);
       }
-      // Wall-avoidance bias toward center
+      // === v37.98: constant center-bias + early wall ramp ===
+      // See the BT actPreyFlock comment for the full rationale; this is
+      // the legacy path under LEAGUE_CONFIG.useBTForTag === false.
       const cxw = COMBAT.arenaW / 2, cyw = COMBAT.arenaH / 2;
       const wallProx = Math.max(
-        (80 - p.x) / 80,
-        (p.x - (COMBAT.arenaW - 80)) / 80,
-        (60 - p.y) / 60,
-        (p.y - (COMBAT.arenaH - 60)) / 60,
+        (200 - p.x) / 200,
+        (p.x - (COMBAT.arenaW - 200)) / 200,
+        (160 - p.y) / 160,
+        (p.y - (COMBAT.arenaH - 160)) / 160,
         0
       );
-      if (wallProx > 0) {
-        const centerAng = Math.atan2(cyw - p.y, cxw - p.x);
-        moveAng = _blendAngles(moveAng, centerAng, clamp(wallProx * 0.7, 0, 0.85));
-      }
+      const constantCenterBias = 0.20;
+      const wallBias = clamp(wallProx * 0.60, 0, 0.65);
+      const blend = clamp(constantCenterBias + wallBias, 0, 0.85);
+      const centerAng = Math.atan2(cyw - p.y, cxw - p.x);
+      moveAng = _blendAngles(moveAng, centerAng, blend);
       const tx = p.x + Math.cos(moveAng) * 100;
       const ty = p.y + Math.sin(moveAng) * 100;
       p._tag_move_x = tx; p._tag_move_y = ty;
@@ -20904,10 +21214,12 @@ const MODE_AI = (function() {
       // Priority 2: enemy carrier → close in (with per-bot offset)
       const enemyCarrier = enemyAlive.find(e => e.id === m.crown.carrierId);
       if (enemyCarrier) {
+        // v37.98: wider spread (40px → 100-180px) — see actSupport rationale
         const offset = (p.id * 0.61803) % 1;
         const offAng = offset * Math.PI * 2;
-        p._escort_x = enemyCarrier.x + Math.cos(offAng) * 40;
-        p._escort_y = enemyCarrier.y + Math.sin(offAng) * 40;
+        const offR = 100 + offset * 80;
+        p._escort_x = enemyCarrier.x + Math.cos(offAng) * offR;
+        p._escort_y = enemyCarrier.y + Math.sin(offAng) * offR;
         p.target = enemyCarrier;
         p.aiState = "CTF_HOLD";
         return true;
@@ -20919,28 +21231,39 @@ const MODE_AI = (function() {
 
     // === Action: carrier (kite away from enemies, blend toward center near walls) ===
     function actCarrier(p, m, bb) {
+      // === v37.97: see decideKoth's carrier branch for the full rationale ===
+      // Pre-v37.97 carrier kited away from ALL enemies with inverse-distance
+      // weighting, only blending toward center within 80px of walls. The
+      // BT path is the active code (useBTForKoth default true), so users
+      // were seeing perimeter-scoot. Three fixes: FLEE_RANGE filter,
+      // constant center-bias, earlier wall-prox ramp.
       const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
       const enemyAlive = enemies.filter(e => e.alive);
       const cxw = COMBAT.arenaW / 2, cyw = COMBAT.arenaH / 2;
+      const FLEE_RANGE_SQ = 250 * 250;
       let avgX = 0, avgY = 0, count = 0;
       for (const e of enemyAlive) {
         const dx = p.x - e.x, dy = p.y - e.y;
-        const d = Math.hypot(dx, dy) || 1;
+        const dsq = dx*dx + dy*dy;
+        if (dsq > FLEE_RANGE_SQ) continue;  // ignore distant enemies
+        const d = Math.sqrt(dsq) || 1;
         // Inverse-distance weighted (closer enemies push harder)
         avgX += (dx / d) * (200 / Math.max(40, d));
         avgY += (dy / d) * (200 / Math.max(40, d));
         count++;
       }
       const wallProx = Math.max(
-        (80 - p.x) / 80,
-        (p.x - (COMBAT.arenaW - 80)) / 80,
-        (60 - p.y) / 60,
-        (p.y - (COMBAT.arenaH - 60)) / 60,
+        (200 - p.x) / 200,
+        (p.x - (COMBAT.arenaW - 200)) / 200,
+        (160 - p.y) / 160,
+        (p.y - (COMBAT.arenaH - 160)) / 160,
         0
       );
       const fleeAng = (count > 0) ? Math.atan2(avgY, avgX) : Math.atan2(cyw - p.y, cxw - p.x);
       const centerAng = Math.atan2(cyw - p.y, cxw - p.x);
-      const blend = clamp(wallProx * 0.85, 0, 0.95);
+      const constantCenterBias = 0.30;
+      const wallBias = clamp(wallProx * 0.65, 0, 0.70);
+      const blend = clamp(constantCenterBias + wallBias, 0, 0.95);
       const moveAng = _blendAngles(fleeAng, centerAng, blend);
       p._koth_moveAng = moveAng;
       p.aiState = "KOTH_KITE";
@@ -20964,8 +21287,17 @@ const MODE_AI = (function() {
         // to screen; IDLE drift will pull bot toward action if any)
         return _kothRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
       }
-      const tx = carrier.x + (threat.x - carrier.x) * 0.55;
-      const ty = carrier.y + (threat.y - carrier.y) * 0.55;
+      // === v37.98: split the two escorts onto OPPOSITE perpendiculars ===
+      // Pre-v37.98 both escorts went to carrier + 0.55*(threat-carrier),
+      // the SAME single midpoint, so probe showed them overlapping at
+      // (~182, 424). Now: split by bot.id parity onto perpendicular sides
+      // of the carrier-threat axis. Each escort sits ~45px lateral to the
+      // line of attack, providing wider coverage of the carrier.
+      const ang = Math.atan2(threat.y - carrier.y, threat.x - carrier.x);
+      const side = (p.id % 2 === 0) ? 1 : -1;
+      const perpAng = ang + (Math.PI / 2) * side;
+      const tx = carrier.x + Math.cos(ang) * 35 + Math.cos(perpAng) * 45;
+      const ty = carrier.y + Math.sin(ang) * 35 + Math.sin(perpAng) * 45;
       p._escort_x = tx; p._escort_y = ty;
       p.target = threat;
       p.aiState = "KOTH_ESCORT";
@@ -21029,9 +21361,18 @@ const MODE_AI = (function() {
         return _kothRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
       }
       const ang = Math.atan2(carrier.y - p.y, carrier.x - p.x);
-      const perpAng = ang + (Math.PI / 2);
-      const flankX = carrier.x + Math.cos(perpAng) * 60;
-      const flankY = carrier.y + Math.sin(perpAng) * 60;
+      // === v37.98: split flankers to OPPOSITE sides ===
+      // Pre-v37.98 both flankers used perpAng = ang + π/2 (always the SAME
+      // perpendicular side), so they piled at one shoulder of the carrier.
+      // Bot.id parity gives a stable left/right split that survives
+      // re-assignment between frames.
+      const flankSide = (p.id % 2 === 0) ? 1 : -1;
+      const perpAng = ang + (Math.PI / 2) * flankSide;
+      // === v37.98: wider flank radius (was 60px → 110px) ===
+      // 60px put flankers in the carrier's melee range — too close to
+      // function as "flank" (was effectively a second attacker).
+      const flankX = carrier.x + Math.cos(perpAng) * 110;
+      const flankY = carrier.y + Math.sin(perpAng) * 110;
       const d = distance(p, carrier);
       if (d > 90) {
         p._escort_x = flankX; p._escort_y = flankY;
@@ -21128,11 +21469,16 @@ const MODE_AI = (function() {
           // Priority 2: enemy carrier → close in to apply pressure
           const enemyCarrier = enemyAlive.find(e => e.id === m.crown.carrierId);
           if (enemyCarrier) {
-            // Offset slightly so multiple support bots don't stack
+            // === v37.98: spread support bots more (40px → 100-180px) ===
+            // Pre-v37.98 all support bots parked 40px from the carrier,
+            // forming a tight pile with the attacker+flankers. Now use
+            // bot.id for both angular AND radial spread so 3-4 support
+            // bots distribute around a ring 100-180px from carrier.
             const offset = (p.id * 0.61803) % 1;
             const offAng = offset * Math.PI * 2;
-            p._escort_x = enemyCarrier.x + Math.cos(offAng) * 40;
-            p._escort_y = enemyCarrier.y + Math.sin(offAng) * 40;
+            const offR = 100 + offset * 80;  // 100-180px
+            p._escort_x = enemyCarrier.x + Math.cos(offAng) * offR;
+            p._escort_y = enemyCarrier.y + Math.sin(offAng) * offR;
             p.target = enemyCarrier;
             p.aiState = "CTF_HOLD";  // reuses the move-and-fire execute path
             return BT.SUCCESS;
@@ -21174,24 +21520,115 @@ const MODE_AI = (function() {
       return BT.SUCCESS;
     }
 
+    // === v37.96: Action — IT's teammates (it_team role from v37.94) ===
+    // The legacy decideTag's TAG_GUARD path. Without this branch the BT
+    // Selector had no handler for _modeRole === "it_team" and returned
+    // FAILURE, leaving p.aiState=null — bots idled in place until the
+    // round timed out (user-reported bug).
+    //
+    // v37.98: drift toward action zone instead of perma-idle at spawn.
+    // Pre-v37.98 actGuard parked the bot at p.x,p.y forever; with team
+    // spawns 200px from a wall, all 4 IT teammates clustered there for
+    // the whole round. Now they drift to a point between (current IT)
+    // and (arena center), with per-bot offsets so they spread out
+    // instead of stacking on the IT. They still don't engage (Tag is
+    // melee-only and only IT can tag) — they just maintain visible
+    // team-support presence near the chase.
+    function actGuard(p, m, bb) {
+      // v38.01: clear stale predictive-aim from any prior IT_predator role
+      // — actGuard runs for it_team bots; any of them may have been IT
+      // earlier in the match. The stale _tag_aim_x/y would override the
+      // _tag_move_x/y target in executeAIState's move-vector check chain.
+      p._tag_aim_x = null;
+      p._tag_aim_y = null;
+      const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
+      const it = allAlive.find(e => e.id === m.tag.itId);
+      const cxw = COMBAT.arenaW / 2, cyw = COMBAT.arenaH / 2;
+
+      // === v38.00: commitment timer for guard target ===
+      // Pre-v38.00 the target was recomputed every frame. As IT chased
+      // prey, the (IT + center) / 2 midpoint moved each frame, so the
+      // teammate raced toward a perpetually-moving target and never
+      // arrived. Probe (50-75s window) showed pathLen/netDisp ratios
+      // of 3.6-4.0× for IT teammates — pure back-and-forth.
+      // Now: cache the target, refresh only every GUARD_REFRESH frames
+      // OR when IT has moved >GUARD_IT_DELTA from its position at the
+      // last refresh. The teammate has time to actually arrive somewhere.
+      const GUARD_REFRESH = 30;           // recompute at most every 1.5s
+      const GUARD_IT_DELTA = 250;         // OR when IT has moved this far
+      const itMoved = (p._guardItPos && it)
+        ? Math.hypot(it.x - p._guardItPos.x, it.y - p._guardItPos.y) > GUARD_IT_DELTA
+        : true;
+      const stale = !p._guardTargetFrame || (m.roundFrame - p._guardTargetFrame) >= GUARD_REFRESH;
+      if (stale || itMoved || typeof p._guardTargetX !== "number") {
+        // Compute fresh target — same math as pre-v38.00, just cached
+        let tx, ty;
+        if (it) {
+          // 50/50 blend of IT position and arena center — pulls team-
+          // support presence to the chase without piling on IT itself.
+          tx = (it.x + cxw) * 0.5;
+          ty = (it.y + cyw) * 0.5;
+        } else {
+          // No IT (shouldn't happen mid-round) — head to arena center
+          tx = cxw; ty = cyw;
+        }
+        // Per-bot offset ring so 4 teammates don't converge.
+        // v37.98: 100-200px ring (was 60-100).
+        const offset = (p.id * 0.61803) % 1;
+        const offAng = offset * Math.PI * 2;
+        const offR = 100 + offset * 100;
+        tx += Math.cos(offAng) * offR;
+        ty += Math.sin(offAng) * offR;
+        p._guardTargetX = clamp(tx, 100, COMBAT.arenaW - 100);
+        p._guardTargetY = clamp(ty, 100, COMBAT.arenaH - 100);
+        p._guardTargetFrame = m.roundFrame;
+        p._guardItPos = it ? { x: it.x, y: it.y } : null;
+      }
+      p._tag_move_x = p._guardTargetX;
+      p._tag_move_y = p._guardTargetY;
+      p.target = null;  // clear any stale enemy target
+      p.aiState = "TAG_GUARD";
+      return BT.SUCCESS;
+    }
+
     // === Action: IT predator (port of decideTag's role==="it_predator" branch) ===
     function actPredator(p, m, bb) {
       const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
-      const candidates = allAlive.filter(e => e.id !== p.id && !isFrozen(e.id, m));
+      // === v37.96: enemy-team filter + no-tag-back (matches legacy decideTag) ===
+      // Pre-v37.96 the BT version was missing the team-aware filter that the
+      // legacy decideTag got in v37.94. Result: IT bot in BT-driven path
+      // would consider teammates as tag candidates (waste cycles even though
+      // applyTagHit defensively rejects the actual tag attempt).
+      const enemyTeamId = (p.teamId === m.teamAId) ? m.teamBId : m.teamAId;
+      const lastIt = (m.tag && m.tag.lastIt != null) ? m.tag.lastIt : null;
+      const candidates = allAlive.filter(e =>
+        e.teamId === enemyTeamId &&
+        e.id !== p.id &&
+        !isFrozen(e.id, m) &&
+        e.id !== lastIt
+      );
       if (candidates.length === 0) {
-        // Only frozen prey left — pick nearest of those
-        const frozenPrey = allAlive.filter(e => e.id !== p.id && isFrozen(e.id, m));
-        if (frozenPrey.length > 0) {
-          frozenPrey.sort((a, b) => distance(p, a) - distance(p, b));
-          p.target = frozenPrey[0];
+        // No taggable enemies — fall back to any enemy (frozen or lastIt).
+        // Frozen/lastIt enemies are valid chase targets even if applyTagHit
+        // rejects the tag; the round-end gate handles team-wipe.
+        const fallback = allAlive.filter(e =>
+          e.teamId === enemyTeamId && e.id !== p.id
+        );
+        if (fallback.length > 0) {
+          fallback.sort((a, b) => distance(p, a) - distance(p, b));
+          p.target = fallback[0];
           p.aiState = "MELEE";
           return BT.SUCCESS;
         }
-        return BT.FAILURE; // tree falls through (shouldn't normally happen)
+        return BT.FAILURE; // no enemies at all — round-end gate will fire
       }
-      // Commitment timer (≥60 frames before re-evaluating)
+      // === v37.96: commitment timer must also enforce v37.94 invariants ===
+      // A pre-v37.96 commit could have locked onto a teammate or onto lastIt.
+      // Re-pick if any invariant is now violated.
       const committed =
         p.target && p.target.alive && !isFrozen(p.target.id, m) &&
+        p.target.teamId === enemyTeamId &&
+        p.target.id !== lastIt &&
         (m.roundFrame - (p._tag_targetSince || 0)) < 60;
       let bestTarget = null;
       if (committed) {
@@ -21240,27 +21677,100 @@ const MODE_AI = (function() {
 
     // === Action: prey shielded ===
     function actPreyShielded(p, m, bb) {
+      // v38.01: clear stale predictive-aim from any prior IT_predator role
+      // — actPredator sets _tag_aim_x/y but nothing clears them when the
+      // bot transitions to prey. Stale aim leaked into the executeAIState
+      // movement chain (which checks _tag_aim_x first) and made prey
+      // chase phantom IT-position points instead of their shield target.
+      p._tag_aim_x = null;
+      p._tag_aim_y = null;
       const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
       const it = allAlive.find(e => e.id === m.tag.itId);
       if (!it) return BT.FAILURE;
       const itAng = Math.atan2(it.y - p.y, it.x - p.x);
-      let shield = null, shieldD = Infinity;
-      for (const other of allAlive) {
-        if (other === p || other === it) continue;
-        const ox = other.x - p.x, oy = other.y - p.y;
-        const od = Math.hypot(ox, oy);
-        if (od === 0) continue;
-        const oAng = Math.atan2(oy, ox);
-        let angDiff = Math.abs(oAng - itAng);
-        if (angDiff > Math.PI) angDiff = 2*Math.PI - angDiff;
-        if (angDiff < 0.35 && od < shieldD) {
-          shield = other; shieldD = od;
+
+      // === v38.00: commitment timer for chosen shield ===
+      // Pre-v38.00 the prey re-picked the closest bot in the IT-cone
+      // every frame. As IT moved, the angular relationship shifted, and
+      // the "best" shield changed mid-chase. Prey ping-ponged between
+      // candidate shields — part of the user's reported 50s jiggle.
+      // Now: commit to a shield for SHIELD_COMMIT frames unless it dies
+      // or the angle deviates beyond SHIELD_ANG_THRESHOLD (the shield
+      // has moved out of the IT-cone, time to find a new one).
+      const SHIELD_COMMIT = 30;            // ~1.5s commitment
+      const SHIELD_ANG_THRESHOLD = 0.70;   // ~40° before re-pick
+      let shield = null;
+      if (p._shieldId != null && (m.roundFrame - (p._shieldFrame || 0)) < SHIELD_COMMIT) {
+        const committed = allAlive.find(e => e.id === p._shieldId);
+        if (committed && committed !== it) {
+          const cx = committed.x - p.x, cy = committed.y - p.y;
+          const cd = Math.hypot(cx, cy);
+          if (cd > 0) {
+            const cAng = Math.atan2(cy, cx);
+            let angDiff = Math.abs(cAng - itAng);
+            if (angDiff > Math.PI) angDiff = 2 * Math.PI - angDiff;
+            if (angDiff < SHIELD_ANG_THRESHOLD) shield = committed;
+          }
         }
       }
-      if (!shield) return BT.FAILURE; // no shield available, try next branch
-      const awayAng = Math.atan2(p.y - it.y, p.x - it.x);
-      p._tag_move_x = shield.x + Math.cos(awayAng) * 25;
-      p._tag_move_y = shield.y + Math.sin(awayAng) * 25;
+
+      // No valid committed shield — find a fresh one (closest in IT-cone)
+      if (!shield) {
+        let shieldD = Infinity;
+        for (const other of allAlive) {
+          if (other === p || other === it) continue;
+          const ox = other.x - p.x, oy = other.y - p.y;
+          const od = Math.hypot(ox, oy);
+          if (od === 0) continue;
+          const oAng = Math.atan2(oy, ox);
+          let angDiff = Math.abs(oAng - itAng);
+          if (angDiff > Math.PI) angDiff = 2*Math.PI - angDiff;
+          if (angDiff < 0.35 && od < shieldD) {
+            shield = other; shieldD = od;
+          }
+        }
+        if (!shield) return BT.FAILURE; // no shield available, try next branch
+        p._shieldId = shield.id;
+        p._shieldFrame = m.roundFrame;
+      }
+
+      // === v38.01: only refresh projection on actual shield CHANGE ===
+      // Pre-fix: shield commitment was 30 frames. At expiry, re-pick fires
+      // and sets _shieldFrame = roundFrame. shieldFreshlyPicked became true
+      // → projection recomputed against CURRENT IT position (moved a lot
+      // in 30 frames). Bot 200 showed 6-7 of those cycles in the probe
+      // window → pathLen 369 over 200 frames, disp 15, ratio 24.9×.
+      // The fix: distinguish "shield identity changed" from "shield
+      // identity re-confirmed at same id". Only the former should jolt
+      // the projection; the latter should continue at the same target.
+      const shieldChanged = (p._shieldProjId !== shield.id);
+      const angleStale = !p._shieldProjFrame ||
+                         (m.roundFrame - p._shieldProjFrame) >= 60;
+      if (shieldChanged || angleStale || typeof p._tag_move_x !== "number") {
+        const awayAng = Math.atan2(p.y - it.y, p.x - it.x);
+        let tx = shield.x + Math.cos(awayAng) * 25;
+        let ty = shield.y + Math.sin(awayAng) * 25;
+        tx = clamp(tx, 100, COMBAT.arenaW - 100);
+        ty = clamp(ty, 100, COMBAT.arenaH - 100);
+        p._tag_move_x = tx;
+        p._tag_move_y = ty;
+        p._shieldProjFrame = m.roundFrame;
+        p._shieldProjId = shield.id;
+      } else {
+        // Shield didn't change — keep projection ANCHORED to shield's
+        // current position with the same offset vector that was committed.
+        // This way, as the shield drifts, the prey drifts WITH it (which
+        // is the intent of "hiding behind") rather than re-anchoring
+        // toward IT's new position every 30 frames.
+        const offX = p._tag_move_x - (p._shieldProjAnchorX ?? shield.x);
+        const offY = p._tag_move_y - (p._shieldProjAnchorY ?? shield.y);
+        if (typeof offX === "number" && typeof offY === "number") {
+          p._tag_move_x = shield.x + offX;
+          p._tag_move_y = shield.y + offY;
+        }
+      }
+      p._shieldProjAnchorX = shield.x;
+      p._shieldProjAnchorY = shield.y;
       p.target = it;
       p.aiState = "TAG_SHIELD";
       return BT.SUCCESS;
@@ -21268,19 +21778,60 @@ const MODE_AI = (function() {
 
     // === Action: prey break (scatter laterally from herd) ===
     function actPreyBreak(p, m, bb) {
+      // v38.01: clear stale predictive-aim from any prior IT_predator role
+      p._tag_aim_x = null;
+      p._tag_aim_y = null;
       const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
       const it = allAlive.find(e => e.id === m.tag.itId);
       if (!it) return BT.FAILURE;
       const peers = allAlive.filter(e => e !== p && e !== it && !isFrozen(e.id, m));
       if (peers.length === 0) return BT.FAILURE; // no herd to break from
-      let cx = 0, cy = 0;
-      for (const peer of peers) { cx += peer.x; cy += peer.y; }
-      cx /= peers.length; cy /= peers.length;
-      const fromHerd = Math.atan2(p.y - cy, p.x - cx);
-      const fromIt = Math.atan2(p.y - it.y, p.x - it.x);
-      const ang = _blendAngles(fromIt, fromHerd, 0.5);
-      p._tag_move_x = p.x + Math.cos(ang) * 100;
-      p._tag_move_y = p.y + Math.sin(ang) * 100;
+
+      // === v38.01: commitment timer for scatter angle ===
+      // Pre-v38.01 the scatter angle was recomputed every frame from
+      // herd centroid + IT position. Both move every frame; in tight
+      // spaces (cornered prey) the angle oscillates and the bot's move
+      // target swings between frames. Probe showed pathLen/disp 18.8×
+      // for a prey_break bot — pure jiggle. Now commit for 25 frames
+      // (~1.25s) OR until IT moves >150px from where it was when we
+      // last picked. The scatter "decision" sticks long enough to
+      // actually scatter.
+      const BREAK_REFRESH = 25;
+      const BREAK_IT_DELTA = 150;
+      const itMoved = (p._breakItPos && it)
+        ? Math.hypot(it.x - p._breakItPos.x, it.y - p._breakItPos.y) > BREAK_IT_DELTA
+        : true;
+      const stale = !p._breakAngFrame || (m.roundFrame - p._breakAngFrame) >= BREAK_REFRESH;
+      if (stale || itMoved || typeof p._breakAng !== "number") {
+        let cx = 0, cy = 0;
+        for (const peer of peers) { cx += peer.x; cy += peer.y; }
+        cx /= peers.length; cy /= peers.length;
+        const fromHerd = Math.atan2(p.y - cy, p.x - cx);
+        const fromIt = Math.atan2(p.y - it.y, p.x - it.x);
+        let ang = _blendAngles(fromIt, fromHerd, 0.5);
+        // === v37.98: wall avoidance bake-in (now cached too) ===
+        const cxw = COMBAT.arenaW / 2, cyw = COMBAT.arenaH / 2;
+        const wallProx = Math.max(
+          (200 - p.x) / 200,
+          (p.x - (COMBAT.arenaW - 200)) / 200,
+          (160 - p.y) / 160,
+          (p.y - (COMBAT.arenaH - 160)) / 160,
+          0
+        );
+        if (wallProx > 0) {
+          const centerAng = Math.atan2(cyw - p.y, cxw - p.x);
+          const wallBias = clamp(wallProx * 0.55, 0, 0.70);
+          ang = _blendAngles(ang, centerAng, wallBias);
+        }
+        p._breakAng = ang;
+        p._breakAngFrame = m.roundFrame;
+        p._breakItPos = { x: it.x, y: it.y };
+      }
+      // Project move target along the COMMITTED scatter direction.
+      // Steering still adjusts for live walls/teammates each frame in the
+      // execute case — only the SCATTER DIRECTION is committed.
+      p._tag_move_x = p.x + Math.cos(p._breakAng) * 100;
+      p._tag_move_y = p.y + Math.sin(p._breakAng) * 100;
       p.target = it;
       p.aiState = "TAG_BREAK";
       return BT.SUCCESS;
@@ -21288,34 +21839,60 @@ const MODE_AI = (function() {
 
     // === Action: prey flock (default fallback) ===
     function actPreyFlock(p, m, bb) {
+      // v38.01: clear stale predictive-aim from any prior IT_predator role
+      p._tag_aim_x = null;
+      p._tag_aim_y = null;
       const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
       const it = allAlive.find(e => e.id === m.tag.itId);
       if (!it) return BT.FAILURE;
-      const peers = allAlive.filter(e => e !== p && e !== it && !isFrozen(e.id, m));
-      const fromIt = Math.atan2(p.y - it.y, p.x - it.x);
-      let moveAng = fromIt;
-      if (peers.length > 0) {
-        let cx = 0, cy = 0;
-        for (const peer of peers) { cx += peer.x; cy += peer.y; }
-        cx /= peers.length; cy /= peers.length;
-        const toHerd = Math.atan2(cy - p.y, cx - p.x);
-        moveAng = _blendAngles(fromIt, toHerd, 0.30);
-      }
-      // Wall-avoidance bias toward center
-      const cxw = COMBAT.arenaW / 2, cyw = COMBAT.arenaH / 2;
-      const wallProx = Math.max(
-        (80 - p.x) / 80,
-        (p.x - (COMBAT.arenaW - 80)) / 80,
-        (60 - p.y) / 60,
-        (p.y - (COMBAT.arenaH - 60)) / 60,
-        0
-      );
-      if (wallProx > 0) {
+
+      // === v38.01: commitment timer on flee angle ===
+      // Pre-v38.01 the flee angle was recomputed every frame from IT
+      // + herd positions. Small per-frame variations in those positions
+      // + steering separation force pushing perpendicular to the flee
+      // direction → flee angle wobbles every frame → perpendicular
+      // jiggle. Probe showed bot 102 with 112 flips (mostly Y axis).
+      // Commit for 20 frames (~1s) OR when IT moves >180px from its
+      // position at last commit. Shorter than break-commit because
+      // flock IS the default reactive state.
+      const FLOCK_REFRESH = 20;
+      const FLOCK_IT_DELTA = 180;
+      const itMoved = (p._flockItPos && it)
+        ? Math.hypot(it.x - p._flockItPos.x, it.y - p._flockItPos.y) > FLOCK_IT_DELTA
+        : true;
+      const stale = !p._flockAngFrame || (m.roundFrame - p._flockAngFrame) >= FLOCK_REFRESH;
+      if (stale || itMoved || typeof p._flockAng !== "number") {
+        const peers = allAlive.filter(e => e !== p && e !== it && !isFrozen(e.id, m));
+        const fromIt = Math.atan2(p.y - it.y, p.x - it.x);
+        let moveAng = fromIt;
+        if (peers.length > 0) {
+          let cx = 0, cy = 0;
+          for (const peer of peers) { cx += peer.x; cy += peer.y; }
+          cx /= peers.length; cy /= peers.length;
+          const toHerd = Math.atan2(cy - p.y, cx - p.x);
+          moveAng = _blendAngles(fromIt, toHerd, 0.30);
+        }
+        // === v37.98: rewrite to fix prey wall-hugging / corner-trapping ===
+        // 200/160 wall ramp, constant 20% center pull.
+        const cxw = COMBAT.arenaW / 2, cyw = COMBAT.arenaH / 2;
+        const wallProx = Math.max(
+          (200 - p.x) / 200,
+          (p.x - (COMBAT.arenaW - 200)) / 200,
+          (160 - p.y) / 160,
+          (p.y - (COMBAT.arenaH - 160)) / 160,
+          0
+        );
+        const constantCenterBias = 0.20;
+        const wallBias = clamp(wallProx * 0.60, 0, 0.65);
+        const blend = clamp(constantCenterBias + wallBias, 0, 0.85);
         const centerAng = Math.atan2(cyw - p.y, cxw - p.x);
-        moveAng = _blendAngles(moveAng, centerAng, clamp(wallProx * 0.7, 0, 0.85));
+        moveAng = _blendAngles(moveAng, centerAng, blend);
+        p._flockAng = moveAng;
+        p._flockAngFrame = m.roundFrame;
+        p._flockItPos = { x: it.x, y: it.y };
       }
-      p._tag_move_x = p.x + Math.cos(moveAng) * 100;
-      p._tag_move_y = p.y + Math.sin(moveAng) * 100;
+      p._tag_move_x = p.x + Math.cos(p._flockAng) * 100;
+      p._tag_move_y = p.y + Math.sin(p._flockAng) * 100;
       p.target = it;
       p.aiState = "TAG_FLEE";
       return BT.SUCCESS;
@@ -21330,22 +21907,29 @@ const MODE_AI = (function() {
         BT.Condition("isRoleFrozen", (p) => p._modeRole === "frozen"),
         BT.Action("setFrozen", actFrozen),
       ]),
-      // 2. IT predator
+      // 2. IT's teammate — stand guard (v37.96)
+      // Critical for v37.94 team-based Tag: without this branch the BT
+      // Selector returned FAILURE for it_team bots and they idled.
+      BT.Sequence([
+        BT.Condition("isRoleItTeam", (p) => p._modeRole === "it_team"),
+        BT.Action("guard", actGuard),
+      ]),
+      // 3. IT predator
       BT.Sequence([
         BT.Condition("isRoleIt", (p) => p._modeRole === "it_predator"),
         BT.Action("predator", actPredator),
       ]),
-      // 3. Prey shielded (preferred prey behavior if shield available)
+      // 4. Prey shielded (preferred prey behavior if shield available)
       BT.Sequence([
         BT.Condition("isRoleShielded", (p) => p._modeRole === "prey_shielded"),
         BT.Action("preyShielded", actPreyShielded),
       ]),
-      // 4. Prey break (scatter from herd)
+      // 5. Prey break (scatter from herd)
       BT.Sequence([
         BT.Condition("isRoleBreak", (p) => p._modeRole === "prey_break"),
         BT.Action("preyBreak", actPreyBreak),
       ]),
-      // 5. Prey flock (default fallback for any prey role)
+      // 6. Prey flock (default fallback for any prey role)
       BT.Sequence([
         BT.Condition("isAnyPrey", (p) => p._modeRole && p._modeRole.indexOf("prey_") === 0),
         BT.Action("preyFlock", actPreyFlock),
@@ -22888,8 +23472,15 @@ function executeAIState(p, enemyAlive, m) {
        ============================================================ */
     case "KOTH_KITE": {
       // Crown carrier kiting. Move along p._koth_moveAng. NO firing.
+      // v37.97: speed multiplier now configurable via Settings (default 1.05).
+      // v37.99: routed through _applySteering so wall repulsion + same-team
+      // separation are applied universally. The hand-coded center-bias in
+      // actCarrier still computes intent; steering handles the safety rails.
       if (typeof p._koth_moveAng === "number") {
-        moveAlong(p, p._koth_moveAng, effSpd * 1.05);
+        const kCfg = (LEAGUE_CONFIG.modeConfig || {}).koth || {};
+        const kMult = (typeof kCfg.crownSpeedMult === "number") ? kCfg.crownSpeedMult : 1.05;
+        const steered = _applySteering(p, m, p._koth_moveAng, effSpd * kMult);
+        moveAlong(p, steered.ang, steered.speed);
       }
       break;
     }
@@ -22899,10 +23490,16 @@ function executeAIState(p, enemyAlive, m) {
     case "CTF_HOLD": {
       // Move toward a stored escort point (p._escort_x, _escort_y).
       // Once near it, hold position and engage if a target is set.
+      // v37.99: steered — wall avoidance prevents escorts from being
+      // pushed into walls when the carrier-threat midpoint is near an
+      // edge; mid-range separation keeps escorts from stacking.
       if (typeof p._escort_x === "number") {
         const dx = p._escort_x - p.x, dy = p._escort_y - p.y;
         const d = Math.hypot(dx, dy);
-        if (d > 18) moveAlong(p, Math.atan2(dy, dx), effSpd);
+        if (d > 18) {
+          const steered = _applySteering(p, m, Math.atan2(dy, dx), effSpd);
+          moveAlong(p, steered.ang, steered.speed);
+        }
       }
       // Fire opportunistically at the escort target if in range
       if (p.target && p.target.alive && p.attackCooldown <= 0 && p.stunned <= 0) {
@@ -22920,13 +23517,17 @@ function executeAIState(p, enemyAlive, m) {
     case "KOTH_FLANK":
     case "CTF_FLANK": {
       // Move to flank point, then close on target
+      // v37.99: steered during the flank-positioning phase (avoid walls,
+      // separate from teammates). Once close to flank point, the close-
+      // on-target leg is unsteered — combat closing should not deflect.
       if (typeof p._escort_x === "number") {
         const dx = p._escort_x - p.x, dy = p._escort_y - p.y;
         const d = Math.hypot(dx, dy);
         if (d > 30) {
-          moveAlong(p, Math.atan2(dy, dx), effSpd);
+          const steered = _applySteering(p, m, Math.atan2(dy, dx), effSpd);
+          moveAlong(p, steered.ang, steered.speed);
         } else if (p.target && p.target.alive) {
-          // Reached flank; close on target
+          // Reached flank; close on target (no steering — combat closing)
           const tang = Math.atan2(p.target.y - p.y, p.target.x - p.x);
           moveAlong(p, tang, effSpd);
         }
@@ -23030,10 +23631,38 @@ function executeAIState(p, enemyAlive, m) {
     }
     case "TAG_HUNT": {
       // It pursuing prey with predictive aim-ahead. p._tag_aim_x/y is
-      // already lead-corrected; move toward it.
+      // already lead-corrected by actPredator; move toward it.
+      // v38.01: aim-ahead is now clamped to playable area, routed through
+      // steering, and uses arrival behavior. Pre-v38.01 the predictive
+      // aim could compute targets PAST a wall (prey fleeing toward an
+      // edge with high velocity), so IT chased a phantom point until the
+      // prey changed direction, then chased a new phantom — pure jiggle.
+      // Probe showed IT_predator pathLen/disp ratio of 9.3× in the 50s+
+      // window. Clamping the aim and adding arrival deceleration fixes it.
       if (typeof p._tag_aim_x === "number" && p.target && p.target.alive) {
-        const dx = p._tag_aim_x - p.x, dy = p._tag_aim_y - p.y;
-        moveAlong(p, Math.atan2(dy, dx), effSpd * 1.10);
+        // Clamp predictive aim to a 60px safety margin from arena edges
+        const aimX = clamp(p._tag_aim_x, 60, COMBAT.arenaW - 60);
+        const aimY = clamp(p._tag_aim_y, 60, COMBAT.arenaH - 60);
+        const dx = aimX - p.x, dy = aimY - p.y;
+        const d = Math.hypot(dx, dy);
+        // Arrival: smooth deceleration as we approach the actual target
+        // (not the aim-ahead point — distance to TARGET, the prey itself,
+        // because the prey is what we want to be at melee range with).
+        const targetD = distance(p, p.target);
+        const ARRIVAL_RADIUS = 50, ARRIVAL_DEAD = 20;
+        if (d > 1 && targetD > ARRIVAL_DEAD) {
+          const ang = Math.atan2(dy, dx);
+          const speedScale = (targetD > ARRIVAL_RADIUS)
+            ? 1.0
+            : ((targetD - ARRIVAL_DEAD) / (ARRIVAL_RADIUS - ARRIVAL_DEAD));
+          // Apply steering for wall avoidance — predator should not run
+          // through walls trying to reach prey hugging an edge.
+          // v38.01: arrival-factor attenuates same-team separation so the
+          // predator can close on prey without being shoved by teammates.
+          const steered = _applySteering(p, m, ang, effSpd * 1.10 * speedScale,
+                                          { arrivalFactor: speedScale });
+          moveAlong(p, steered.ang, steered.speed);
+        }
         // If we're within tag-strike range, fire melee
         const td = distance(p, p.target);
         if (td <= COMBAT.hitRange + 12 && p.attackCooldown <= 0 && p.stunned <= 0) {
@@ -23051,12 +23680,50 @@ function executeAIState(p, enemyAlive, m) {
     case "TAG_BREAK":
     case "TAG_GUARD":
     case "TAG_FLEE": {
-      // v37.94: TAG_GUARD added — IT's teammates. _tag_move_x/y is set
-      // to their current position so they stand still (zero delta).
-      // Prey movement — head to stored move target (always exists)
+      // v37.94: TAG_GUARD added — IT's teammates.
+      // v37.98: actGuard now drifts to IT/center midpoint (was perma-idle).
+      // v37.99: routed through _applySteering — replaces the per-action
+      // wall-prox math + the v37.98 shield-target clamp.
+      // v38.00: added Reynolds arrival behavior (slow as approaching the
+      // target) + split TAG_GUARD speed (it_team is patrolling at 0.85×,
+      // not racing at 1.10×). Fixes the 50s jiggle the user reported.
       if (typeof p._tag_move_x === "number") {
         const dx = p._tag_move_x - p.x, dy = p._tag_move_y - p.y;
-        moveAlong(p, Math.atan2(dy, dx), effSpd * 1.10);
+        const d = Math.hypot(dx, dy);
+        // === v38.00: arrival behavior ===
+        // - d > 50px: full speed
+        // - 15px < d <= 50px: linear ramp from 0 (at 15) to full (at 50)
+        // - d <= 15px: dead-zone, bot has arrived, no movement
+        // Standard Reynolds arrival — prevents overshoot + the jiggle
+        // that emerges when steered force vectors balance near a target.
+        // === v38.01: TAG_GUARD uses WIDER dead-zone (35 vs 15) ===
+        // Pre-v38.01 GUARDs (it_team bots) jiggled at ~3px/frame in the
+        // arrival ramp region: a nearby teammate's separation force +
+        // tiny arrival speed combined into a stable 2-frame oscillation
+        // between two positions ~3px apart. Probe showed bot 202 with
+        // 327 flips. it_team is PATROLLING, not racing — it doesn't need
+        // a pixel-precise rest. Widening the dead-zone to 35px lets the
+        // bot settle anywhere within a comfortable rest band.
+        const ARRIVAL_RADIUS = 50;
+        const ARRIVAL_DEAD = (p.aiState === "TAG_GUARD") ? 35 : 15;
+        if (d > ARRIVAL_DEAD) {
+          const ang = Math.atan2(dy, dx);
+          const speedScale = (d > ARRIVAL_RADIUS)
+            ? 1.0
+            : ((d - ARRIVAL_DEAD) / (ARRIVAL_RADIUS - ARRIVAL_DEAD));
+          // TAG_GUARD = it_team patrolling (0.85×); prey races (1.10×)
+          const baseSpeed = (p.aiState === "TAG_GUARD")
+            ? effSpd * 0.85
+            : effSpd * 1.10;
+          // v38.01: pass arrival factor so separation attenuates with
+          // deceleration — bots can settle near their target without
+          // separation shoving them around it.
+          const steered = _applySteering(p, m, ang, baseSpeed * speedScale,
+                                          { arrivalFactor: speedScale });
+          moveAlong(p, steered.ang, steered.speed);
+        }
+        // Within dead-zone: bot has arrived. Don't move — let smoothed
+        // velocity decay naturally next frame if movement resumes.
       }
       // No firing — Tag is melee-only and prey have no business fighting back
       break;
@@ -23608,6 +24275,132 @@ function executeAIState(p, enemyAlive, m) {
 const _ACTIVE_ENGAGE_STATES = new Set([
   "ENGAGE", "MELEE", "FINISH_OFF", "SEEK_CORE", "CTF_RUSH",
 ]);
+
+/* === v37.99: STEERING LAYER ===
+   The research-pass synthesis identified the architectural gap that
+   produced v37.95–v37.98's recurring bugs: every Action was trying to
+   do its own wall-avoidance and cluster-prevention, with slightly
+   different code, slightly different constants, and slightly different
+   bugs. The Reynolds three-level model (action selection / steering /
+   locomotion) names the gap — we had the top and bottom layers; the
+   middle was missing.
+
+   _applySteering takes a desired direction + speed from any Action and
+   returns the same with two universal forces applied:
+
+   1. WALL EDGE REPULSION — smooth force away from arena edges, ramping
+      from 0 at STEER_WALL_DIST (150px) to full strength at the edge.
+      Replaces ~10 separate ad-hoc wall-prox blocks scattered across
+      decideKoth's carrier branch, actCarrier (BT), actPreyFlock,
+      actPreyBreak, actPreyShielded's clamp, actGuard's clamp, etc.
+
+   2. MID-RANGE TEAMMATE SEPARATION — soft push away from same-team
+      bots within STEER_SEP_DIST (60px). Distinct from moveAlong's
+      existing 22px tight-separation (which prevents overlap); this
+      one prevents the 50-100px cluster pattern that v37.98 fought
+      with bot.id-parity splits and golden-ratio ring offsets.
+
+   The helper is intentionally narrow: it does NOT decide direction,
+   does NOT swap targets, does NOT pick alternative goals — those are
+   action-selection concerns. It just deflects the Action's intent
+   away from walls and teammate pileups, preserving the goal as much
+   as possible.
+
+   APPLIED IN: KOTH_KITE, KOTH_ESCORT, KOTH_FLANK, CTF_HOLD,
+               TAG_FLEE, TAG_SHIELD, TAG_BREAK, TAG_GUARD
+   NOT APPLIED IN: ENGAGE/MELEE/FINISH_OFF (active combat — bot needs
+                   to close on target wherever target is, including
+                   against walls), CTF_RACE/KOTH_RACE (urgent goal-
+                   directed sprint), CTF_RUSH (carrier going home),
+                   TAG_HUNT (IT bot chasing prey into corners),
+                   IDLE drift-to-fight (dogpile destination).
+*/
+const STEER_WALL_DIST = 150;   // ramp begins this many px from edge
+const STEER_WALL_MAX  = 1.20;  // peak wall force as fraction of speed
+const STEER_SEP_DIST  = 60;    // mid-range teammate spread radius
+const STEER_SEP_MAX   = 0.70;  // peak separation force as fraction of speed
+const STEER_SPEED_CAP = 1.50;  // cap on resultant speed (forces can't overpower)
+
+function _applySteering(p, m, ang, speed, opts) {
+  // No-op guards: zero speed (nothing to steer), missing match (defensive)
+  if (!m || speed <= 0 || !isFinite(ang)) return { ang, speed };
+
+  // === v38.01: arrival-aware separation attenuation ===
+  // Optional opts.arrivalFactor in [0..1] tells steering how close the
+  // bot is to its target (1 = far, full forces; 0 = at target, no forces).
+  // When the bot is decelerating (arrivalFactor < 1), reduce same-team
+  // separation strength proportionally. Pre-v38.01 separation was at
+  // full strength even in the arrival deadzone, which shoved bots
+  // around their own destination — visible as per-frame X/Y jiggle when
+  // multiple teammates settle nearby. Wall repulsion is NOT attenuated
+  // (running into a wall is always wrong, regardless of distance to
+  // target).
+  const arrivalFactor = (opts && typeof opts.arrivalFactor === "number")
+    ? Math.max(0, Math.min(1, opts.arrivalFactor))
+    : 1.0;
+
+  // Start with the Action's desired velocity as the base force vector
+  let fx = Math.cos(ang) * speed;
+  let fy = Math.sin(ang) * speed;
+
+  // === Wall edge repulsion ===
+  // Each edge contributes a force pointing INTO the arena, scaled by
+  // how close we are. Clamp the proximity ratio to 0+ in case the bot
+  // briefly crosses the edge (physics can push slightly past clamp).
+  const dxL = p.x;
+  const dxR = COMBAT.arenaW - p.x;
+  const dyT = p.y;
+  const dyB = COMBAT.arenaH - p.y;
+  if (dxL < STEER_WALL_DIST) {
+    const t = Math.max(0, 1 - dxL / STEER_WALL_DIST);
+    fx += t * speed * STEER_WALL_MAX;
+  }
+  if (dxR < STEER_WALL_DIST) {
+    const t = Math.max(0, 1 - dxR / STEER_WALL_DIST);
+    fx -= t * speed * STEER_WALL_MAX;
+  }
+  if (dyT < STEER_WALL_DIST) {
+    const t = Math.max(0, 1 - dyT / STEER_WALL_DIST);
+    fy += t * speed * STEER_WALL_MAX;
+  }
+  if (dyB < STEER_WALL_DIST) {
+    const t = Math.max(0, 1 - dyB / STEER_WALL_DIST);
+    fy -= t * speed * STEER_WALL_MAX;
+  }
+
+  // === Mid-range same-team separation ===
+  // Soft push away from same-team bots within STEER_SEP_DIST. This is
+  // the 50-100px scale that moveAlong's 22px tight-separation doesn't
+  // address. Same-team only — opposing-team proximity is gameplay
+  // (combat range, predator-prey distance), not pileup to prevent.
+  // v38.01: scaled by arrivalFactor so bots can settle near their target
+  // without separation shoving them around it.
+  const all = m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers);
+  const sepDistSq = STEER_SEP_DIST * STEER_SEP_DIST;
+  const sepStrength = STEER_SEP_MAX * arrivalFactor;
+  for (const o of all) {
+    if (o === p || !o.alive || o.teamId !== p.teamId) continue;
+    const dx = p.x - o.x, dy = p.y - o.y;
+    const d2 = dx*dx + dy*dy;
+    if (d2 < sepDistSq && d2 > 0.01) {
+      const d = Math.sqrt(d2);
+      // Linear falloff: 1.0 at d=0 → 0 at STEER_SEP_DIST
+      const t = 1 - d / STEER_SEP_DIST;
+      fx += (dx / d) * speed * sepStrength * t;
+      fy += (dy / d) * speed * sepStrength * t;
+    }
+  }
+
+  // Convert back to angle + magnitude. If forces ~cancel out (e.g.
+  // bot wedged between two walls equally), preserve the input angle
+  // and reduce speed proportionally rather than picking an arbitrary
+  // direction from a near-zero vector.
+  const newSpeedRaw = Math.hypot(fx, fy);
+  const newAng = (newSpeedRaw > 0.01) ? Math.atan2(fy, fx) : ang;
+  // Cap resultant speed so accumulated forces can't fling the bot
+  const newSpeed = Math.min(newSpeedRaw, speed * STEER_SPEED_CAP);
+  return { ang: newAng, speed: newSpeed };
+}
 
 function moveAlong(p, ang, speed) {
   // === v37.59: suppression speed reduction (Tier 3.D) ===
@@ -35265,7 +36058,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // === v37.92: single source of truth for the build label ===
 // Used by the console boot log AND by the save's gameVersion stamp.
 // Bump in ONE place per release.
-const BUILD_LABEL = "v37.94";
+const BUILD_LABEL = "v38.01";
 
 // === v37.34: build-identification stamp ===
 // Prints once on script load. If the user reports crashes and this line is
@@ -35494,6 +36287,42 @@ function deserializeLeague(jsonStr) {
   // currentSlot must point at a real slot in the bracket
   if (LEAGUE.currentSlot && (!LEAGUE.bracket || !LEAGUE.bracket[LEAGUE.currentSlot])) {
     bracketHasGhostTeams = true;
+  }
+  // === v37.95: null-team detection on currentSlot ===
+  // The pre-v37.95 validation above missed a corruption mode the user
+  // reported (console: `team id 'null' is not in TEAM_BY_ID`): a saved
+  // bracket where currentSlot points to a deps-pending slot whose teamA
+  // or teamB are still null. Pre-v37.95 the boot renderer would call
+  // renderTeamPanel with teamId=null and show "(unknown team: null)".
+  // First try to lazily resolve from upstream winners; if any team
+  // remains null AND no deps can fill it, the bracket is corrupt — rebuild.
+  if (!bracketHasGhostTeams && LEAGUE.currentSlot && LEAGUE.bracket &&
+      LEAGUE.bracket[LEAGUE.currentSlot]) {
+    const cs = LEAGUE.bracket[LEAGUE.currentSlot];
+    if (cs.depends) {
+      if (cs.teamA == null && cs.depends[0]) {
+        const dep = LEAGUE.bracket[cs.depends[0]];
+        if (dep && dep.winner) cs.teamA = dep.winner;
+      }
+      if (cs.teamB == null && cs.depends[1]) {
+        const dep = LEAGUE.bracket[cs.depends[1]];
+        if (dep && dep.winner) cs.teamB = dep.winner;
+      } else if (cs.teamB == null && cs.depends[0] && cs.teamA) {
+        // 12-team qf format: single-dep slots (qfX.depends = [qlX]).
+        // The qf takes its bye-teamA at build time, then teamB comes
+        // from the qualifier winner. Lazy-resolve that case here too.
+        const dep = LEAGUE.bracket[cs.depends[0]];
+        if (dep && dep.winner) cs.teamB = dep.winner;
+      }
+    }
+    // If teams are STILL null after lazy resolve, bracket state is corrupt
+    if (cs.teamA == null || cs.teamB == null) {
+      console.warn("[v37.95] currentSlot '" + LEAGUE.currentSlot +
+        "' has null teamA/teamB and deps could not be resolved (deps=" +
+        JSON.stringify(cs.depends) + ", teamA=" + cs.teamA +
+        ", teamB=" + cs.teamB + "); rebuilding bracket.");
+      bracketHasGhostTeams = true;
+    }
   }
   if (bracketHasGhostTeams) {
     console.warn("[v37.32] Loaded bracket references teams not in current pool, or currentSlot is invalid; rebuilding bracket.");
@@ -36486,15 +37315,22 @@ function bindSettings() {
   const ctfCapsSel = $("#setCtfCaps");
   // v37.94: tag bleed DPS picker (1.0–5.0 in 0.5 increments)
   const tagBleedSel = $("#setTagBleedDps");
+  // v37.97: crown speed + tag freeze pickers
+  const crownSpeedSel = $("#setCrownSpeedMult");
+  const tagFreezeSel = $("#setTagFreezeSec");
   const kothRow = $("#kothPointsRow");
+  const kothSpeedRow = $("#kothSpeedRow");
   const ctfRow = $("#ctfCapsRow");
   const tagBleedRow = $("#tagBleedRow");
+  const tagFreezeRow = $("#tagFreezeRow");
   function _updateModeSubRows() {
     const v = modeSel ? modeSel.value : "deathmatch";
-    if (kothRow) kothRow.style.display = (v === "koth") ? "" : "none";
-    if (ctfRow)  ctfRow.style.display  = (v === "ctf")  ? "" : "none";
-    // v37.94: tag-specific row only visible when Team Tag mode is active
-    if (tagBleedRow) tagBleedRow.style.display = (v === "tag") ? "" : "none";
+    if (kothRow)      kothRow.style.display      = (v === "koth") ? "" : "none";
+    if (kothSpeedRow) kothSpeedRow.style.display = (v === "koth") ? "" : "none";  // v37.97
+    if (ctfRow)       ctfRow.style.display       = (v === "ctf")  ? "" : "none";
+    // v37.94: tag-specific rows only visible when Team Tag mode is active
+    if (tagBleedRow)  tagBleedRow.style.display  = (v === "tag") ? "" : "none";
+    if (tagFreezeRow) tagFreezeRow.style.display = (v === "tag") ? "" : "none";  // v37.97
   }
   if (modeSel) {
     modeSel.value = (LEAGUE_CONFIG && LEAGUE_CONFIG.gameMode) || "deathmatch";
@@ -36510,6 +37346,18 @@ function bindSettings() {
   if (tagBleedSel && LEAGUE_CONFIG && LEAGUE_CONFIG.modeConfig) {
     const saved = LEAGUE_CONFIG.modeConfig.tag && LEAGUE_CONFIG.modeConfig.tag.itBleedDps;
     tagBleedSel.value = String(saved != null ? saved : 1.5);
+  }
+  // v37.97: populate crown speed mult select (fallback 1.05)
+  if (crownSpeedSel && LEAGUE_CONFIG && LEAGUE_CONFIG.modeConfig) {
+    const saved = LEAGUE_CONFIG.modeConfig.koth && LEAGUE_CONFIG.modeConfig.koth.crownSpeedMult;
+    crownSpeedSel.value = String(saved != null ? saved : 1.05);
+  }
+  // v37.97: populate tag freeze duration select (config stores frames @ 20fps;
+  // UI displays seconds; convert: frames / 20 = seconds, default 60 → 3.0)
+  if (tagFreezeSel && LEAGUE_CONFIG && LEAGUE_CONFIG.modeConfig) {
+    const savedFrames = LEAGUE_CONFIG.modeConfig.tag && LEAGUE_CONFIG.modeConfig.tag.tagFreezeFrames;
+    const savedSec = (savedFrames != null) ? (savedFrames / 20) : 3;
+    tagFreezeSel.value = String(savedSec);
   }
   _updateModeSubRows();
 
@@ -36723,6 +37571,11 @@ function bindSettings() {
         if (LEAGUE_CONFIG.modeConfig) {
           if (LEAGUE_CONFIG.modeConfig.koth) {
             LEAGUE_CONFIG.modeConfig.koth.pointsToWin = +($("#setKothPoints")?.value || 50);
+            // v37.97: crown speed multiplier — validated to 0.6×–1.5×
+            const rawSpd = +($("#setCrownSpeedMult")?.value || 1.05);
+            const clampedSpd = Math.max(0.6, Math.min(1.5, rawSpd));
+            // Quantize to nearest 0.05 to keep saved values clean
+            LEAGUE_CONFIG.modeConfig.koth.crownSpeedMult = Math.round(clampedSpd * 20) / 20;
           }
           if (LEAGUE_CONFIG.modeConfig.ctf) {
             LEAGUE_CONFIG.modeConfig.ctf.capsToWin = +($("#setCtfCaps")?.value || 5);
@@ -36734,6 +37587,12 @@ function bindSettings() {
             const clamped = Math.max(1, Math.min(5, rawBleed));
             const quantized = Math.round(clamped * 2) / 2;
             LEAGUE_CONFIG.modeConfig.tag.itBleedDps = quantized;
+            // v37.97: tag freeze duration — UI is seconds, config is frames (20fps)
+            const rawSec = +($("#setTagFreezeSec")?.value || 3);
+            const clampedSec = Math.max(0.5, Math.min(5, rawSec));
+            // Quantize to nearest 0.5 sec, then convert to frames
+            const quantSec = Math.round(clampedSec * 2) / 2;
+            LEAGUE_CONFIG.modeConfig.tag.tagFreezeFrames = Math.round(quantSec * 20);
           }
         }
       }
@@ -36877,6 +37736,11 @@ function bindSettings() {
         if (kp > 0 && LEAGUE_CONFIG.modeConfig.koth) {
           LEAGUE_CONFIG.modeConfig.koth.pointsToWin = kp;
         }
+        // v37.97: crown speed mult — validated 0.6×–1.5×, quantized to 0.05
+        const cs = +($("#setCrownSpeedMult")?.value || 0);
+        if (cs >= 0.6 && cs <= 1.5 && LEAGUE_CONFIG.modeConfig.koth) {
+          LEAGUE_CONFIG.modeConfig.koth.crownSpeedMult = Math.round(cs * 20) / 20;
+        }
         const cc = +($("#setCtfCaps")?.value || 0);
         if (cc > 0 && LEAGUE_CONFIG.modeConfig.ctf) {
           LEAGUE_CONFIG.modeConfig.ctf.capsToWin = cc;
@@ -36885,6 +37749,12 @@ function bindSettings() {
         const tb = +($("#setTagBleedDps")?.value || 0);
         if (tb >= 1 && tb <= 5 && LEAGUE_CONFIG.modeConfig.tag) {
           LEAGUE_CONFIG.modeConfig.tag.itBleedDps = Math.round(tb * 2) / 2;
+        }
+        // v37.97: tag freeze duration — UI is seconds (0.5-5.0), config is frames @ 20fps
+        const tfs = +($("#setTagFreezeSec")?.value || 0);
+        if (tfs >= 0.5 && tfs <= 5 && LEAGUE_CONFIG.modeConfig.tag) {
+          const quantSec = Math.round(tfs * 2) / 2;
+          LEAGUE_CONFIG.modeConfig.tag.tagFreezeFrames = Math.round(quantSec * 20);
         }
       }
       if (typeof saveLocal === "function") saveLocal();
@@ -36924,8 +37794,10 @@ function bindSettings() {
       { id: "setBracketFmt",     label: "Bracket size" },
       { id: "setContinent",      label: "Continent" },
       { id: "setKothPoints",     label: "KOTH points" },
+      { id: "setCrownSpeedMult", label: "KOTH crown speed" },  // v37.97
       { id: "setCtfCaps",        label: "CTF captures" },
       { id: "setTagBleedDps",    label: "Tag IT bleed" },  // v37.94
+      { id: "setTagFreezeSec",   label: "Tag freeze duration" },  // v37.97
     ];
     for (const inp of autoSaveInputs) {
       const el = $("#" + inp.id);
