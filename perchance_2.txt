@@ -10092,7 +10092,7 @@
       <article class="history">
         <h3>The Stories Cabinet — what's archived here</h3>
         <div class="meta">A working archive · Float Foundation Stories Cabinet · curated narrative arcs from across the continent · entries added on a rolling basis</div>
-        <p>The Stories cabinet of the Foundation Archive holds long-running narrative columns, serialized correspondence, and curated ephemera from the continent's print outlets and grandstand seats, stored in the form their authors and editors and (in some cases) silent contributors chose to leave them. The cabinet was opened formally in Y41 closeout. As of this revision, seven tenants have been admitted.</p>
+        <p>The Stories cabinet of the Foundation Archive holds long-running narrative columns, serialized correspondence, and curated ephemera from the continent's print outlets and grandstand seats, stored in the form their authors and editors and (in some cases) silent contributors chose to leave them. The cabinet was opened formally in Y41 closeout. As of this revision, eight tenants have been admitted.</p>
         <p>The first tenant, taking up the cabinet's first five chapters below, is <em>South Strip Songbook</em> — Cyril Halberd's standing column from the Wing Standard culture page, which has run since Y28 and which the Foundation has, with the Wing Standard's permission, copied into this archive in its entirety to date. Its organizing thread is the singer Byakko of Reno's Velvet Lacquer, whose debut record is at the time of this archive's opening in active production.</p>
         <p>The second tenant is the <em>Selected Ephemera from the Pew-Pew Ewe's Archive</em> — a curated draw from the seventy-five filed items the Foundation has accumulated since Y33 closeout, when an anonymous female sheep first took Section 14, Row M, seat 3 at Brewer's Reach. The selection is unauthorized in the sense that the subject has never identified herself and has, by every measurable sign, no idea this archive exists; it is authorized in the sense that the Section 14 ushers' working agreement with the Foundation permits the filing of fan ephemera as a matter of historical record.</p>
         <p>The third tenant is <em>From the Embankment</em> — the inaugural-year columns and earlier preserved letters of the anonymous fox kit who, since Y34 R3, has manned Gate Three at Brewer's Reach Pitch on every match day, and who began writing a signed column for the Wing Standard sports pages in Y41 closeout under that title.</p>
@@ -10100,6 +10100,7 @@
         <p>The fifth tenant is <em>Marin's Classroom</em> — the paired archive of Marin Bristlebeard, Boston schoolteacher of forty-six years' standing and wife of the retired Beaver Tank known to the canon as Bristlebeard the Second, and her secondary-school student Hollis (older brother of the Tenant Four letter-writer Penn), whose intergenerational friendship across fifty-some years of age has, since Y40 founding bell, been conducted principally on the after-school broadcasts of Beavers home matches in classroom 3-B of the Brewer's Row Common School.</p>
         <p>The sixth tenant is <em>A Hug Is Technically Legal</em> — the paired cartoon archive of two young Float Knights cartoonists from opposite coasts of the continent (Saskia Goldenpaw, twelve, Olympia Harbor, Golden Retriever; Theo Nightwhisker, eleven, Saint-Laurent, black-furred cat), whose youthful and entirely affectionate mockery of the Portland Punching Pandas' non-play eccentricities first appeared together on the Wing Standard's Y41 Hallowtide youth cartoon supplement and has, with the Pandas' coach Yu Cobblepad's gracefully written approval, run in every Hallowtide special edition since.</p>
         <p><em>Voices from Outside the Continent</em> — six broadcasters, streamers, and video-essay producers from beyond the Float Knights' continental boundary who have, between Y40 and Y42, produced sustained published or broadcast work about the League. The Foundation has, by the Commissioner's office's case-by-case authorization and with each contributor's signed consent, archived a representative sample. The contributors are non-canonical to the League's internal record (their work is broadcast outward, not part of the in-continent press circuit) but their published commentary is part of how the League is now seen, by audiences elsewhere, and is therefore — by the Foundation's standing doctrine that any record clearly belonging in the world's memory deserves keeping — preserved here in their respective voices.</p>
+        <p>The eighth tenant is <em>The Pony at Center Pitch</em> — the small white pony of unknown but voluntarily-stated origin who has, since approximately Y42 closeout, been present on the field at every match on every pitch on the continent, identifying herself in conversation as <em>Sweetie</em>, identifying her origin as <em>a far-away land</em>, and identifying her job as <em>the referee</em>. The League's Referee Office has, after consideration, registered no objection. She watches; the matches continue; the readers seem to like that she is there. The Foundation files her two interviews to date, and the eighth-tenant preface, by the Commissioner's office's standing authorization for "ephemera the world's memory should not be without."</p>
         <p>The Foundation does not, as a general rule, archive culture columns or fan ephemera; the sports archive has long been the bulk of what comes through these doors. The decision to extend the archive to these six was made by the Commissioner's office in consultation with the Wing Standard's editor, on the grounds that each had, by every measurable sign, become its own kind of permanent record of a life lived inside the League's orbit, and that this kind of record — when it appears, in any field — is worth keeping.</p>
         <div class="signoff">— Float Foundation, Stories Cabinet, opened Y41 closeout, most recently expanded Y42 closeout</div>
       </article>
@@ -11116,6 +11117,78 @@
       </details>
 
 
+      <details class="lore-timeline-era" open>
+        <summary><span class="era-name">VIII — The Pony at Center Pitch</span> <span class="era-count">3 entries · the eighth tenant · the referee from a far-away land</span></summary>
+        <article class="history">
+          <h3>Cabinet preface — on the eighth tenant</h3>
+          <div class="meta">A note · Float Foundation, Stories Cabinet · Y43 mid-season</div>
+          <p>The Foundation's Stories Cabinet has, in eight tenants now, archived a sportswriter's column, a sheep's seat, a fox kit's letters, two children's letters, a schoolteacher's classroom, two children's cartoons, six outside-continent broadcasters, and — as of Y43 mid-season — a small white pony who has, since approximately Y42 closeout, been present at center pitch for every match on every field on the continent, watching politely, and identifying herself as <em>the referee</em>.</p>
+          <p>She is not employed by the League. The League's Referee Office has, in three filed letters across the Y43 mid-season, formally noted that she does not hold accreditation, has not sat for the qualifying examination, and has not registered with the Office's standing roster. The Referee Office has also formally noted, in the same three letters, that she is welcome to continue doing what she is doing for as long as she pleases.</p>
+          <p>She has identified herself, in conversation with the two Wing Standard cultural-affairs reporters who have managed to interview her at any length, as <em>Sweetie</em>. She has identified her place of origin, in the same interviews, as <em>a far-away land</em>. She has declined to be more specific. The interviews are appended below.</p>
+          <div class="signoff">— Float Foundation, Stories Cabinet · eighth-tenant preface · Y43 mid-season</div>
+        </article>
+
+        <article class="history">
+          <h3>The pony, the first interview — Wing Standard cultural affairs, Y42 closeout</h3>
+          <div class="meta">An interview · Wing Standard cultural affairs · the post-match concourse at Brewer's Reach Pitch · Y42 closeout R7 · the interviewer is Cassia Plumfoot, the cultural-affairs reporter on rotation that evening</div>
+          <p><strong>Plumfoot:</strong> Hi there. I'm Cassia, with the Wing Standard. Could I ask your name?</p>
+          <p><strong>The pony:</strong> Sweetie.</p>
+          <p><strong>Plumfoot:</strong> Sweetie. That's a nice name. And do you have a last name?</p>
+          <p><strong>Sweetie:</strong> Just Sweetie. From a far-away land.</p>
+          <p><strong>Plumfoot:</strong> A far-away land. Could I — would you be willing to say which one?</p>
+          <p><strong>Sweetie:</strong> Far away.</p>
+          <p><strong>Plumfoot:</strong> Of course. I noticed you were on the field during the match tonight. May I ask what you were doing?</p>
+          <p><strong>Sweetie:</strong> Refereeing.</p>
+          <p><strong>Plumfoot:</strong> Are you affiliated with the League's Referee Office?</p>
+          <p><strong>Sweetie:</strong> I am the referee.</p>
+          <p><strong>Plumfoot:</strong> Yes. So I understand. Are you the referee — formally?</p>
+          <p><strong>Sweetie:</strong> <em>(a small considering pause)</em> I think so. Yes.</p>
+          <p><strong>Plumfoot:</strong> I see. How did the match go tonight, in your judgment?</p>
+          <p><strong>Sweetie:</strong> It went well. They mostly remembered to be nice to each other. The blue one — <em>(she nods toward the visiting team's locker tunnel)</em> — knocked the green one over twice without saying sorry. I'm going to have a word with her. After this.</p>
+          <p><strong>Plumfoot:</strong> The blue and the green are — these are the team colors of —</p>
+          <p><strong>Sweetie:</strong> The blue one. The green one. I'll find them.</p>
+          <p><strong>Plumfoot:</strong> Right. And you've been — how long have you been refereeing?</p>
+          <p><strong>Sweetie:</strong> Always.</p>
+          <p><strong>Plumfoot:</strong> Always?</p>
+          <p><strong>Sweetie:</strong> Mm.</p>
+          <p><em>(Plumfoot indicates, in her filed write-up, that at this point in the interview Sweetie produced a referee's whistle from a small pouch on her lanyard, examined it briefly with apparent professional approval, and put it back. The whistle was, by Plumfoot's filed observation, an entirely ordinary metal pitch whistle. Plumfoot did not feel, in her filed report, that she had grounds to ask further about it.)</em></p>
+          <p><strong>Plumfoot:</strong> Is there anything you'd like the Wing Standard's readers to know?</p>
+          <p><strong>Sweetie:</strong> <em>(brightening considerably)</em> I think the matches are going very well. Everyone is doing their best. I'm proud of them.</p>
+          <div class="signoff">— Wing Standard cultural affairs, Y42 closeout R7 · interviewer Cassia Plumfoot · filed for the Foundation archive with Plumfoot's signed permission and Sweetie's verbal assent</div>
+        </article>
+
+        <article class="history">
+          <h3>The pony, the second interview — Wing Standard cultural affairs, Y43 mid-season</h3>
+          <div class="meta">An interview · Wing Standard cultural affairs · the visiting-team concourse at Reno Power Cell · Y43 mid-season R3 · the interviewer is Roan Pelletier, the cultural-affairs reporter on rotation that evening · Pelletier was assigned the second interview by his editor on the explicit grounds that he is, by departmental consensus, "the gentlest person on the cultural-affairs desk"</div>
+          <p><strong>Pelletier:</strong> Sweetie? Hi. I'm Roan, with the Wing Standard. May I sit?</p>
+          <p><strong>Sweetie:</strong> Please.</p>
+          <p><em>(Pelletier files that Sweetie was, at the moment of the interview's opening, sitting cross-legged on the concourse floor with her referee's whistle on her lanyard, sorting through a small pile of pastel-colored buttons she had apparently picked up from various match concourses across the season. Pelletier files that he was unable to determine whether the buttons were souvenirs, evidence, both, or neither, and that he chose not to ask.)</em></p>
+          <p><strong>Pelletier:</strong> Cassia Plumfoot interviewed you last season. Do you remember her?</p>
+          <p><strong>Sweetie:</strong> The owl. Yes. She was kind.</p>
+          <p><strong>Pelletier:</strong> She had a few follow-up questions she wasn't able to ask, and I'm hoping you'd be willing to —</p>
+          <p><strong>Sweetie:</strong> Yes.</p>
+          <p><strong>Pelletier:</strong> She mentioned you said you came from a far-away land. She wondered if you would tell us a little more about it.</p>
+          <p><strong>Sweetie:</strong> Oh. It's very nice there. There's lots of grass. And friends. Everyone has wings or a horn or both. Well — not me. I'm just me. But everyone else.</p>
+          <p><strong>Pelletier:</strong> I see. And — is it close to here? Or —</p>
+          <p><strong>Sweetie:</strong> Oh, no. Very far.</p>
+          <p><strong>Pelletier:</strong> Could one travel there?</p>
+          <p><strong>Sweetie:</strong> <em>(a long considering pause)</em> Not exactly. You'd need a friend on the other side. To open the way.</p>
+          <p><strong>Pelletier:</strong> And — do you have a friend on the other side?</p>
+          <p><strong>Sweetie:</strong> Lots.</p>
+          <p><strong>Pelletier:</strong> May I ask — do you watch every match? Every one?</p>
+          <p><strong>Sweetie:</strong> Yes. That's my job. I'm the referee.</p>
+          <p><strong>Pelletier:</strong> Even the ones in Saint-Laurent? The ones in Olympia Harbor? Tampa?</p>
+          <p><strong>Sweetie:</strong> Yes.</p>
+          <p><strong>Pelletier:</strong> How do you get there?</p>
+          <p><strong>Sweetie:</strong> <em>(brightening)</em> I just go.</p>
+          <p><em>(Pelletier files, in his closing summary, that he attempted at this point to ask Sweetie a clarifying question about the logistics of "just going" and that she, by Pelletier's careful written observation, smiled at him with the patient and entirely friendly bearing of a small child who has been asked something perfectly answerable in her own private language and is willing to wait, on the matter, for the adult to catch up. Pelletier did not, by his own subsequent journal entry, feel that he had grounds to press further, and would not have done so if he had.)</em></p>
+          <p><strong>Pelletier:</strong> Is there anything you'd like the readers to know?</p>
+          <p><strong>Sweetie:</strong> <em>(very seriously)</em> They're all trying their best. The matches are going to be okay. I promise.</p>
+          <div class="signoff">— Wing Standard cultural affairs, Y43 mid-season R3 · interviewer Roan Pelletier · filed for the Foundation archive with Pelletier's signed permission, Sweetie's verbal assent, and an editor's footnote that "the cultural-affairs desk has been asked, by the Referee Office, to please not push further on the question of how she gets places; the Referee Office has its own theory and is content with it"</div>
+        </article>
+      </details>
+
+
 </div>
 
     <div class="lore-section" data-loresection="timeline">
@@ -11927,13 +12000,36 @@
 
       <div class="setting-card">
         <h3>Game Mode</h3>
-        <div class="setting-desc">Each match plays under one mode. <strong>Deathmatch</strong> = standard 5v5 best-of-N elimination. <strong>King of the Hill</strong> and <strong>Capture the Flag</strong> run as single continuous matches with their own scoring. <strong>CTF</strong> is classic two-flag: steal the enemy flag and bring it to your base — but you can only score if your own flag is still at home. Touch your own dropped flag to return it instantly. <strong>Team Tag</strong> is team-based: one bot starts as "It" and only "It" can tag, only enemies. Becoming "It" applies a slow bleed; pass "It" by tagging an enemy. Round ends when one team is fully eliminated; matches are best-of-N rounds like Deathmatch.</div>
+        <div class="setting-desc">Each match plays under one mode. <strong>Deathmatch</strong> = standard 5v5 best-of-N elimination. <strong>King of the Hill</strong> and <strong>Capture the Flag</strong> run as single continuous matches with their own scoring. <strong>CTF</strong> is classic two-flag: steal the enemy flag and bring it to your base — but you can only score if your own flag is still at home. Touch your own dropped flag to return it instantly. <strong>Team Tag</strong> is team-based: one bot starts as "It" and only "It" can tag, only enemies. Becoming "It" applies a slow bleed; pass "It" by tagging an enemy. Round ends when one team is fully eliminated; matches are best-of-N rounds like Deathmatch. <strong>Explore</strong> is a non-combat mode: each team fields a squad of 3-9 Sweeties (pony wanderers using the GO2 movement engine) and the two squads roam the same arena. After a 5-minute timer, the team that visually identified the most distinct biome-scatter objects wins the round. Slots into the bracket like any other match. Makes for a super weird screensaver.</div>
         <div class="setting-row">
           <select id="setGameMode" class="setting-select">
             <option value="deathmatch">Deathmatch (5v5 best-of-N rounds)</option>
             <option value="koth">King of the Hill (first to N points)</option>
             <option value="ctf">Capture the Flag (first to N captures)</option>
             <option value="tag">Team Tag (IT passes; round ends on team wipe)</option>
+            <option value="explore">Explore (Sweetie herd, no combat, timer)</option>
+          </select>
+        </div>
+        <div class="setting-row" id="exploreCountRow">
+          <label class="setting-sub-label">Explore: Sweeties per team</label>
+          <select id="setExploreCount" class="setting-select">
+            <option value="3">3 per team (6 total)</option>
+            <option value="4">4 per team (8 total)</option>
+            <option value="5" selected>5 per team (10 total · default)</option>
+            <option value="6">6 per team (12 total)</option>
+            <option value="7">7 per team (14 total)</option>
+            <option value="8">8 per team (16 total)</option>
+            <option value="9">9 per team (18 total)</option>
+          </select>
+        </div>
+        <div class="setting-row" id="exploreDurationRow">
+          <label class="setting-sub-label">Explore: match duration</label>
+          <select id="setExploreDuration" class="setting-select">
+            <option value="180">3 minutes</option>
+            <option value="240">4 minutes</option>
+            <option value="300" selected>5 minutes (default)</option>
+            <option value="420">7 minutes</option>
+            <option value="600">10 minutes</option>
           </select>
         </div>
         <div class="setting-row" id="kothPointsRow">
@@ -13089,6 +13185,33 @@ const LEAGUE_CONFIG = {
                               //         User-adjustable 1-10 base via Settings.
                               //         The tier multipliers are fixed in code.
     },
+    // === v38.08: Explore mode ===
+    // A non-combat 5th mode. The arena hosts 3-9 Sweeties (pony herd
+    // wanderers, structurally like v38.07's Pony Referee but multiplied
+    // and with FOV-based curiosity for arena scatter). No teams, no
+    // damage, no win/lose — the match runs for a fixed timer and the
+    // result is a per-arena-object visit-count leaderboard: which named
+    // objects in the scatter did the herd actually look at most. A
+    // gentle screensaver-mode that doubles as a soft tour of the
+    // procedurally-generated biome scatter.
+    explore: {
+      sweetieCount: 5,          // 3-9 ponies in the herd
+      durationSec: 300,         // 5 minutes default (3-10 range)
+      // v38.11: FOV cone area reduced to 1/6 per user report — at
+      // the old 80°/220px Sweeties finished their task in 10 seconds.
+      // Both angle and range scaled by ~0.55 so combined cone area
+      // (0.5 × r² × θ in radians) is exactly 1/6 of pre-v38.11.
+      fovDeg: 44,               // forward cone in degrees (was 80)
+      fovRangeMax: 120,         // max range a Sweetie can "see" objects (was 220)
+      visitThresholdFrames: 8,  // frames in FOV to count as "looked at"
+      // Curiosity radius — Sweeties drift toward the nearest unseen
+      // scatter object within this range, to give the wandering a soft
+      // explore-oriented direction rather than pure random walk.
+      curiosityRange: 160,
+      // Cooldown — once a Sweetie has looked at an object, they don't
+      // re-investigate it for this many frames (variety).
+      objectCooldownFrames: 600,  // 30 seconds at 20fps
+    },
   },
 };
 
@@ -13224,6 +13347,13 @@ const LineupFactory = (function() {
         { match: "brawl",     priorities: ["brawl", "tank"] },
       ],
     },
+    explore: {
+      // v38.08: Explore mode has no knights — the field is just the
+      // Sweetie herd. Empty slots array → applyToMatch returns 0 active,
+      // entire career roster on the bench. The bench rests; the herd
+      // wanders; the timer counts down.
+      slots: [],
+    },
   };
 
   // Build the match-time lineup. Returns { active: [...], bench: [...] }.
@@ -13313,7 +13443,499 @@ const LineupFactory = (function() {
     }
   }
 
-  return { build, applyToMatch, restoreCareer, RECIPES };
+  // === v38.05: careerPosOf helper for display contexts ===
+  // During a match, a knight's `p.position` is the MATCH-TIME variant
+  // (set by applyToMatch). For AI/gameplay code that's correct — a
+  // sniper-career playing brawl-match should fight like a brawler.
+  // But for UI that shows CAREER context (Ladder roster table, profile
+  // modal, scouting reports), we want the canonical career position.
+  // Use this helper: `LineupFactory.careerPosOf(p)` returns the career
+  // identity regardless of whether a match is in progress.
+  function careerPosOf(p) {
+    if (!p) return null;
+    return p._careerPosition || p.position;
+  }
+
+  return { build, applyToMatch, restoreCareer, careerPosOf, RECIPES };
+})();
+
+// ════════════════════════════════════════════════════════════════════
+// v38.07 — RefereeFactory
+// ════════════════════════════════════════════════════════════════════
+// Spawns a non-combatant "pony referee" who wanders the arena during
+// matches. Always present (1 per match), can't be targeted, can't take
+// damage, can't be tagged in Tag mode. Adds visual life and a tiny
+// lore beat to every match.
+//
+// Lore: framed in the Stories tab as a referee from a far-away land
+// — quietly a Sweetie reference (the Unitree-Go2 quadruped from a
+// cousin project). The wander behavior is structurally the same as
+// the sim/world.py Wanderer: pick random target in a roam radius,
+// step toward it, repeat. Adds light flee-from-fighters so the chaos
+// parts around her — same flee_distance pattern as Sweetie's reactive
+// Wanderer for when the robot gets too close.
+//
+// Architecture:
+//   - Referee lives on m.referees (parallel to m.teamAplayers).
+//   - drawArena renders referees in their own pass.
+//   - applyDamage / tag-eligibility / target-picking filter out
+//     entities with isReferee === true.
+//   - No team affiliation, no career stats, no scoreboard impact.
+const RefereeFactory = (function() {
+  // Per-mode referee names. The same character ("Sweetie") shows up
+  // in every mode but with mode-appropriate flavor in the Stories tab.
+  const REFEREE_NAMES = {
+    deathmatch: "Sweetie",
+    koth:       "Sweetie",
+    ctf:        "Sweetie",
+    tag:        "Sweetie",
+  };
+
+  // Build a referee for the given match. Returns the entity (added
+  // to m.referees by the caller). Spawn position is the arena center
+  // with a small randomized offset so two consecutive matches don't
+  // see her at the literal-identical pixel.
+  function build(gameMode, opts) {
+    opts = opts || {};
+    const arenaW = (typeof COMBAT !== "undefined") ? COMBAT.arenaW : 1280;
+    const arenaH = (typeof COMBAT !== "undefined") ? COMBAT.arenaH : 720;
+    // v38.16: spawn at sign-left position (top of line of scrimmage,
+    // just west of the top-center banner). She'll start here, watch
+    // from here during pre-round, then steer toward action when the
+    // round goes live.
+    const homeX = arenaW * 0.45;
+    const homeY = arenaH * 0.08;
+    return {
+      isReferee: true,
+      id: "ref-" + (LEAGUE.season || 0) + "-" + (LEAGUE.currentSlot || 0),
+      name: REFEREE_NAMES[gameMode] || REFEREE_NAMES.deathmatch,
+      gameMode: gameMode,
+      // Position + movement state (Wanderer-style)
+      x: homeX,
+      y: homeY,
+      homeX, homeY,
+      _targetX: homeX,
+      _targetY: homeY,
+      _arrivalFrame: 0,
+      speed: 1.4,             // px/frame — gentle compared to knights (avg 2.5-3)
+      // v38.11: roamRadius scales with the stadium grid (kept for back-
+      // compat; v38.16 tick no longer uses roam — target is now phase-aware)
+      roamRadius: 180 * ((typeof COMBAT !== "undefined") ? (COMBAT.gridScale || 1) : 1),
+      fleeDistance: 90,       // px — knights this close trigger a step-aside
+      fleeSpeedMult: 1.8,     // step away faster when alarmed
+      arrivalTolerance: 6,    // px — close enough to count as arrived
+      // Visual state
+      facing: 1,              // sprite mirror, like knights
+      headingAng: 0,
+      // Sweetie's hover bob is part of the rendering — referees have
+      // a slightly slower bob period so they read as distinct entities.
+      bobPhase: SIM_RNG.next() * Math.PI * 2,
+      bobAmp: 2.2,
+    };
+  }
+
+  // Wanderer-style step. Called once per frame from tickMatch (after
+  // the player ticks so we know where the chaos is). m is the active
+  // match; ref is the referee entity.
+  // v38.16: phase-aware target — follow action centroid during a live
+  // round (Go2 "watch the highest concentration of activity" pattern),
+  // stand at sign-left position between rounds. Reactive flee on close-
+  // knight proximity preserved. Random-wander removed.
+  function tick(ref, m) {
+    if (!ref) return;
+    const W = COMBAT.arenaW, H = COMBAT.arenaH;
+    const _gridScale = (typeof COMBAT !== "undefined") ? (COMBAT.gridScale || 1) : 1;
+
+    // === Step 1: phase-aware target ===
+    // Sign-left position: top of line of scrimmage, just left of the
+    // top-center "sign" object at (W*0.5, H*0.028). x=W*0.45 = 100
+    // worldspace pixels west of sign; y=H*0.08 = just below the top
+    // pillar row, on the field surface.
+    let targetX = W * 0.45;
+    let targetY = H * 0.08;
+    if (m && m.phase === "round") {
+      // Compute action centroid from alive knights (the "highest
+      // concentration of action"). Empty/no-alive falls through to
+      // sign-left default.
+      let sx = 0, sy = 0, count = 0;
+      const all = m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers);
+      for (const p of all) {
+        if (!p.alive) continue;
+        sx += p.x; sy += p.y; count++;
+      }
+      if (count > 0) {
+        targetX = sx / count;
+        // Stand 100*gridScale worldspace BELOW the action centroid so
+        // she has a clear view of the engagement without being on top
+        // of the action.
+        targetY = sy / count + 100 * _gridScale;
+      }
+    }
+    // Clamp target to playable area (60 worldspace margin from walls)
+    targetX = Math.max(60, Math.min(W - 60, targetX));
+    targetY = Math.max(60, Math.min(H - 60, targetY));
+
+    // === Step 2: reactive flee (Go2 sweetie pattern) ===
+    let nearest = null, nearestD = Infinity;
+    const all2 = m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers);
+    for (const p of all2) {
+      if (!p.alive) continue;
+      const dx = ref.x - p.x, dy = ref.y - p.y;
+      const d = Math.hypot(dx, dy);
+      if (d < nearestD) { nearestD = d; nearest = p; }
+    }
+    let speed = ref.speed;
+    if (nearest && nearestD < ref.fleeDistance) {
+      // Override target — flee directly away from the threat
+      const dx = ref.x - nearest.x, dy = ref.y - nearest.y;
+      const d = Math.max(0.001, nearestD);
+      const ux = dx / d, uy = dy / d;
+      const fleeStep = ref.fleeDistance * 1.5;
+      targetX = ref.x + ux * fleeStep;
+      targetY = ref.y + uy * fleeStep;
+      speed = ref.speed * ref.fleeSpeedMult;
+    }
+    ref._targetX = targetX;
+    ref._targetY = targetY;
+
+    // === Step 3: step toward target ===
+    const tdx = ref._targetX - ref.x;
+    const tdy = ref._targetY - ref.y;
+    const tDist = Math.hypot(tdx, tdy);
+    if (tDist < ref.arrivalTolerance) return;  // stand still
+    // v38.11: scale step by gridScale so referee paces the bigger arena
+    const step = Math.min(speed * _gridScale, tDist);
+    const nx = tdx / tDist, ny = tdy / tDist;
+    ref.x += nx * step;
+    ref.y += ny * step;
+    // Clamp to playable area so flee doesn't push her out of bounds
+    ref.x = Math.max(40, Math.min(W - 40, ref.x));
+    ref.y = Math.max(40, Math.min(H - 40, ref.y));
+    // Heading for sprite-flip
+    if (Math.abs(nx) > 0.05) ref.facing = nx > 0 ? 1 : -1;
+    ref.headingAng = Math.atan2(ny, nx);
+  }
+
+  // Pony name → pre-match lore intro line for the Stories tab.
+  // Reused per mode; future expansion can vary by season/slot.
+  const REFEREE_INTROS = {
+    deathmatch: "A small white pony — short pink-and-purple mane, big eyes — trots onto the field and finds a quiet spot to sit. Nobody knows who invited her, but she has a referee's whistle on a lanyard and an unshakeable air of being exactly where she's supposed to be.",
+    koth:       "A small white pony with a striped mane appears between the rounds and lets the crown carriers pass without a glance. The fighters move around her like water around a stone. She is the referee. Or she just thinks she is. Either way, the match continues.",
+    ctf:        "The pony is back. She has a flag-themed neckerchief now. She watches the runners with the patience of someone who has seen every flag of every kingdom and is unimpressed by all of them. The teams ignore her. She ignores them harder.",
+    tag:        "The pony arrives just before the first tag is called. She doesn't play; she observes. The IT-bot tries once to tag her and bounces off something invisible. She does not appear to notice. Tag continues.",
+  };
+
+  function loreIntroFor(gameMode) {
+    return REFEREE_INTROS[gameMode] || REFEREE_INTROS.deathmatch;
+  }
+
+  return { build, tick, loreIntroFor, REFEREE_NAMES, REFEREE_INTROS };
+})();
+
+// ════════════════════════════════════════════════════════════════════
+// v38.08 — ExploreFactory
+// ════════════════════════════════════════════════════════════════════
+// Builds and ticks the Sweetie HERD for the Explore game mode.
+// Structurally a multi-Sweetie cousin of RefereeFactory: same Wanderer
+// kernel, same flee-from-other-sweeties separation (now mutual), plus
+// a CURIOSITY layer that biases targets toward the nearest scatter
+// object that hasn't been "looked at" recently, and an FOV-VISIT
+// detector that increments per-object exposure counts when any Sweetie
+// holds the object in their forward cone long enough.
+//
+// The score is the per-object visit-count map (kept on the match as
+// m.explore.visits). At timer end this becomes the result leaderboard.
+//
+// Reuses sweetie/sim/perception.py's VISION_FOV_DEG=70 / VISION_RANGE=8
+// shape conceptually; values are pixel-scaled for the 1280×720 arena.
+const ExploreFactory = (function() {
+
+  // === v38.08 Sweetie name pool ===
+  // Drawn from the toy pony references the v38.07 Stories Cabinet
+  // already named (Sweetie). Other herd members get sister/friend-like
+  // names — all small, gentle, generic enough to read as a herd.
+  const HERD_NAMES = [
+    "Sweetie", "Berry", "Bloom", "Cocoa", "Daisy", "Honey",
+    "Maple", "Misty", "Pepper", "Sprout", "Twinkle", "Willow",
+  ];
+
+  // === v38.12: Sweetie name generator ===
+  // Hybrid: pony-themed first name (from HERD_NAMES) + random surname
+  // drawn from the Knight Factory's SURNAMES pool. Each Sweetie has a
+  // unique full name like "Sweetie Quickstone" or "Berry Ironclaw" —
+  // identifiable in the match panel and ladder, while preserving the
+  // pony-themed first names for character.
+  function _generateSweetieName(firstNameIdx) {
+    const first = HERD_NAMES[firstNameIdx % HERD_NAMES.length];
+    // Use genFirstName / SURNAMES from the Knight Factory if available
+    if (typeof SURNAMES !== "undefined" && SURNAMES.length) {
+      const surname = SURNAMES[Math.floor(SIM_RNG.next() * SURNAMES.length)];
+      return first + " " + surname;
+    }
+    return first;
+  }
+
+  // Build N Sweeties spread across the arena, each with their own
+  // home anchor. Returns the array. Legacy single-pool builder, kept
+  // for backwards-compat / tests; the live game uses buildTeams.
+  function build(gameMode, opts) {
+    opts = opts || {};
+    const count = Math.max(3, Math.min(9, opts.count || 5));
+    const arenaW = (typeof COMBAT !== "undefined") ? COMBAT.arenaW : 1280;
+    const arenaH = (typeof COMBAT !== "undefined") ? COMBAT.arenaH : 720;
+    const sweeties = [];
+    for (let i = 0; i < count; i++) {
+      const ringAng = (i / Math.min(count, 6)) * Math.PI * 2;
+      const ringR = 220;
+      const homeX = arenaW / 2 + Math.cos(ringAng) * ringR
+                    + (SIM_RNG.next() - 0.5) * 40;
+      const homeY = arenaH / 2 + Math.sin(ringAng) * ringR
+                    + (SIM_RNG.next() - 0.5) * 40;
+      sweeties.push(_makeSweetie(i, _generateSweetieName(i), homeX, homeY, null));
+    }
+    return sweeties;
+  }
+
+  // === v38.10: TWO-team build for the proper Explore game mode ===
+  // Per the patch notes: Explore is a non-combat MATCH between two
+  // teams of Sweeties. Each team has `count` Sweeties (3-9 per side).
+  // Team A's herd spawns clustered on the LEFT half of the arena;
+  // Team B's herd on the RIGHT half. Each Sweetie's `teamId` is set
+  // so visit counts credit the right team at the end.
+  function buildTeams(teamAId, teamBId, count) {
+    const n = Math.max(3, Math.min(9, count || 5));
+    const arenaW = (typeof COMBAT !== "undefined") ? COMBAT.arenaW : 1280;
+    const arenaH = (typeof COMBAT !== "undefined") ? COMBAT.arenaH : 720;
+    const teamA = [], teamB = [];
+    for (let i = 0; i < n; i++) {
+      // Spread vertically on left side for Team A
+      const sliceFrac = (i + 0.5) / n;
+      const homeAY = sliceFrac * (arenaH - 160) + 80;
+      const homeAX = 200 + (SIM_RNG.next() - 0.5) * 100;
+      // Mirror right for Team B
+      const homeBX = arenaW - 200 + (SIM_RNG.next() - 0.5) * 100;
+      const homeBY = sliceFrac * (arenaH - 160) + 80;
+      // v38.12: each Sweetie gets a unique full name via the Knight
+      // Factory's SURNAMES pool so the match panel + ladder can
+      // distinguish them. Both teams independently generate names.
+      teamA.push(_makeSweetie(i, _generateSweetieName(i), homeAX, homeAY, teamAId));
+      teamB.push(_makeSweetie(i + 100, _generateSweetieName(i), homeBX, homeBY, teamBId));
+    }
+    return { teamA, teamB };
+  }
+
+  // Internal helper: construct one Sweetie entity with the standard
+  // Wanderer-kernel state. teamId may be null (legacy/herd mode).
+  function _makeSweetie(idIdx, name, homeX, homeY, teamId) {
+    // v38.11: roamRadius scales with the stadium grid so each Sweetie's
+    // home circle covers the same RELATIVE fraction of the (now 3×)
+    // arena. Without this, 220px circles would clump into tiny pockets
+    // on the 3840×2160 field and the herd would look static.
+    const gridScale = (typeof COMBAT !== "undefined") ? (COMBAT.gridScale || 1) : 1;
+    return {
+      isExploreSweetie: true,
+      id: "sw-" + idIdx,
+      name: name,
+      teamId: teamId,            // v38.10: per-team affiliation (null for legacy herd)
+      x: homeX, y: homeY,
+      homeX, homeY,
+      _targetX: homeX, _targetY: homeY,
+      speed: 1.2,
+      roamRadius: 220 * gridScale,  // v38.11: was 220
+      fleeDistance: 35,
+      fleeSpeedMult: 1.4,
+      arrivalTolerance: 6,
+      facing: 1,
+      headingAng: SIM_RNG.next() * Math.PI * 2,
+      bobPhase: SIM_RNG.next() * Math.PI * 2,
+      bobAmp: 2.0,
+      _lastVisitFrame: Object.create(null),
+      _gazeObjectId: null,
+      _gazeStartFrame: 0,
+    };
+  }
+
+  // Tick one Sweetie. Updates position (with curiosity bias and herd
+  // separation) and FOV state. Increments m.explore.visits when a
+  // sustained gaze on a fresh object resolves.
+  function tick(sw, m) {
+    if (!sw || !m) return;
+    const cfg = (LEAGUE_CONFIG.modeConfig && LEAGUE_CONFIG.modeConfig.explore) || {};
+
+    // === Herd separation ===
+    // Mutual flee within fleeDistance from other Sweeties — keeps the
+    // herd loose, prevents pile-ups at a popular curiosity target.
+    let sepFx = 0, sepFy = 0;
+    if (m.sweeties) {
+      for (const other of m.sweeties) {
+        if (other === sw) continue;
+        const dx = sw.x - other.x, dy = sw.y - other.y;
+        const d = Math.hypot(dx, dy);
+        if (d > 0 && d < sw.fleeDistance) {
+          const force = (sw.fleeDistance - d) / sw.fleeDistance;
+          sepFx += (dx / d) * force;
+          sepFy += (dy / d) * force;
+        }
+      }
+    }
+
+    // === Curiosity target ===
+    // If we don't have a fresh target, look for the nearest scatter
+    // object within curiosityRange that we haven't visited recently.
+    // Sets _targetX/_targetY toward it.
+    const curiosityRange = cfg.curiosityRange || 280;
+    const cooldown = cfg.objectCooldownFrames || 600;
+    let curiosityObject = null;
+    if (m.scatter && m.scatter.length) {
+      let best = null, bestD = curiosityRange;
+      for (const obj of m.scatter) {
+        if (!obj || typeof obj.x !== "number") continue;
+        const lastVisit = sw._lastVisitFrame[obj.id || obj._exploreId] || 0;
+        if (lastVisit && m.roundFrame - lastVisit < cooldown) continue;
+        const d = Math.hypot(obj.x - sw.x, obj.y - sw.y);
+        if (d < bestD) { bestD = d; best = obj; }
+      }
+      curiosityObject = best;
+    }
+
+    // === Pick / update target ===
+    const tdx = sw._targetX - sw.x;
+    const tdy = sw._targetY - sw.y;
+    const tDist = Math.hypot(tdx, tdy);
+    if (tDist < sw.arrivalTolerance) {
+      // Arrived — pick a new target, biased toward curiosity object if any
+      if (curiosityObject) {
+        // Aim NEAR (not directly on) the object so we can FOV-see it
+        // without overshoot. Offset by a 50px tangent so the gaze lands
+        // cleanly.
+        const ang = Math.atan2(curiosityObject.y - sw.y, curiosityObject.x - sw.x);
+        const stopDist = Math.max(60, Math.hypot(curiosityObject.x - sw.x, curiosityObject.y - sw.y) - 100);
+        sw._targetX = sw.x + Math.cos(ang) * stopDist;
+        sw._targetY = sw.y + Math.sin(ang) * stopDist;
+      } else {
+        // Random wander inside home circle
+        const ang = SIM_RNG.next() * Math.PI * 2;
+        const r = SIM_RNG.next() * sw.roamRadius;
+        sw._targetX = sw.homeX + r * Math.cos(ang);
+        sw._targetY = sw.homeY + r * Math.sin(ang);
+      }
+    }
+
+    // === Step toward target with separation force applied ===
+    // v38.11: stadium grid-scale speed buff — sweetie movement scales
+    // with the 3× arena so the herd doesn't crawl across the bigger
+    // field.
+    const _gridMult = COMBAT.gridScale || 1;
+    let mvx = 0, mvy = 0;
+    if (tDist > sw.arrivalTolerance) {
+      mvx = (tdx / tDist) * sw.speed * _gridMult;
+      mvy = (tdy / tDist) * sw.speed * _gridMult;
+    }
+    // Add separation force (scaled smaller than primary motion)
+    mvx += sepFx * sw.speed * 0.8 * _gridMult;
+    mvy += sepFy * sw.speed * 0.8 * _gridMult;
+    sw.x += mvx;
+    sw.y += mvy;
+    sw.x = Math.max(40, Math.min(COMBAT.arenaW - 40, sw.x));
+    sw.y = Math.max(40, Math.min(COMBAT.arenaH - 40, sw.y));
+
+    // Update facing/heading from actual motion
+    const motionDist = Math.hypot(mvx, mvy);
+    if (motionDist > 0.05) {
+      if (Math.abs(mvx) > 0.05) sw.facing = mvx > 0 ? 1 : -1;
+      sw.headingAng = Math.atan2(mvy, mvx);
+    }
+
+    // === FOV visit detection ===
+    const fovHalfRad = ((cfg.fovDeg || 80) / 2) * Math.PI / 180;
+    const fovRange = cfg.fovRangeMax || 220;
+    const visitThreshold = cfg.visitThresholdFrames || 8;
+    let gazeNow = null;  // id of an object currently being held in FOV
+    if (m.scatter && m.scatter.length) {
+      for (const obj of m.scatter) {
+        if (!obj || typeof obj.x !== "number") continue;
+        const ox = obj.x - sw.x, oy = obj.y - sw.y;
+        const d = Math.hypot(ox, oy);
+        if (d > fovRange) continue;
+        const angTo = Math.atan2(oy, ox);
+        let dAng = angTo - sw.headingAng;
+        while (dAng > Math.PI) dAng -= 2 * Math.PI;
+        while (dAng < -Math.PI) dAng += 2 * Math.PI;
+        if (Math.abs(dAng) > fovHalfRad) continue;
+        // Object is in FOV. Pick the nearest one as the "primary gaze."
+        if (gazeNow === null || d < (sw._gazeNearestD || Infinity)) {
+          gazeNow = obj.id || obj._exploreId;
+          sw._gazeNearestD = d;
+        }
+      }
+      sw._gazeNearestD = null;
+    }
+    // Gaze-stability check: an object only counts as "visited" if the
+    // Sweetie holds it in their cone for visitThreshold frames.
+    if (gazeNow === sw._gazeObjectId && gazeNow != null) {
+      if (m.roundFrame - sw._gazeStartFrame >= visitThreshold) {
+        // Record visit (once per cooldown window)
+        const last = sw._lastVisitFrame[gazeNow] || 0;
+        if (!last || m.roundFrame - last >= (cfg.objectCooldownFrames || 600)) {
+          sw._lastVisitFrame[gazeNow] = m.roundFrame;
+          if (m.explore) {
+            // === v38.10: PER-TEAM visit credit ===
+            // The teamId on this Sweetie credits her sighting to her
+            // team's tally. When teamId is null (legacy single-pool
+            // build path), fall back to the shared `visits` bag so
+            // tests and any non-team scenarios still work.
+            m.explore.visits = m.explore.visits || Object.create(null);
+            if (sw.teamId && m.explore.visitsByTeam) {
+              const bag = m.explore.visitsByTeam[sw.teamId] =
+                m.explore.visitsByTeam[sw.teamId] || Object.create(null);
+              bag[gazeNow] = (bag[gazeNow] || 0) + 1;
+              // Mirror to the shared bag so first-discovery / camera /
+              // lore-feed paths see a single chronological sightings
+              // log across both teams.
+              m.explore.visits[gazeNow] = (m.explore.visits[gazeNow] || 0) + 1;
+            } else {
+              // Legacy single-pool path (no team affiliation).
+              m.explore.visits[gazeNow] = (m.explore.visits[gazeNow] || 0) + 1;
+            }
+            // First-discovery bonus: log the first time ANY Sweetie
+            // (either team) collectively sees an object (for the
+            // result feed and lore color).
+            if (m.explore.visits[gazeNow] === 1) {
+              m.explore.discoveryOrder = m.explore.discoveryOrder || [];
+              m.explore.discoveryOrder.push({
+                id: gazeNow,
+                frame: m.roundFrame,
+                bySweetie: sw.name,
+                byTeam: sw.teamId || null,
+              });
+            }
+          }
+        }
+        // Reset gaze so the same object doesn't double-count in one
+        // long stare; the cooldown will gate re-visiting.
+        sw._gazeObjectId = null;
+      }
+    } else {
+      sw._gazeObjectId = gazeNow;
+      sw._gazeStartFrame = m.roundFrame;
+    }
+  }
+
+  // === v38.10: scoring helpers ===
+  // Distinct objects this team has spotted. The "most objects
+  // identified" win condition uses this.
+  function distinctCount(visitsBag) {
+    return visitsBag ? Object.keys(visitsBag).length : 0;
+  }
+  // Total visits by this team (used for tie-breaking).
+  function totalVisits(visitsBag) {
+    if (!visitsBag) return 0;
+    let s = 0;
+    for (const k in visitsBag) s += visitsBag[k];
+    return s;
+  }
+
+  return { build, buildTeams, tick, distinctCount, totalVisits, HERD_NAMES };
 })();
 
 // === v37.23: Knight personalities ===
@@ -13548,11 +14170,18 @@ const COMBAT = {
   backHitDmgMult: 0.50,
   // === end v37.59 constants ===
   // === end v28 constants ===
-  arenaW: 1280,         // 16:9 field, wider than v28 (960) so spawning teams
-  arenaH: 720,          // can't shoot across the field at start. Spawn-to-spawn
-  arenaSize: 1280,      // distance is 1080px (was 760px in v28); even at sniper
-                        // max range (460px) bots must close ~620px before
-                        // they're in firing range of the opposing spawn line.
+  // === v38.11: Stadium grid scale ===
+  // User feedback: "Stadium may also be too small. Increase the stadium
+  // detail grid 3x." This single constant scales arena dimensions,
+  // spawn lines, and bot movement speed together so the stadium feels
+  // 3× larger without changing combat distances (hit range, weapon
+  // range, AI engage distance stay the same — combat encounters happen
+  // in tighter clusters within the bigger field, which actually reads
+  // better). Set to 1 to restore pre-v38.11 dimensions.
+  gridScale: 3,
+  arenaW: 1280 * 3,     // v38.11: was 1280; now 3840 (16:9 stadium 3× larger)
+  arenaH: 720 * 3,      // v38.11: was 720; now 2160. The camera auto-zooms
+  arenaSize: 1280 * 3,  // v38.11: alias kept for back-compat
   frameMs: 50,          // sim tick at 1×
   roundMaxFrames: 1500, // safety cap on a single ROUND (longer rounds need more)
   matchMaxFrames: 1500, // alias kept for back-compat
@@ -13560,11 +14189,12 @@ const COMBAT = {
   // Lower DEF_DENOM = armor matters more. 35 is meaningfully tougher than 50.
   defDenom: 35,
   cdMult: 1.20,
-  spawnRadius: 580,     // was 540 in v28.2; pushed further toward walls per
-                        // v28.4 user request "bots need to start farther back."
-                        // Team A spawn line at x=60, team B at x=1220, with
-                        // ±6 jitter and 12px world-edge clamp this gives a
-                        // comfortable ~40px clear of the wall for sprites.
+  spawnRadius: 1820,    // v38.14: was 580 × 3 = 1740. Pushed further back
+                        // per user feedback after v38.13: teams should start
+                        // closer to the walls on the 3× arena. baseX = cx ±
+                        // 1820 → team A at x≈100, team B at x≈3740, giving
+                        // spawn-to-spawn distance of 3640 (was 3480 at 1740).
+                        // The 40px clamp at the wall still applies.
 };
 
 /* ============================================================
@@ -13978,9 +14608,14 @@ window.detectActiveRivalries = detectActiveRivalries;
    ============================================================ */
 function _generateScoutingReport(p) {
   if (!p) return "—";
-  const pos = POS_BY_ID[p.position];
+  // v38.05: scouting describes the knight's CAREER identity. During a
+  // match, p.position and p.stats may be match-time variants (factory
+  // swap for Tag/KOTH). Use _careerPosition/_careerStats if present.
+  const careerId = (typeof LineupFactory !== "undefined")
+    ? LineupFactory.careerPosOf(p) : p.position;
+  const pos = POS_BY_ID[careerId];
   const personality = PERSONALITY_BY_ID[p.personality] || PERSONALITY_BY_ID.methodical;
-  const s = p.stats || {};
+  const s = p._careerStats || p.stats || {};
   const tier = (val, low, mid, high) => val >= high ? "high" : val >= mid ? "mid" : val >= low ? "low" : "vlow";
 
   // Stat outliers
@@ -15277,8 +15912,12 @@ function reapDeceased() {
     for (let i = 0; i < roster.length; i++) {
       const p = roster[i];
       if (p.deceased) {
-        // Already dead — make sure they're in graveyard, then replace
-        const pos = POS_BY_ID[p.position];
+        // Already dead — make sure they're in graveyard, then replace.
+        // v38.05: read CAREER position (not match-time swap) so the
+        // lineage successor inherits the correct career identity.
+        const _careerId = (typeof LineupFactory !== "undefined")
+          ? LineupFactory.careerPosOf(p) : p.position;
+        const pos = POS_BY_ID[_careerId];
         const rookie = makePlayer(team.id, pos);
         rookie.debutSeason = LEAGUE.season;
         // === v37.16: lineage name override ===
@@ -15473,10 +16112,25 @@ function backfillRosters() {
     // Multiple non-deceased at the same position is a bug from upstream
     // — we preserve the first and demote the rest to the graveyard so
     // their gear isn't lost.
+    // === v38.05 hotfix: see CANONICAL career positions ===
+    // Pre-v38.04 every knight's `position` was the canonical career
+    // position throughout. v38.04 introduced LineupFactory which swaps
+    // `position` to the match-time variant during a match (tank → striker
+    // for Tag, etc.). backfillRosters running mid-match (from startRound)
+    // would otherwise see "no tank exists" because tank-career was
+    // swapped to striker, and mint a phantom rookie tank — that rookie
+    // then got pushed into m.teamAplayers at default (0,0) by the
+    // mid-match infusion code at line 16386+. User-visible as 4 ghost
+    // bots at top-left of Tag matches (2 per team = the 2 career
+    // positions swapped per team).
+    // Fix: read _careerPosition if present (active during a match),
+    // else p.position (between matches, no swap active).
+    const careerPosOf = (p) => p._careerPosition || p.position;
     const byPosition = {};
     for (const pos of POSITIONS) byPosition[pos.id] = [];
     for (const p of roster) {
-      if (byPosition[p.position]) byPosition[p.position].push(p);
+      const cp = careerPosOf(p);
+      if (byPosition[cp]) byPosition[cp].push(p);
     }
 
     // Step 2: For each position, ensure exactly one non-deceased knight.
@@ -16195,7 +16849,21 @@ function startMatch() {
     modeScoreA: 0,
     modeScoreB: 0,
     modeWinner: null,
+    // === v38.07: pony referee ===
+    // Non-combatant Sweetie pony who wanders the arena during the match.
+    // Always 1 per match; never targeted; never damaged. See
+    // RefereeFactory for the entity shape + tick behavior.
+    referees: [],
+    // === v38.08: Explore-mode Sweetie herd ===
+    // Populated only when gameMode === "explore". Empty otherwise.
+    sweeties: [],
   };
+  // Spawn the referee (after LEAGUE.match exists so SIM_RNG seed is set)
+  if (typeof RefereeFactory !== "undefined") {
+    const _ref = RefereeFactory.build(LEAGUE.match.gameMode);
+    LEAGUE.match.referees.push(_ref);
+    feed("match", `🐴 ${_ref.name} the pony referee trots onto the field.`);
+  }
   _initModeEntities(LEAGUE.match);
   // Scatter + ambient have to be generated AFTER biome is set
   LEAGUE.match.scatter = generateBiomeScatter(LEAGUE.match.biome);
@@ -16376,13 +17044,30 @@ function startRound() {
       const posLabel = POS_BY_ID[c.rookie.position]?.label || c.rookie.position;
       feed("spawn", `🆕 ${team.name} pool: ${c.rookie.name} (${posLabel}) added between rounds.`);
     }
-    // === v37.22: mid-match rookie infusion ===
+    // === v37.22 / v38.05: mid-match rookie infusion ===
     // Earlier, new rookies sat in the league pool until next match — so
     // a team that lost their Sniper to permadeath in round 2 played the
     // rest of the match short-handed (5 vs 7, etc). The user (correctly)
     // flagged this as imbalance. Now: any new rookie minted by the
     // between-rounds backfill ALSO gets injected into the current match's
     // active line, with full lives. They dress for the next round.
+    //
+    // v38.05: ONLY infuse rookies whose career position is in the
+    // current mode's recipe. For Tag (recipe = speed/striker/brawl)
+    // a rookie healer/sniper/grenadier stays in the pool but does NOT
+    // join the match — Tag's mode-shape excludes them. Without this
+    // filter, the rookie was pushed in at default x=0,y=0 (the makePlayer
+    // default), then layoutTeam — running on a STALE eligibleA snapshot
+    // taken before the push — failed to place them. Visible as ghost
+    // bots at the top-left corner of the arena.
+    const _matchMode = LEAGUE_CONFIG.gameMode || "deathmatch";
+    const _matchRecipe = (typeof LineupFactory !== "undefined")
+      ? (LineupFactory.RECIPES[_matchMode] || LineupFactory.RECIPES.deathmatch)
+      : null;
+    const _recipePositions = _matchRecipe
+      ? new Set(_matchRecipe.slots.map(s => s.match).concat(
+          _matchRecipe.slots.flatMap(s => s.priorities || [])))
+      : null;
     const matchTeamArrays = {
       [m.teamAId]: m.teamAplayers,
       [m.teamBId]: m.teamBplayers,
@@ -16392,6 +17077,16 @@ function startRound() {
       if (!teamArr) continue; // rookie's team isn't in the current match
       // Avoid double-add if this knight is somehow already there
       if (teamArr.some(p => p.id === c.rookie.id)) continue;
+      // v38.05: skip mid-match infusion if rookie's career position
+      // is not in the current mode's recipe.
+      if (_recipePositions && !_recipePositions.has(c.rookie.position)) {
+        // Knight joins the career pool for next match but doesn't
+        // dress for this one — there's no recipe slot for them.
+        const team = TEAM_BY_ID[c.team];
+        const posLabel = POS_BY_ID[c.rookie.position]?.label || c.rookie.position;
+        feed("spawn", `🪖 ${team.emoji} ${team.short}: ${c.rookie.name} (${posLabel}) joins the pool — dresses for next match.`);
+        continue;
+      }
       // Init match-state on the rookie so they're round-ready
       c.rookie.lives = MATCH.startingLives;
       c.rookie.itemUsed = false;
@@ -16399,6 +17094,14 @@ function startRound() {
       c.rookie.balloonsPopped = 0;
       c.rookie.alive = true;
       c.rookie.hp = c.rookie.stats.hp;
+      // v38.05: place the rookie at the team's spawn line right away
+      // so they're not visible at (0,0) before layoutTeam runs below.
+      // (layoutTeam in this same startRound will re-place properly with
+      // formation slots; this is just defensive in case any render
+      // intervenes between the push and layoutTeam.)
+      const _isLeft = (c.team === m.teamAId);
+      c.rookie.x = _isLeft ? 80 : (COMBAT.arenaW - 80);
+      c.rookie.y = COMBAT.arenaH / 2;
       teamArr.push(c.rookie);
       const team = TEAM_BY_ID[c.team];
       const posLabel = POS_BY_ID[c.rookie.position]?.label || c.rookie.position;
@@ -16424,9 +17127,18 @@ function startRound() {
   const eligibleA = m.teamAplayers.filter(p => !p.deceased && p.lives > 0);
   const eligibleB = m.teamBplayers.filter(p => !p.deceased && p.lives > 0);
 
-  if (!eligibleA.length || !eligibleB.length) {
-    finalizeRound(/*forfeit*/ true);
-    return;
+  // v38.09 bugfix: Explore mode has no knights by design (recipe has
+  // zero slots — the field is just the Sweetie herd). Both eligible
+  // arrays being empty is the expected state, NOT a forfeit. Without
+  // this gate, finalizeRound(forfeit=true) fires on frame 0 of every
+  // Explore match, ending it before any Sweetie can move. Reported by
+  // user: "Timers expire, bots don't get to move because the match is
+  // over, round ends, season progresses."
+  if (m.gameMode !== "explore") {
+    if (!eligibleA.length || !eligibleB.length) {
+      finalizeRound(/*forfeit*/ true);
+      return;
+    }
   }
 
   // === v37.19: return-from-KO surface ===
@@ -16666,6 +17378,40 @@ function _initModeEntities(m) {
       };
       // Mark the It bot so AI can branch on it (we read m.tag.itId in AI dispatch).
     }
+  } else if (mode === "explore") {
+    // === v38.08 → v38.10: Explore mode init ===
+    // v38.10 per patch notes: TWO competing Sweetie squads, not a
+    // shared herd. Each squad takes one bracket slot's team color and
+    // wanders the arena. The team that visually identifies the most
+    // distinct scatter objects by the timer wins the round.
+    if (typeof ExploreFactory !== "undefined") {
+      const exploreCfg = modeCfg || {};
+      const built = ExploreFactory.buildTeams(
+        m.teamAId, m.teamBId,
+        exploreCfg.sweetieCount || 5
+      );
+      // Concatenate both squads into m.sweeties (the renderer + camera
+      // both iterate this single array). Each Sweetie's `teamId`
+      // routes her visit credits to the correct team-tally.
+      m.sweeties = [...built.teamA, ...built.teamB];
+      const durationFrames = Math.round((exploreCfg.durationSec || 300) * 1000 / COMBAT.frameMs);
+      m.explore = {
+        startFrame: 0,                        // synced with roundFrame
+        endFrame: durationFrames,             // timer
+        // Shared bag (every team's sightings combined) — used for the
+        // first-discovery log and the camera/lore feed.
+        visits: Object.create(null),
+        discoveryOrder: [],
+        // Per-team bag — used for round-end winner determination.
+        visitsByTeam: {
+          [m.teamAId]: Object.create(null),
+          [m.teamBId]: Object.create(null),
+        },
+      };
+      const teamAName = TEAM_BY_ID[m.teamAId]?.short || "Team A";
+      const teamBName = TEAM_BY_ID[m.teamBId]?.short || "Team B";
+      feed("match", `🌿 Explore mode: ${teamAName} vs ${teamBName} — ${built.teamA.length} Sweeties per side wander the arena for ${(exploreCfg.durationSec||300)/60 | 0} minutes. Most objects spotted wins.`);
+    }
   }
 }
 
@@ -16677,6 +17423,7 @@ function tickGameMode(m) {
   if (mode === "koth") tickKOTH(m);
   else if (mode === "ctf") tickCTF(m);
   else if (mode === "tag") tickTag(m);
+  else if (mode === "explore") tickExplore(m);  // v38.08
   // deathmatch + tag (v37.94) need no extra tick — round-end gate in
   // tickArena handles team-wipe detection for both.
   if (mode !== "deathmatch" && mode !== "tag") {
@@ -17024,6 +17771,50 @@ function tickTag(m) {
   }
 }
 
+/* ============================================================
+   v38.08 — tickExplore
+   Ticks the Sweetie herd, applies the FOV-based visit counting,
+   and ends the round when the timer expires. No knights are in
+   play in this mode — m.teamAplayers / m.teamBplayers are empty
+   (LineupFactory.RECIPES.explore returns no active slots).
+   ============================================================ */
+function tickExplore(m) {
+  if (!m.explore || !m.sweeties) return;
+  // Tick each Sweetie (movement + curiosity + FOV-visit detection)
+  if (typeof ExploreFactory !== "undefined") {
+    for (const sw of m.sweeties) {
+      ExploreFactory.tick(sw, m);
+    }
+  }
+  // Timer
+  if (m.roundFrame >= m.explore.endFrame) {
+    // === v38.10: pick a REAL winner ===
+    // Per the patch notes: "The team to visually identify the most
+    // objects by the end of the timer wins the round."
+    // 1° tie-break: total visits (effort)
+    // 2° tie-break: coin flip
+    const a = (m.explore.visitsByTeam || {})[m.teamAId];
+    const b = (m.explore.visitsByTeam || {})[m.teamBId];
+    const aDistinct = (typeof ExploreFactory !== "undefined") ? ExploreFactory.distinctCount(a) : 0;
+    const bDistinct = (typeof ExploreFactory !== "undefined") ? ExploreFactory.distinctCount(b) : 0;
+    const aTotal = (typeof ExploreFactory !== "undefined") ? ExploreFactory.totalVisits(a) : 0;
+    const bTotal = (typeof ExploreFactory !== "undefined") ? ExploreFactory.totalVisits(b) : 0;
+    if (aDistinct > bDistinct) m.modeWinner = m.teamAId;
+    else if (bDistinct > aDistinct) m.modeWinner = m.teamBId;
+    else if (aTotal > bTotal) m.modeWinner = m.teamAId;
+    else if (bTotal > aTotal) m.modeWinner = m.teamBId;
+    else m.modeWinner = (SIM_RNG.next() < 0.5) ? m.teamAId : m.teamBId;
+    // Stash final counts on the explore record for finalizeMatch's
+    // feed / bracket-display
+    m.explore.finalA = { distinct: aDistinct, total: aTotal };
+    m.explore.finalB = { distinct: bDistinct, total: bTotal };
+    const teamAName = TEAM_BY_ID[m.teamAId]?.short || "A";
+    const teamBName = TEAM_BY_ID[m.teamBId]?.short || "B";
+    const winnerName = TEAM_BY_ID[m.modeWinner]?.short || "?";
+    feed("match", `🌿 Timer expires — ${teamAName} spotted ${aDistinct} objects (${aTotal} visits); ${teamBName} spotted ${bDistinct} objects (${bTotal} visits). ${winnerName} wins!`);
+  }
+}
+
 /* === v37.94: team-based applyTagHit ===
    Called from melee resolveAttack when in tag mode AND the attacker is
    currently "It". New semantics:
@@ -17044,6 +17835,8 @@ function tickTag(m) {
    roles forbid combat). */
 function applyTagHit(attacker, defender, m) {
   if (!m.tag || attacker.id !== m.tag.itId) return false;
+  // v38.07: cannot tag the pony referee — she's not in the game
+  if (defender && defender.isReferee) return false;
   // v37.94 defense: cannot tag own teammates (the user-reported bug)
   if (attacker.teamId === defender.teamId) return false;
   // v37.94 defense: cannot immediately tag back the bot who just tagged us
@@ -18175,17 +18968,42 @@ function generateBiomeScatter(biome) {
   const out = [];
   const W = COMBAT.arenaW, H = COMBAT.arenaH;
   const cx = W / 2, cy = H / 2;
-  const SPAWN_KEEPOUT = 80;
-  const CORE_KEEPOUT = 75;
+  // v38.11: keepouts scale with arena so the 3× bigger stadium keeps
+  // the same RELATIVE clear zones at spawn lines and around the core.
+  const gridScale = COMBAT.gridScale || 1;
+  const SPAWN_KEEPOUT = 80 * gridScale;
+  // v38.14: CORE_KEEPOUT shrunk from 75 → 25 so the middle of the
+  // field can have scatter. The power-core pickup zone (when active)
+  // only occupies a small radius at exact center; previous 75 was
+  // over-eager rejection.
+  const CORE_KEEPOUT = 25 * gridScale;
+  // v38.14: scatter density × 5 (was × 3 in v38.11). Smaller items
+  // (r ∈ {1,2}) plus 5× count gives a noticeably more debris-strewn
+  // field — feels like a real battlefield instead of an empty pitch.
+  const SCATTER_MULT = 5;
+  // v38.14: target zones — middle vertical strip and four corners.
+  // Per user feedback after v38.13: scatter should concentrate "around
+  // the middle third lines vertically, and in the four corners in
+  // general." Mid-strip = central 20% width (x ∈ [W*0.4, W*0.6]).
+  // Corners = (x < 20% OR x > 80%) AND (y < 25% OR y > 75%).
+  const _inTargetZone = (x, y) => {
+    const midStrip = (x > W * 0.40 && x < W * 0.60);
+    const corner = (x < W * 0.20 || x > W * 0.80) &&
+                   (y < H * 0.25 || y > H * 0.75);
+    return midStrip || corner;
+  };
   for (const [typeKey, def] of Object.entries(biome.scatter || {})) {
-    for (let i = 0; i < def.count; i++) {
-      // Rejection sampling — keep clear zones spawn-free
+    const count = Math.round((def.count || 0) * SCATTER_MULT);
+    for (let i = 0; i < count; i++) {
+      // Rejection sampling — keep clear zones spawn-free, bias toward
+      // target zones (middle strip + corners) so the visible scatter
+      // concentrates where the user wants the field to feel detailed.
       let x, y, tries = 0;
       do {
         x = Math.round(BIOME_RNG.next() * (W - 16) + 8);
         y = Math.round(BIOME_RNG.next() * (H - 16) + 8);
         tries++;
-        if (tries > 8) break;
+        if (tries > 12) break;  // was 8; raised to give the bias time to land
         const dxC = x - cx, dyC = y - cy;
         const distCenter = Math.hypot(dxC, dyC);
         if (distCenter < CORE_KEEPOUT) continue;
@@ -18194,14 +19012,27 @@ function generateBiomeScatter(biome) {
           // Allow some on the edges (only a fraction)
           if (BIOME_RNG.next() > 0.3) continue;
         }
+        // v38.14: zone bias — items NOT in a target zone have a 50%
+        // reject roll so the placed scatter visibly concentrates in
+        // the middle column + corners. Spawn keepout above is already
+        // honored; this only adds reject pressure between targets.
+        if (!_inTargetZone(x, y)) {
+          if (BIOME_RNG.next() < 0.50) continue;
+        }
         break;
       } while (true);
       out.push({
         type: typeKey,
         x, y,
         c1: def.color1, c2: def.color2,
-        r: 1 + Math.floor(BIOME_RNG.next() * 3),
+        // v38.11: scatter size reduced to 1+rand(0..2) → 1+rand(0..1)
+        // (so r ∈ {1, 2} not {1, 2, 3}). Smaller items mean Sweeties
+        // have to get closer/face them more squarely to score a visit.
+        r: 1 + Math.floor(BIOME_RNG.next() * 2),
         rot: BIOME_RNG.next() * Math.PI * 2,
+        // v38.08: stable id used by Explore mode for FOV-visit tracking.
+        // Type + sequential index — unique within the match.
+        _exploreId: typeKey + ":" + out.length,
       });
     }
   }
@@ -18772,7 +19603,9 @@ function tickMatch() {
   // Cheap (one sort + iteration per team). Runs every frame so role
   // changes (carrier killed, flag dropped, It changed) propagate to
   // bot behavior without delay.
-  if (m.gameMode && m.gameMode !== "deathmatch" && typeof MODE_AI !== "undefined") {
+  // v38.09: Explore has no knights; skip MODE_AI + TEAM_AI to avoid
+  // wasted work on empty arrays.
+  if (m.gameMode && m.gameMode !== "deathmatch" && m.gameMode !== "explore" && typeof MODE_AI !== "undefined") {
     MODE_AI.assignRoles(m);
   }
 
@@ -18781,7 +19614,7 @@ function tickMatch() {
   // in-trouble flags so per-bot AI can make team-aware decisions.
   // Runs every frame; cost is dominated by enemy-target scoring which
   // is O(N²) for N≈14 — negligible.
-  if (typeof TEAM_AI !== "undefined") {
+  if (m.gameMode !== "explore" && typeof TEAM_AI !== "undefined") {
     TEAM_AI.computeTeamState(m);
   }
 
@@ -18848,6 +19681,16 @@ function tickMatch() {
 
       // Apply dodge nudge AFTER state movement so it weaves additively
       applyDodgeNudge(p, m);
+    }
+  }
+
+  // === v38.07: tick referees (non-combatant pony wanderer) ===
+  // Run AFTER player AI so the referee sees this frame's final knight
+  // positions when deciding whether to flee. Failsafe-guarded so a
+  // partially-init match (no referees array) doesn't crash.
+  if (m.referees && typeof RefereeFactory !== "undefined") {
+    for (const ref of m.referees) {
+      RefereeFactory.tick(ref, m);
     }
   }
 
@@ -24711,6 +25554,14 @@ function _applySteering(p, m, ang, speed, opts) {
 }
 
 function moveAlong(p, ang, speed) {
+  // === v38.11: stadium grid-scale speed multiplier ===
+  // Per user feedback: "Increase the game's default speed to match" the
+  // 3× stadium. This is applied at the canonical move-step so every
+  // knight-AI path (chase, retreat, patrol, capture-flag, etc.) sees
+  // the same speed buff. Combat hit-ranges/weapon-ranges are NOT
+  // scaled — combat happens in tighter clusters within the bigger
+  // field, which actually reads better.
+  speed = speed * (COMBAT.gridScale || 1);
   // === v37.59: suppression speed reduction (Tier 3.D) ===
   // While suppressed (recently took a near-miss), reduce effective speed
   // 30% AND 50% chance to land on the original spot (movement skipped).
@@ -25105,11 +25956,16 @@ function tickProjectiles(m) {
   if (!m.projectiles || !m.projectiles.length) return;
   const enemies = (teamId) => teamId === m.teamAId ? m.teamBplayers : m.teamAplayers;
 
+  // v38.11: projectiles scale with the stadium grid so ranged combat
+  // stays responsive on the bigger arena. Without this scale, a sniper
+  // shot would crawl across the field at 1/3 the perceived speed.
+  const _gridMult = COMBAT.gridScale || 1;
+
   for (let i = m.projectiles.length - 1; i >= 0; i--) {
     const pr = m.projectiles[i];
     const oldX = pr.x, oldY = pr.y;
-    pr.x += pr.vx;
-    pr.y += pr.vy;
+    pr.x += pr.vx * _gridMult;
+    pr.y += pr.vy * _gridMult;
     pr.ttl--;
 
     // Off-arena or expired
@@ -25216,6 +26072,11 @@ function applyProjectileHit(attacker, defender, pr, m) {
    knockback themselves (e.g., grenade detonation, which pushes victims
    away from the blast center, not from the kill-credit attacker). */
 function applyDamage(attacker, defender, dmg, isCrit, m, opts) {
+  // === v38.07: pony referee immunity ===
+  // The referee is non-combatant. AoE effects (grenade, power-core
+  // explosion) could otherwise sweep her into the damage radius. Bail
+  // out silently — no damage, no balloon pop, no float, no KO.
+  if (defender && defender.isReferee) return;
   const hpFracBefore = defender.hp / defender.stats.hp;
   defender.hp -= dmg;
   const hpFracAfter = defender.hp / defender.stats.hp;
@@ -26025,6 +26886,30 @@ function finalizeRound(forfeit) {
   const m = LEAGUE.match;
   if (!m) return;
 
+  // === v38.09 bugfix: Explore mode short-circuit ===
+  // Explore has no traditional "rounds" — one timer counts down, then
+  // the match ends. The team-wipe / forfeit / draw decision tree below
+  // is meaningless for Explore (both teams are always empty by design).
+  // Skip straight to finalizeMatch with the explore result preserved.
+  if (m.gameMode === "explore") {
+    _aiDiag("roundend", "—", "finalizeRound called for Explore", {
+      mode: "explore",
+      visits: m.explore ? Object.keys(m.explore.visits || {}).length : 0,
+      roundFrame: m.roundFrame,
+    });
+    // Mark a synthetic "round" entry for record-keeping uniformity.
+    m.rounds.push({
+      index: m.currentRoundIndex,
+      winner: null,
+      isDraw: true,
+      explore: m.explore || { visits: {}, discoveryOrder: [] },
+    });
+    // Explore ends as a draw — no winner, no rounds-won counter advances.
+    m.winnerId = null;
+    finalizeMatch(/*matchDraw*/ true);
+    return;
+  }
+
   // v37.79: diagnostics
   _aiDiag("roundend", "—", `finalizeRound called`, {
     forfeit: !!forfeit,
@@ -26138,6 +27023,63 @@ function finalizeMatch(matchDraw) {
     scoreA: m.modeScoreA || 0,
     scoreB: m.modeScoreB || 0,
   });
+
+  // === v38.09 → v38.10: Explore mode short-circuit ===
+  // Explore is a non-combat MATCH between two Sweetie squads. No
+  // injury rolls (no knights took the field), no career stats
+  // advance, but a REAL winner is awarded based on which team's
+  // squad spotted more objects. tickExplore set m.modeWinner; the
+  // bracket slot takes that team, and the season advances normally.
+  if (m.gameMode === "explore") {
+    m.phase = "post";
+    if (typeof spawnJanitors === "function") spawnJanitors(m);
+    // Result feed
+    const fa = m.explore?.finalA || { distinct: 0, total: 0 };
+    const fb = m.explore?.finalB || { distinct: 0, total: 0 };
+    const teamA = TEAM_BY_ID[m.teamAId] || { emoji: "", short: "A" };
+    const teamB = TEAM_BY_ID[m.teamBId] || { emoji: "", short: "B" };
+    feed("match", `🌿 Explore complete — ${teamA.emoji} ${teamA.short}: ${fa.distinct} objects / ${fa.total} visits · ${teamB.emoji} ${teamB.short}: ${fb.distinct} objects / ${fb.total} visits.`);
+    // Top-watched objects (combined across both teams) — color for the lore feed
+    const visits = (m.explore && m.explore.visits) || {};
+    const ranked = Object.entries(visits)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    if (ranked.length > 0) {
+      const lines = ranked.map(([id, count]) => `${id}: ${count}`);
+      feed("match", `🏆 Most-watched objects: ${lines.join(" · ")}.`);
+    }
+    // === Bracket: award the REAL winner ===
+    // tickExplore set m.modeWinner from the per-team distinct-object
+    // count (with total-visits and coin-flip tie-breakers). Use that
+    // as the bracket slot's winner. The bracket advances naturally
+    // and the season progresses with a clean result.
+    const winnerId = (m.modeWinner && m.modeWinner !== "draw") ? m.modeWinner : null;
+    m.winnerId = winnerId;
+    if (LEAGUE.bracket && LEAGUE.bracket[m.slot] && winnerId) {
+      LEAGUE.bracket[m.slot].winner = winnerId;
+      LEAGUE.bracket[m.slot].scoreA = fa.distinct;
+      LEAGUE.bracket[m.slot].scoreB = fb.distinct;
+      LEAGUE.bracket[m.slot].casualties = [];
+      LEAGUE.bracket[m.slot].exploreResult = {
+        finalA: fa,
+        finalB: fb,
+        topObjects: ranked,
+      };
+    }
+    // Records: a real W-L (not a draw) so the ladder records advance
+    if (winnerId && LEAGUE.records) {
+      const loserId = (winnerId === m.teamAId) ? m.teamBId : m.teamAId;
+      if (LEAGUE.records[winnerId]) {
+        LEAGUE.records[winnerId].wins = (LEAGUE.records[winnerId].wins || 0) + 1;
+      }
+      if (LEAGUE.records[loserId]) {
+        LEAGUE.records[loserId].losses = (LEAGUE.records[loserId].losses || 0) + 1;
+      }
+    }
+    if (typeof saveLocal === "function") saveLocal();
+    if (typeof showIntermission === "function") showIntermission();
+    return;
+  }
 
   m.phase = "post";
   // === v37.22: spawn cleanup crew for the post-match break ===
@@ -27335,11 +28277,13 @@ ctx.imageSmoothingEnabled = false;
    *outside* it so they stay viewport-locked.
    ============================================================ */
 const CAMERA = {
-  x: 640,        // current center X in world coords (arenaW=1280 / 2)
-  y: 360,        // current center Y in world coords (arenaH=720 / 2)
-  zoom: 1.0,     // current zoom (1 = fit field exactly)
-  targetX: 640,
-  targetY: 360,
+  // v38.13: initial position centered on the actual arena (which
+  // tracks COMBAT.gridScale). Pre-v38.13 was hardcoded (640, 360).
+  x: COMBAT.arenaW / 2,
+  y: COMBAT.arenaH / 2,
+  zoom: 1.0,        // initial zoom; camera lerps from here to compute target
+  targetX: COMBAT.arenaW / 2,
+  targetY: COMBAT.arenaH / 2,
   targetZoom: 1.0,
   enabled: false,  // toggled by TV mode + opt-in setting
   // Tunables — v28.13: re-tuned for less aggressive zoom + smoother motion
@@ -27350,13 +28294,19 @@ const CAMERA = {
   PAD_NORMAL: 200, // (was 80) much more padding so small alive-player
                    // clusters don't make the AABB tiny → camera no longer
                    // tightens on a 2-player engagement
-  MIN_ZOOM: 0.55, // v37.15: was 0.78 — pulled back further so the camera
-                  // shows more of the stadium framing around the field. The
-                  // CROWD_DEPTH was simultaneously increased to fill the
-                  // newly-visible perimeter so it doesn't read as black void.
-  MAX_ZOOM: 1.10, // (was 1.6) — barely zoom in past fit-the-field. The
-                  // stadium stays visible at all times. Cinematic, not
-                  // claustrophobic.
+  // v38.13: MIN_ZOOM tuned so the wide-shot shows the FULL bigger
+  // arena with modest crowd margin. At gridScale=3, canvasFillScale
+  // = 1280/3840 = 0.333. visible_world = canvasW / (zoom × 0.333).
+  // At zoom=0.85: visible_world = 4517, world is 3840, so we see
+  // 338 worldspace pixels of crowd margin on each side. Good wide-shot
+  // composition. Going below ~0.7 would make the world appear lost
+  // in black on the canvas.
+  MIN_ZOOM: 0.85, // was 0.55 (pre-v38.11) → 0.30 in v38.13 first pass (too low)
+  // v38.13: MAX_ZOOM bumped from 1.10 → 3.0 to allow cinematic close-
+  // ups in the 3× arena. At zoom=3.0 in the new arena, visible_world
+  // = 1280/(3.0 × 0.333) = 1280, which matches the OLD MAX_ZOOM=1.10
+  // close-up in the old arena. Same on-screen close-up framing.
+  MAX_ZOOM: 3.0, // was 1.10
   LERP: 0.04,     // (was 0.07) per-frame movement toward target — slower
                   // glide eliminates the "snap" feel
   ZOOM_LERP: 0.025, // (was 0.05) zoom changes are now barely perceptible
@@ -27383,7 +28333,11 @@ function _computeCameraTarget(m) {
     return { cx: W/2, cy: H/2, zoom: CAMERA.MIN_ZOOM };
   }
 
-  const pad = CAMERA.PAD_NORMAL;
+  // v38.15: pad scales with gridScale so the camera buffer stays the
+  // same RELATIVE fraction of the arena. Was 200 (16% of old 1280
+  // arena); without scaling, 200 in the new 3840 arena is just 5% —
+  // camera framing was too tight on small clusters.
+  const pad = CAMERA.PAD_NORMAL * (COMBAT.gridScale || 1);
 
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   let count = 0;
@@ -27397,6 +28351,33 @@ function _computeCameraTarget(m) {
     if (p.x > maxX) maxX = p.x;
     if (p.y > maxY) maxY = p.y;
     count++;
+  }
+
+  // === v38.10: include Sweeties + Referees in camera framing ===
+  // Pre-v38.10 the camera only tracked teamAplayers/teamBplayers, so in
+  // Explore mode (no knights, herd of Sweeties only) count stayed at 0
+  // and the camera defaulted to the wide stadium view forever — the
+  // Sweeties were never followed. User-reported bug. Including them
+  // here means: Explore camera now tracks the herd naturally; in
+  // regular matches the referee subtly influences the frame too, but
+  // her weight is minor compared to the knight cluster.
+  if (m.sweeties && m.sweeties.length) {
+    for (const sw of m.sweeties) {
+      if (sw.x < minX) minX = sw.x;
+      if (sw.y < minY) minY = sw.y;
+      if (sw.x > maxX) maxX = sw.x;
+      if (sw.y > maxY) maxY = sw.y;
+      count++;
+    }
+  }
+  if (m.referees && m.referees.length) {
+    for (const ref of m.referees) {
+      if (ref.x < minX) minX = ref.x;
+      if (ref.y < minY) minY = ref.y;
+      if (ref.x > maxX) maxX = ref.x;
+      if (ref.y > maxY) maxY = ref.y;
+      count++;
+    }
   }
 
   // Mode objectives — crown, flag, bases — when present
@@ -27430,14 +28411,17 @@ function _computeCameraTarget(m) {
 
   // Dropped items — only consider drops within reach of any alive player
   // so the camera doesn't over-fit on stale far-corner drops
+  // v38.15: proximity scaled with gridScale so the check stays at the
+  // same relative range in the bigger arena (was hardcoded 200).
   if (m.drops && count > 0) {
+    const dropReachSq = (200 * (COMBAT.gridScale || 1)) ** 2;
     for (const d of m.drops) {
-      // Is any alive player within 200px of this drop?
+      // Is any alive player within reach of this drop?
       let near = false;
       for (const p of all) {
         if (!p.alive) continue;
         const dx = p.x - d.x, dy = p.y - d.y;
-        if (dx*dx + dy*dy < 200*200) { near = true; break; }
+        if (dx*dx + dy*dy < dropReachSq) { near = true; break; }
       }
       if (near) {
         if (d.x < minX) minX = d.x;
@@ -27501,7 +28485,13 @@ function _computeCameraTarget(m) {
     const canvasFillScale = isPortraitMismatch
       ? Math.min(cW / W, cH / H)
       : Math.max(cW / W, cH / H);
-    if (canvasFillScale > 0) {
+    // v38.13: only bump zoom UP when the canvas is BIGGER than the
+    // world (canvasFillScale > 1, e.g. TV mode 1920×1080 with 1280×720
+    // world). When the world is bigger than the canvas (the v38.11 3×
+    // stadium case), zooming up to "fill canvas" would force the
+    // camera to show only a fraction of the world. Allow MIN_ZOOM to
+    // win in that case so the camera can frame the whole stadium.
+    if (canvasFillScale > 1 && canvasFillScale > 0) {
       const minZoomForFill = 1.0 / canvasFillScale;
       if (zoom < minZoomForFill) zoom = minZoomForFill;
     }
@@ -27674,24 +28664,30 @@ function _applyCameraTransform() {
 // edge), banners at the top-center and bottom-center edges (above/below
 // the playing area), and keeps the rubble piles as in-field obstacles
 // at their existing positions. Field is 1280×720.
-const SCENERY = [
-  // Corner pillars — ~50px inset from each corner so they sit at the
-  // perimeter, between the field markings and the seating chip.
-  { type: "pillar", x:  50, y:  50 },   // top-left
-  { type: "pillar", x: 1230, y:  50 },  // top-right
-  { type: "pillar", x:  50, y: 670 },   // bottom-left
-  { type: "pillar", x: 1230, y: 670 },  // bottom-right
-  // Edge banners — top-center and bottom-center, hanging from the chip.
-  { type: "banner", x: 640, y:  20 },   // top-center
-  { type: "banner", x: 640, y: 700 },   // bottom-center
-  // In-field rubble — these are intentionally on the playing surface as
-  // gameplay obstacles (cover for snipers, line breakers for tanks),
-  // unchanged from before.
-  { type: "rubble", x: 340, y: 280 },
-  { type: "rubble", x: 620, y: 280 },
-  { type: "rubble", x: 480, y: 200 },
-  { type: "rubble", x: 480, y: 340 },
-];
+// v38.13: SCENERY positions computed from arena dimensions so they
+// scale with COMBAT.gridScale. Pre-v38.13 used hardcoded (50, 50) /
+// (1230, 670) / etc., which after the 3× stadium expansion left the
+// pillars and banners clustered near (0, 0) — far from the corners.
+const SCENERY = (function() {
+  const W = COMBAT.arenaW, H = COMBAT.arenaH;
+  return [
+    // Corner pillars — ~4% inset from each corner so they sit at the
+    // perimeter, between the field markings and the seating chip.
+    { type: "pillar", x: Math.round(W * 0.040), y: Math.round(H * 0.069) },   // top-left
+    { type: "pillar", x: Math.round(W * 0.960), y: Math.round(H * 0.069) },   // top-right
+    { type: "pillar", x: Math.round(W * 0.040), y: Math.round(H * 0.931) },   // bottom-left
+    { type: "pillar", x: Math.round(W * 0.960), y: Math.round(H * 0.931) },   // bottom-right
+    // Edge banners — top-center and bottom-center, hanging from the chip.
+    { type: "banner", x: Math.round(W * 0.500), y: Math.round(H * 0.028) },   // top-center
+    { type: "banner", x: Math.round(W * 0.500), y: Math.round(H * 0.972) },   // bottom-center
+    // In-field rubble — these are intentionally on the playing surface as
+    // gameplay obstacles (cover for snipers, line breakers for tanks).
+    { type: "rubble", x: Math.round(W * 0.266), y: Math.round(H * 0.389) },
+    { type: "rubble", x: Math.round(W * 0.484), y: Math.round(H * 0.389) },
+    { type: "rubble", x: Math.round(W * 0.375), y: Math.round(H * 0.278) },
+    { type: "rubble", x: Math.round(W * 0.375), y: Math.round(H * 0.472) },
+  ];
+})();
 
 // Convert "#RRGGBB" to "rgba(r,g,b,a)" for compositing
 function _hexA(hex, a) {
@@ -27722,7 +28718,21 @@ function _blend(hexA, hexB, t) {
    is bounded (<300 sprites typically) so blasting through is fast.
    ============================================================ */
 function drawBiomeScatter(scatter) {
+  // v38.16: scatter visual scale bumped to match terrain block sizing.
+  // The v38.15 wrap of gridScale (=3) made pebbles 15 worldspace pixels;
+  // terrain blocks are 36 worldspace. Pebbles still looked tiny next
+  // to the centerline blocks. SCATTER_VISUAL_SCALE=2.5 brings total
+  // wrap to 7.5 at gridScale=3, giving pebble diameter ≈ 37.5 worldspace
+  // (matches terrain block visual weight at the wide camera).
+  const SCATTER_VISUAL_SCALE = 2.5;
+  const G = (COMBAT.gridScale || 1) * SCATTER_VISUAL_SCALE;
   for (const s of scatter) {
+    if (G !== 1) {
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.scale(G, G);
+      ctx.translate(-s.x, -s.y);
+    }
     switch (s.type) {
       case "grassTuft": {
         // Three little vertical blades fanning out
@@ -28308,6 +29318,7 @@ function drawBiomeScatter(scatter) {
         break;
       }
     }
+    if (G !== 1) ctx.restore();  // v38.15: close sprite-scale transform
   }
 }
 
@@ -29283,7 +30294,10 @@ function drawJanitors(m) {
 }
 window.drawJanitors = drawJanitors;
 
-const CROWD_DEPTH = 180;       // v37.15: was 32 — extended deep enough that
+// v38.13: scale crowd band with gridScale so the seating fills the
+// perimeter of the now-bigger arena. Pre-v38.13 was fixed 180 which
+// at the 3× expansion would look like a thin halo around a vast field.
+const CROWD_DEPTH = 180 * (COMBAT.gridScale || 1);       // v37.15: was 32 — extended deep enough that
                                 // at MIN_ZOOM=0.55 the seating fills the
                                 // perimeter the camera now reveals. Seating
                                 // tiers stretch back from the field edge to
@@ -30617,7 +31631,14 @@ function drawModeEntities(m) {
    with balloon HP), blood, corpses, drops, floating dmg numbers.
    ============================================================ */
 function drawArena() {
-  const W = arenaCanvas.width, H = arenaCanvas.height;
+  // v38.13: separate canvas dims (for pre-camera letterbox fill) from
+  // WORLD dims (for everything drawn inside the camera transform). The
+  // floor, mowing stripes, end-zone gradients, court markings, and
+  // pitch-lights all need to fill the FULL world — not just the canvas
+  // patch. Pre-v38.13 used arenaCanvas.width/height for everything,
+  // which only filled a 1280×720 chunk of the now-3840×2160 world.
+  const cW = arenaCanvas.width, cH = arenaCanvas.height;
+  const W = COMBAT.arenaW || cW, H = COMBAT.arenaH || cH;
   const m = LEAGUE.match;
   const biome = m && m.biome ? m.biome : null;
 
@@ -30628,7 +31649,7 @@ function drawArena() {
   // Clear & paint background (letterbox bars when zoom > 1)
   ctx.save();
   ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(0, 0, cW, cH);  // v38.13: canvas dims (outside camera transform)
   ctx.restore();
 
   // World-space drawing happens inside the camera transform. We save,
@@ -30903,6 +31924,24 @@ function drawArena() {
   // Drawn before players so a carrier's avatar appears on top.
   drawModeEntities(m);
 
+  // === v38.07: pony referee — drawn BEFORE knights so the action
+  // foregrounds her. Small pastel sprite + name tag, hovers gently. ===
+  if (m.referees && m.referees.length) {
+    for (const ref of m.referees) {
+      drawReferee(ref);
+    }
+  }
+
+  // === v38.08: Explore-mode Sweetie herd ===
+  // Drawn before knights for the same reason; the herd is the focus
+  // of Explore mode (where there ARE no knights), but in other modes
+  // the array is empty so this is a no-op.
+  if (m.sweeties && m.sweeties.length) {
+    for (let i = 0; i < m.sweeties.length; i++) {
+      drawSweetie(m.sweeties[i], i);
+    }
+  }
+
   // Players — pixel-art mascot knights
   for (const list of [m.teamAplayers, m.teamBplayers]) {
     for (const p of list) {
@@ -30971,6 +32010,335 @@ function drawArena() {
   ctx.restore();
 }
 
+// === v38.08: explore-mode Sweetie renderer ===
+// Same pony body as drawReferee, no REF badge, optional FOV-cone hint
+// when she's actively gazing at something. Color-tinted by index so the
+// herd reads as distinct individuals at a glance.
+
+// === v38.12: sprite-scale helpers ===
+// User feedback: "I would like to visually see the larger field, without
+// you making the bots smaller." After the v38.11 3× stadium expansion,
+// the camera zooms further out and bots appear 1/3 their previous on-
+// screen size. These helpers wrap a draw section in a scale-around-
+// (x,y) transform so the SPRITE renders 3× bigger in world space and
+// thus the same size on screen at the more-zoomed-out camera.
+//
+// Debug overlays (weapon-range circles, hit-radius ellipses, FOV cones)
+// are NOT wrapped — they're drawn at true game-logic distance, so the
+// relationship "weapon range is short relative to bot size" is honestly
+// visualized: a short attack-range circle inside the bot sprite means
+// the knight literally has to touch their target to swing.
+function beginSpriteScale(x, y) {
+  const s = (typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(s, s);
+  ctx.translate(-x, -y);
+}
+function endSpriteScale() {
+  ctx.restore();
+}
+
+function drawSweetie(sw, index) {
+  if (!sw) return;
+  const t = (LEAGUE.match?.frame || 0);
+  const bob = Math.sin(t * 0.06 + sw.bobPhase) * sw.bobAmp;
+  const x = Math.floor(sw.x);
+  const y = Math.floor(sw.y + bob);
+  const facing = sw.facing >= 0 ? 1 : -1;
+
+  // === v38.12: FOV cone drawn FIRST at TRUE world-pixel distance ===
+  // Per user feedback: debug-style overlays show actual game-logic
+  // range, not sprite-scaled. The cone will appear small relative to
+  // the bigger Sweetie sprite — that's the honest visual: she really
+  // does have limited vision.
+  const cfg = (LEAGUE_CONFIG.modeConfig && LEAGUE_CONFIG.modeConfig.explore) || {};
+  const fovDeg = cfg.fovDeg || 80;
+  const fovRange = cfg.fovRangeMax || 220;
+  const fovHalfRad = (fovDeg / 2) * Math.PI / 180;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(sw.headingAng);
+  ctx.fillStyle = "rgba(216, 168, 220, 0.10)";  // very soft pink
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.arc(0, 0, fovRange, -fovHalfRad, fovHalfRad);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // === v38.12: sprite-scale wrapper for shadow + body + name ===
+  beginSpriteScale(x, y);
+
+  // Drop shadow
+  if (!LEAGUE_CONFIG.disableDropShadows) {
+    const shadowY = Math.floor(sw.y) + 14;
+    ctx.fillStyle = "rgba(0,0,0,0.20)";
+    ctx.beginPath();
+    ctx.ellipse(x + 1, shadowY, 16, 5, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,0.40)";
+    ctx.beginPath();
+    ctx.ellipse(x, shadowY, 11, 3, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // Body — same as drawReferee, with optional per-Sweetie mane color
+  // variations (rotate through 4 hues to distinguish the herd).
+  const maneColors = [
+    ["#d97aa8", "#a874c4"],   // classic pink/purple (Sweetie)
+    ["#7abdde", "#8bccdc"],   // blue (Misty)
+    ["#e6c660", "#f0d990"],   // gold (Honey)
+    ["#a3d4a8", "#bce4be"],   // mint (Sprout)
+  ];
+  const [maneA, maneB] = maneColors[(index || 0) % maneColors.length];
+
+  ctx.save();
+  ctx.translate(x, y);
+  if (facing < 0) ctx.scale(-1, 1);
+  // Body
+  ctx.fillStyle = "#fff8f3";
+  ctx.beginPath();
+  ctx.ellipse(0, 4, 13, 8, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = "#d9c5b8";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // Legs
+  ctx.fillStyle = "#fff8f3";
+  ctx.fillRect(-9, 8, 3, 6);
+  ctx.fillRect(-3, 9, 3, 5);
+  ctx.fillRect(3, 9, 3, 5);
+  ctx.fillRect(8, 8, 3, 6);
+  ctx.strokeRect(-9, 8, 3, 6);
+  ctx.strokeRect(-3, 9, 3, 5);
+  ctx.strokeRect(3, 9, 3, 5);
+  ctx.strokeRect(8, 8, 3, 6);
+  // Tail
+  ctx.fillStyle = maneA;
+  ctx.beginPath();
+  ctx.moveTo(-12, 2);
+  ctx.lineTo(-17, 8);
+  ctx.lineTo(-13, 9);
+  ctx.lineTo(-11, 4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = maneB;
+  ctx.beginPath();
+  ctx.moveTo(-13, 4);
+  ctx.lineTo(-16, 10);
+  ctx.lineTo(-12, 8);
+  ctx.closePath();
+  ctx.fill();
+  // Head
+  ctx.fillStyle = "#fff8f3";
+  ctx.beginPath();
+  ctx.ellipse(10, -2, 7, 6, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = "#d9c5b8";
+  ctx.stroke();
+  // Snout
+  ctx.fillStyle = "#f5e0d3";
+  ctx.beginPath();
+  ctx.ellipse(15, 1, 3, 2.5, 0, 0, Math.PI*2);
+  ctx.fill();
+  // Eye
+  ctx.fillStyle = "#3a2a4a";
+  ctx.beginPath();
+  ctx.arc(12, -3, 2, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(12.5, -3.5, 0.7, 0, Math.PI*2);
+  ctx.fill();
+  // Mane
+  ctx.fillStyle = maneA;
+  ctx.beginPath();
+  ctx.moveTo(4, -7);
+  ctx.lineTo(10, -8);
+  ctx.lineTo(12, -4);
+  ctx.lineTo(4, -3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = maneB;
+  ctx.beginPath();
+  ctx.moveTo(5, -7);
+  ctx.lineTo(8, -8);
+  ctx.lineTo(8, -3);
+  ctx.lineTo(5, -3);
+  ctx.closePath();
+  ctx.fill();
+  // Ear
+  ctx.fillStyle = "#fff8f3";
+  ctx.strokeStyle = "#d9c5b8";
+  ctx.beginPath();
+  ctx.moveTo(7, -7);
+  ctx.lineTo(8, -10);
+  ctx.lineTo(10, -7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  // Name label
+  ctx.font = "10px ui-sans-serif, system-ui";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "rgba(0,0,0,0.45)";
+  ctx.fillText(sw.name, x + 1, y - 16);
+  ctx.fillStyle = "#fff8f3";
+  ctx.fillText(sw.name, x, y - 17);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+
+  // v38.12: close the sprite-scale wrap
+  endSpriteScale();
+}
+
+// === v38.07: pony referee renderer ===
+// Small pixel-art pony Sweetie standing on the field. White body,
+// pink-and-purple striped mane, big eye. Hovers gently with bobPhase.
+// No balloons (immortal), no weapon icon (non-combatant), no team color.
+// A small "REF" badge floats above her name to disambiguate from knights.
+function drawReferee(ref) {
+  if (!ref) return;
+  // Hover bob — slightly slower than knights so she reads as distinct.
+  const t = (LEAGUE.match?.frame || 0);
+  const bob = Math.sin(t * 0.06 + ref.bobPhase) * ref.bobAmp;
+  const x = Math.floor(ref.x);
+  const y = Math.floor(ref.y + bob);
+  const facing = ref.facing >= 0 ? 1 : -1;
+
+  // v38.12: sprite-scale wrap so the referee renders at the same on-
+  // screen size after the v38.11 stadium expansion.
+  beginSpriteScale(x, y);
+
+  // ----- Drop shadow -----
+  if (!LEAGUE_CONFIG.disableDropShadows) {
+    const shadowY = Math.floor(ref.y) + 14;
+    ctx.fillStyle = "rgba(0,0,0,0.20)";
+    ctx.beginPath();
+    ctx.ellipse(x + 1, shadowY, 16, 5, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,0.40)";
+    ctx.beginPath();
+    ctx.ellipse(x, shadowY, 11, 3, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // ----- Body (white pony) -----
+  ctx.save();
+  ctx.translate(x, y);
+  if (facing < 0) ctx.scale(-1, 1);
+  // Body (rounded rectangle)
+  ctx.fillStyle = "#fff8f3";
+  ctx.beginPath();
+  ctx.ellipse(0, 4, 13, 8, 0, 0, Math.PI*2);
+  ctx.fill();
+  // Body outline
+  ctx.strokeStyle = "#d9c5b8";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // Legs (4 small rects on the bottom)
+  ctx.fillStyle = "#fff8f3";
+  ctx.fillRect(-9, 8, 3, 6);
+  ctx.fillRect(-3, 9, 3, 5);
+  ctx.fillRect(3, 9, 3, 5);
+  ctx.fillRect(8, 8, 3, 6);
+  ctx.strokeRect(-9, 8, 3, 6);
+  ctx.strokeRect(-3, 9, 3, 5);
+  ctx.strokeRect(3, 9, 3, 5);
+  ctx.strokeRect(8, 8, 3, 6);
+  // Tail (purple-pink streak behind body)
+  ctx.fillStyle = "#d97aa8";
+  ctx.beginPath();
+  ctx.moveTo(-12, 2);
+  ctx.lineTo(-17, 8);
+  ctx.lineTo(-13, 9);
+  ctx.lineTo(-11, 4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#a874c4";
+  ctx.beginPath();
+  ctx.moveTo(-13, 4);
+  ctx.lineTo(-16, 10);
+  ctx.lineTo(-12, 8);
+  ctx.closePath();
+  ctx.fill();
+  // Head (round, slightly forward of body center)
+  ctx.fillStyle = "#fff8f3";
+  ctx.beginPath();
+  ctx.ellipse(10, -2, 7, 6, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = "#d9c5b8";
+  ctx.stroke();
+  // Snout (small bump)
+  ctx.fillStyle = "#f5e0d3";
+  ctx.beginPath();
+  ctx.ellipse(15, 1, 3, 2.5, 0, 0, Math.PI*2);
+  ctx.fill();
+  // Eye (big round, like classic toy-pony eyes)
+  ctx.fillStyle = "#3a2a4a";
+  ctx.beginPath();
+  ctx.arc(12, -3, 2, 0, Math.PI*2);
+  ctx.fill();
+  // Eye highlight
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(12.5, -3.5, 0.7, 0, Math.PI*2);
+  ctx.fill();
+  // Mane (striped pink + purple, falls over forehead)
+  ctx.fillStyle = "#d97aa8";  // pink
+  ctx.beginPath();
+  ctx.moveTo(4, -7);
+  ctx.lineTo(10, -8);
+  ctx.lineTo(12, -4);
+  ctx.lineTo(4, -3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#a874c4";  // purple stripe
+  ctx.beginPath();
+  ctx.moveTo(5, -7);
+  ctx.lineTo(8, -8);
+  ctx.lineTo(8, -3);
+  ctx.lineTo(5, -3);
+  ctx.closePath();
+  ctx.fill();
+  // Ear (small triangle on top)
+  ctx.fillStyle = "#fff8f3";
+  ctx.strokeStyle = "#d9c5b8";
+  ctx.beginPath();
+  ctx.moveTo(7, -7);
+  ctx.lineTo(8, -10);
+  ctx.lineTo(10, -7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  // ----- Name + REF badge (always above, no flip) -----
+  ctx.font = "9px ui-sans-serif, system-ui";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  // REF badge background
+  const badgeW = 26, badgeH = 9;
+  const badgeY = y - 16;
+  ctx.fillStyle = "rgba(168, 116, 196, 0.85)";  // purple
+  ctx.fillRect(x - badgeW/2, badgeY - badgeH/2, badgeW, badgeH);
+  ctx.fillStyle = "#fff";
+  ctx.fillText("REF", x, badgeY);
+  // Name
+  ctx.fillStyle = "rgba(0,0,0,0.45)";
+  ctx.fillText(ref.name, x + 1, y - 25);
+  ctx.fillStyle = "#fff8f3";
+  ctx.fillText(ref.name, x, y - 26);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+
+  // v38.12: close sprite-scale wrap
+  endSpriteScale();
+}
+
 function drawMascot(p) {
   const team = TEAM_BY_ID[p.teamId];
   const pos = POS_BY_ID[p.position];
@@ -30986,6 +32354,13 @@ function drawMascot(p) {
   let state = "alive";
   if (p.stunned > 0) state = "stunned";
   else if ((p.balloonsPopped || 0) >= 2) state = "critical";
+
+  // v38.12: sprite-scale wrap so the knight renders at the same on-screen
+  // size after the v38.11 3× stadium expansion. Debug overlays drawn by
+  // drawHitboxes() are outside this function and stay at true game-logic
+  // size — so the relationship "weapon range is short relative to bot
+  // size" is honestly visualized when hitbox debug is on.
+  beginSpriteScale(x, y);
 
   // ----- Drop shadow (on the ground, doesn't bob, soft edged) -----
   // Two-layer: a wider soft halo + tighter inner shadow gives the impression
@@ -31119,6 +32494,9 @@ function drawMascot(p) {
 
   ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
+
+  // v38.12: close sprite-scale wrap
+  endSpriteScale();
 }
 
 
@@ -33068,7 +34446,17 @@ function renderHeader() {
   // Ticker shows current matchup or next-up cue
   const am = activeMatchTeams();
   if (LEAGUE.match && LEAGUE.match.phase === "round") {
-    $("#ticker").textContent = `LIVE · R${LEAGUE.match.currentRoundIndex}/${LEAGUE.match.bestOf} · ${TEAM_BY_ID[LEAGUE.match.teamAId].name} ${LEAGUE.match.roundsWonA}–${LEAGUE.match.roundsWonB} ${TEAM_BY_ID[LEAGUE.match.teamBId].name}`;
+    // v38.12: Explore ticker shows per-team distinct object counts
+    if (LEAGUE.match.gameMode === "explore" && LEAGUE.match.explore) {
+      const vbt = LEAGUE.match.explore.visitsByTeam || {};
+      const aDist = Object.keys(vbt[LEAGUE.match.teamAId] || {}).length;
+      const bDist = Object.keys(vbt[LEAGUE.match.teamBId] || {}).length;
+      const remaining = Math.max(0, (LEAGUE.match.explore.endFrame || 0) - (LEAGUE.match.roundFrame || 0));
+      const secLeft = Math.round(remaining * COMBAT.frameMs / 1000);
+      $("#ticker").textContent = `EXPLORE · ${secLeft}s left · ${TEAM_BY_ID[LEAGUE.match.teamAId].name}: ${aDist} obj · ${TEAM_BY_ID[LEAGUE.match.teamBId].name}: ${bDist} obj`;
+    } else {
+      $("#ticker").textContent = `LIVE · R${LEAGUE.match.currentRoundIndex}/${LEAGUE.match.bestOf} · ${TEAM_BY_ID[LEAGUE.match.teamAId].name} ${LEAGUE.match.roundsWonA}–${LEAGUE.match.roundsWonB} ${TEAM_BY_ID[LEAGUE.match.teamBId].name}`;
+    }
   } else if (LEAGUE.match && LEAGUE.match.phase === "betweenRounds") {
     $("#ticker").textContent = `INTERMISSION · ${LEAGUE.match.roundsWonA}–${LEAGUE.match.roundsWonB} · place bets between rounds →`;
   } else if (am) {
@@ -33137,8 +34525,13 @@ function renderTeamPanel(side) {
   // Alive count (active match only; otherwise show roster size)
   let alive = 0;
   if (LEAGUE.match && (LEAGUE.match.teamAId === teamId || LEAGUE.match.teamBId === teamId)) {
-    const list = LEAGUE.match.teamAId === teamId ? LEAGUE.match.teamAplayers : LEAGUE.match.teamBplayers;
-    alive = list.filter(p => p.alive).length;
+    // v38.12: Explore-mode alive count = Sweeties on this team
+    if (LEAGUE.match.gameMode === "explore" && Array.isArray(LEAGUE.match.sweeties)) {
+      alive = LEAGUE.match.sweeties.filter(sw => sw.teamId === teamId).length;
+    } else {
+      const list = LEAGUE.match.teamAId === teamId ? LEAGUE.match.teamAplayers : LEAGUE.match.teamBplayers;
+      alive = list.filter(p => p.alive).length;
+    }
   } else {
     alive = players.filter(p => !p.deceased).length;
   }
@@ -33146,11 +34539,56 @@ function renderTeamPanel(side) {
   aliveEl.textContent = alive;
   aliveEl.className = "alive-count " + (alive >= 4 ? "green" : alive >= 2 ? "amber" : "red");
 
+  // === v38.12: Explore-mode panel — render Sweetie squad chips ===
+  // The team's knight roster is still on the bench during Explore but
+  // showing it here would be stale (none of them are on the field).
+  // Instead, surface this team's Sweetie squad with their per-Sweetie
+  // visit contributions so the user can follow individual progress.
+  if (LEAGUE.match && LEAGUE.match.gameMode === "explore" && Array.isArray(LEAGUE.match.sweeties)) {
+    const list = $("#team" + side + "list");
+    list.innerHTML = "";
+    const squadSweeties = LEAGUE.match.sweeties.filter(sw => sw.teamId === teamId);
+    // Team-level visit summary header
+    const visitsByTeam = (LEAGUE.match.explore && LEAGUE.match.explore.visitsByTeam) || {};
+    const teamBag = visitsByTeam[teamId] || {};
+    const distinct = Object.keys(teamBag).length;
+    const total = Object.values(teamBag).reduce((a,b) => a+b, 0);
+    const summary = document.createElement("div");
+    summary.className = "player-chip";
+    summary.style.cssText = "background:var(--bg-3);font-size:11px;padding:6px 8px;border:1px dashed var(--line);";
+    summary.innerHTML = `<div style="display:flex;justify-content:space-between;font-weight:600;">
+      <span>🌿 Sweetie squad</span><span style="color:var(--gold);">${distinct} obj / ${total} visits</span>
+    </div>`;
+    list.appendChild(summary);
+    // Per-Sweetie chips
+    for (const sw of squadSweeties) {
+      // Count this Sweetie's first-discovery contributions (from
+      // discoveryOrder, which is the chronological "who saw it first" log).
+      const discovery = (LEAGUE.match.explore && LEAGUE.match.explore.discoveryOrder) || [];
+      const discoveriesByThisSweetie = discovery.filter(d => d.bySweetie === sw.name).length;
+      const chip = document.createElement("div");
+      chip.className = "player-chip";
+      chip.style.cssText = "padding:4px 8px;";
+      chip.innerHTML = `
+        <span style="font-size:14px;">🐴</span>
+        <span class="chip-name" style="flex:1;">${escapeHTML(sw.name)}</span>
+        ${discoveriesByThisSweetie > 0
+          ? `<span class="chip-streak streak-yellow" title="First-discovered ${discoveriesByThisSweetie} object${discoveriesByThisSweetie===1?"":"s"}">★${discoveriesByThisSweetie}</span>`
+          : ""}
+      `;
+      list.appendChild(chip);
+    }
+    return;
+  }
+
   // Player chips
   const list = $("#team" + side + "list");
   list.innerHTML = "";
   for (const p of players) {
-    const pos = POS_BY_ID[p.position];
+    // v38.05: chip shows CAREER identity (the team-roster context)
+    const _careerId = (typeof LineupFactory !== "undefined")
+      ? LineupFactory.careerPosOf(p) : p.position;
+    const pos = POS_BY_ID[_careerId];
     const chip = document.createElement("div");
     chip.className = "player-chip" + (p.deceased ? " deceased" : "");
     const liveP = LEAGUE.match
@@ -34307,7 +35745,10 @@ function renderBetTab() {
   for (const tid of [aId, bId]) {
     const players = (LEAGUE.rosters[tid] || []).filter(p => !p.deceased);
     for (const p of players) {
-      const pos = POS_BY_ID[p.position];
+      // v38.05: bet UI shows CAREER position (team-roster context)
+      const _careerId = (typeof LineupFactory !== "undefined")
+        ? LineupFactory.careerPosOf(p) : p.position;
+      const pos = POS_BY_ID[_careerId];
       const row = document.createElement("div");
       row.className = "pbet-row" + (BET_PICK.kind === "player" && BET_PICK.target === p.id ? " selected" : "");
       const livesText = m && p.lives !== undefined ? ` · ${p.lives}♥` : "";
@@ -35490,7 +36931,10 @@ function openSandbagPicker(item, am) {
   }
   html += `<div class="sandbag-pick-list">`;
   for (const p of roster) {
-    const pos = POS_BY_ID[p.position];
+    // v38.05: show career position in roster pick
+    const _careerId = (typeof LineupFactory !== "undefined")
+      ? LineupFactory.careerPosOf(p) : p.position;
+    const pos = POS_BY_ID[_careerId];
     const tooSlow = p.stats.spd <= 1.5;
     html += `
       <button class="sandbag-pick-row" data-knight-id="${p.id}" ${LEAGUE.bits < item.cost ? "disabled" : ""}>
@@ -35530,7 +36974,12 @@ window.openSandbagPicker = openSandbagPicker;
    ============================================================ */
 function showPlayerProfile(p) {
   const team = TEAM_BY_ID[p.teamId];
-  const pos = POS_BY_ID[p.position];
+  // v38.05: profile shows CAREER position. During a match the knight's
+  // p.position may be the match-time swap; the profile is the career
+  // record, so we want the canonical career id.
+  const careerId = (typeof LineupFactory !== "undefined")
+    ? LineupFactory.careerPosOf(p) : p.position;
+  const pos = POS_BY_ID[careerId];
   const status = p.deceased
     ? `<span style="color:var(--red);">⚰ DECEASED · S${p.deceasedSeason} · slain by ${escapeHTML(p.deceasedBy || "?")}</span>`
     : `<span style="color:var(--grn);">ACTIVE</span>`;
@@ -35578,7 +37027,10 @@ function showPlayerProfile(p) {
   if (typeof LEAGUE !== "undefined" && LEAGUE.lineages) {
     const surname = (typeof _baseSurnameFor === "function") ? _baseSurnameFor(p.name) : null;
     if (surname) {
-      const key = `${p.teamId}:${p.position}:${surname}`;
+      // v38.05: lineage key is per-team-per-CAREER-position
+      const _careerId = (typeof LineupFactory !== "undefined")
+        ? LineupFactory.careerPosOf(p) : p.position;
+      const key = `${p.teamId}:${_careerId}:${surname}`;
       const chain = LEAGUE.lineages[key];
       if (chain && chain.predecessors && chain.predecessors.length > 0) {
         const depth = chain.predecessors.length;
@@ -35722,7 +37174,11 @@ function showKnightMemorial(p) {
   if (!p.deceased) { showPlayerProfile(p); return; }
 
   const team = TEAM_BY_ID[p.teamId];
-  const pos = POS_BY_ID[p.position];
+  // v38.05: career position (defensive — deceased knight shouldn't
+  // have a live swap, but using the canonical id is safer)
+  const _careerId = (typeof LineupFactory !== "undefined")
+    ? LineupFactory.careerPosOf(p) : p.position;
+  const pos = POS_BY_ID[_careerId];
   const debutSeason = p.debutSeason || 1;
   const deceasedSeason = p.deceasedSeason || LEAGUE.season;
   const seasonsPlayed = Math.max(1, deceasedSeason - debutSeason + 1);
@@ -35863,7 +37319,13 @@ function showTeams() {
         <table class="dt">
           <tr><th>Pos</th><th>Name</th><th>HP</th><th>DMG</th><th>DEF</th><th>SPD</th><th>K</th></tr>
           ${roster.map(p => {
-            const pos = POS_BY_ID[p.position];
+            // v38.05: display CAREER position in roster table — a tank
+            // currently swapped to striker for Tag should show as Tank
+            // in the Ladder, not Striker. (`p.position` is mid-match
+            // match-position; careerPosOf returns canonical career id.)
+            const careerId = (typeof LineupFactory !== "undefined")
+              ? LineupFactory.careerPosOf(p) : p.position;
+            const pos = POS_BY_ID[careerId];
             const cls = p.deceased ? `style="color:var(--mute);text-decoration:line-through;"` : "";
             return `<tr ${cls}>
               <td>${pos.icon}</td>
@@ -36101,9 +37563,12 @@ function showTeamDetail(teamId) {
     <div id="teamDetailRoster" style="display:flex;flex-direction:column;gap:4px;">
   `;
   for (const p of roster) {
-    const pos = (typeof POS_BY_ID !== "undefined") ? POS_BY_ID[p.position] : null;
+    // v38.05: roster row shows CAREER position
+    const _careerId = (typeof LineupFactory !== "undefined")
+      ? LineupFactory.careerPosOf(p) : p.position;
+    const pos = (typeof POS_BY_ID !== "undefined") ? POS_BY_ID[_careerId] : null;
     const posIcon = pos ? pos.icon : "·";
-    const posLabel = pos ? pos.label : p.position || "—";
+    const posLabel = pos ? pos.label : _careerId || "—";
     const deadCls = p.deceased
       ? `style="opacity:0.55;text-decoration:line-through;cursor:pointer;"`
       : `style="cursor:pointer;"`;
@@ -36217,9 +37682,12 @@ function showMatchDetail(slot) {
   const casualties = Array.isArray(m.casualties) ? m.casualties : [];
 
   const playerChip = (p, teamId) => {
-    const pos = (typeof POS_BY_ID !== "undefined") ? POS_BY_ID[p.position] : null;
+    // v38.05: knight chip shows CAREER position
+    const _careerId = (typeof LineupFactory !== "undefined")
+      ? LineupFactory.careerPosOf(p) : p.position;
+    const pos = (typeof POS_BY_ID !== "undefined") ? POS_BY_ID[_careerId] : null;
     const posIcon = pos ? pos.icon : "·";
-    const posLabel = pos ? pos.label : (p.position || "—");
+    const posLabel = pos ? pos.label : (_careerId || "—");
     const deadStyle = p.deceased ? "opacity:0.55;text-decoration:line-through;" : "";
     return `
       <div class="matchdetail-knight"
@@ -36378,7 +37846,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // === v37.92: single source of truth for the build label ===
 // Used by the console boot log AND by the save's gameVersion stamp.
 // Bump in ONE place per release.
-const BUILD_LABEL = "v38.04";
+const BUILD_LABEL = "v38.16";
 
 // === v37.34: build-identification stamp ===
 // Prints once on script load. If the user reports crashes and this line is
@@ -36394,12 +37862,21 @@ try {
 function serializeLeague() {
   const cleanRosters = {};
   for (const tid of Object.keys(LEAGUE.rosters)) {
-    cleanRosters[tid] = LEAGUE.rosters[tid].map(p => ({
+    cleanRosters[tid] = LEAGUE.rosters[tid].map(p => {
+      // v38.05: persist CAREER position. If autosave fires during a
+      // match, p.position is the match-time swap (factory variant);
+      // saving that as the persisted "position" would corrupt the
+      // knight's identity on reload. Use the career snapshot.
+      const _careerId = (typeof LineupFactory !== "undefined")
+        ? LineupFactory.careerPosOf(p) : p.position;
+      // Same for stats: factory may have swapped them too.
+      const _careerStats = p._careerStats || p.stats;
+      return {
       id: p.id,
       name: p.name,
       teamId: p.teamId,
-      position: p.position,
-      stats: p.stats,
+      position: _careerId,
+      stats: _careerStats,
       weapon: p.weapon,
       armor: p.armor,
       item: p.item,
@@ -36412,7 +37889,8 @@ function serializeLeague() {
       personality: p.personality,
       injury: p.injury,
       scoutingReport: p.scoutingReport,
-    }));
+      };
+    });
   }
   return JSON.stringify({
     // === Schema metadata ===
@@ -37643,6 +39121,8 @@ function bindSettings() {
   const ctfRow = $("#ctfCapsRow");
   const tagBleedRow = $("#tagBleedRow");
   const tagFreezeRow = $("#tagFreezeRow");
+  const exploreCountRow = $("#exploreCountRow");  // v38.08
+  const exploreDurationRow = $("#exploreDurationRow");  // v38.08
   function _updateModeSubRows() {
     const v = modeSel ? modeSel.value : "deathmatch";
     if (kothRow)      kothRow.style.display      = (v === "koth") ? "" : "none";
@@ -37651,6 +39131,9 @@ function bindSettings() {
     // v37.94: tag-specific rows only visible when Team Tag mode is active
     if (tagBleedRow)  tagBleedRow.style.display  = (v === "tag") ? "" : "none";
     if (tagFreezeRow) tagFreezeRow.style.display = (v === "tag") ? "" : "none";  // v37.97
+    // v38.08: explore-specific rows
+    if (exploreCountRow)    exploreCountRow.style.display    = (v === "explore") ? "" : "none";
+    if (exploreDurationRow) exploreDurationRow.style.display = (v === "explore") ? "" : "none";
   }
   if (modeSel) {
     modeSel.value = (LEAGUE_CONFIG && LEAGUE_CONFIG.gameMode) || "deathmatch";
@@ -37682,6 +39165,17 @@ function bindSettings() {
     const savedFrames = LEAGUE_CONFIG.modeConfig.tag && LEAGUE_CONFIG.modeConfig.tag.tagFreezeFrames;
     const savedSec = (savedFrames != null) ? (savedFrames / 20) : 3;
     tagFreezeSel.value = String(savedSec);
+  }
+  // v38.08: populate explore selects
+  const exploreCountSel = $("#setExploreCount");
+  if (exploreCountSel && LEAGUE_CONFIG && LEAGUE_CONFIG.modeConfig) {
+    const saved = LEAGUE_CONFIG.modeConfig.explore && LEAGUE_CONFIG.modeConfig.explore.sweetieCount;
+    exploreCountSel.value = String(saved != null ? saved : 5);
+  }
+  const exploreDurSel = $("#setExploreDuration");
+  if (exploreDurSel && LEAGUE_CONFIG && LEAGUE_CONFIG.modeConfig) {
+    const saved = LEAGUE_CONFIG.modeConfig.explore && LEAGUE_CONFIG.modeConfig.explore.durationSec;
+    exploreDurSel.value = String(saved != null ? saved : 300);
   }
   _updateModeSubRows();
 
@@ -37758,8 +39252,8 @@ function bindSettings() {
       };
       CAMERA.MAX_ZOOM = 1.0; CAMERA.MIN_ZOOM = 1.0;
       CAMERA.zoom = 1.0; CAMERA.targetZoom = 1.0;
-      CAMERA.x = 640; CAMERA.y = 360;
-      CAMERA.targetX = 640; CAMERA.targetY = 360;
+      CAMERA.x = COMBAT.arenaW / 2; CAMERA.y = COMBAT.arenaH / 2;
+      CAMERA.targetX = COMBAT.arenaW / 2; CAMERA.targetY = COMBAT.arenaH / 2;
     }
     el.addEventListener("change", () => {
       if (typeof LEAGUE_CONFIG !== "undefined") LEAGUE_CONFIG[tog.key] = el.checked;
@@ -37793,8 +39287,8 @@ function bindSettings() {
           CAMERA.MIN_ZOOM = 1.0;
           CAMERA.zoom = 1.0;
           CAMERA.targetZoom = 1.0;
-          CAMERA.x = 640; CAMERA.y = 360;
-          CAMERA.targetX = 640; CAMERA.targetY = 360;
+          CAMERA.x = COMBAT.arenaW / 2; CAMERA.y = COMBAT.arenaH / 2;
+          CAMERA.targetX = COMBAT.arenaW / 2; CAMERA.targetY = COMBAT.arenaH / 2;
         } else if (CAMERA._savedTunables) {
           Object.assign(CAMERA, CAMERA._savedTunables);
           delete CAMERA._savedTunables;
@@ -37918,6 +39412,14 @@ function bindSettings() {
             const quantSec = Math.round(clampedSec * 2) / 2;
             LEAGUE_CONFIG.modeConfig.tag.tagFreezeFrames = Math.round(quantSec * 20);
           }
+          // v38.08: explore mode — herd size (3-9) and duration (180-600s)
+          if (!LEAGUE_CONFIG.modeConfig.explore) LEAGUE_CONFIG.modeConfig.explore = {};
+          const rawCount = +($("#setExploreCount")?.value || 5);
+          LEAGUE_CONFIG.modeConfig.explore.sweetieCount =
+            Math.max(3, Math.min(9, Math.round(rawCount)));
+          const rawDur = +($("#setExploreDuration")?.value || 300);
+          LEAGUE_CONFIG.modeConfig.explore.durationSec =
+            Math.max(60, Math.min(900, Math.round(rawDur)));
         }
       }
       saveLocal();
@@ -37931,7 +39433,7 @@ function bindSettings() {
         toast(`Bracket size changing to ${newBracketSize} teams next season.`, "warn");
       }
       if (newMode !== oldMode && typeof toast === "function") {
-        const modeNames = { deathmatch: "Deathmatch", koth: "King of the Hill", ctf: "Capture the Flag", tag: "Melee Tag" };
+        const modeNames = { deathmatch: "Deathmatch", koth: "King of the Hill", ctf: "Capture the Flag", tag: "Melee Tag", explore: "Explore" };
         toast(`Game mode changing to <b>${modeNames[newMode] || newMode}</b> at next match.`, "warn");
       }
       // === v37.91: continent toast + theme refresh ===
@@ -38141,7 +39643,7 @@ function bindSettings() {
           deathmatch: "Deathmatch",
           koth: "King of the Hill",
           ctf: "Capture the Flag",
-          tag: "Melee Tag",
+          tag: "Melee Tag", explore: "Explore",
         };
         const oldName = modeNames[_modeRevertValue] || _modeRevertValue;
         const newName = modeNames[newMode2] || newMode2;
@@ -41629,7 +43131,10 @@ function renderFollowingPanel() {
 
   grid.innerHTML = resolved.map(p => {
     const team = TEAM_BY_ID[p.teamId] || { emoji: "·", short: "?", name: "Unknown" };
-    const pos = (typeof POS_BY_ID !== "undefined" && POS_BY_ID[p.position]) || { icon: "·", label: "?" };
+    // v38.05: followed-knight card shows CAREER position
+    const _careerId = (typeof LineupFactory !== "undefined")
+      ? LineupFactory.careerPosOf(p) : p.position;
+    const pos = (typeof POS_BY_ID !== "undefined" && POS_BY_ID[_careerId]) || { icon: "·", label: "?" };
     const career = p.career || {};
     const kills = career.kills || 0;
     const deaths = career.deaths || 0;
