@@ -107,7 +107,8 @@
     align-items: center;
     gap: 14px;
     padding: 10px 14px;
-    background: linear-gradient(180deg, #11161e, #0c1117);
+    background: var(--bg-1); /* Fallback */
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-3));
     border: 1px solid var(--line);
     border-radius: 0;
   }
@@ -4437,11 +4438,25 @@
     gap: 14px;
     margin-top: 16px;
   }
+  /* v38.17: Game Mode card has many mode-specific rows stacked inside.
+     Span 2 columns so its sub-labels + selects don't fight for ~100px
+     of width and overflow. Other multi-row cards opt in via this class. */
+  .setting-card.wide {
+    grid-column: span 2;
+  }
+  @media (max-width: 720px) {
+    /* On narrow viewports, single-column anyway so this is a no-op,
+       but be explicit so wide cards don't try to span past container. */
+    .setting-card.wide { grid-column: span 1; }
+  }
   .setting-card {
     background: var(--bg-2);
+    overflow: flex;
     border: 1px solid var(--line);
     border-radius: 0;
     padding: 14px;
+    /* v38.17: contain children so nothing pokes out of the box */
+    min-width: 0;
   }
   .setting-card h3 {
     margin: 0 0 6px;
@@ -4449,20 +4464,33 @@
     font-size: 13px;
     letter-spacing: 1px;
     text-transform: uppercase;
+    /* v38.17: allow long headings to wrap instead of forcing card-width */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   .setting-desc {
     font-size: 11px;
     color: var(--dim);
     line-height: 1.5;
     margin-bottom: 10px;
+    /* v38.17: contain long descriptions */
+    overflow-wrap: break-word;
   }
   .setting-row {
     display: flex;
     align-items: center;
     gap: 10px;
+    /* v38.17: wrap when child content can't fit on one line — prevents
+       overflow when long select options + long sub-labels can't both
+       fit at narrow card widths. */
+    flex-wrap: wrap;
+    /* v38.17: gap below row when stacked so wrapped rows don't
+       visually merge into the next row's content */
+    margin-bottom: 4px;
   }
   .setting-row input[type=range] {
     flex: 1;
+    min-width: 0;
     accent-color: var(--gold);
   }
   .setting-val {
@@ -4472,24 +4500,50 @@
     font-weight: 700;
     min-width: 90px;
     text-align: right;
+    /* v38.17: prevent overlong values from forcing the row wider than card */
+    flex-shrink: 0;
   }
+  span.setting-val {
+  flex-shrink: 1; /* Allow the element to shrink */
+  min-width: 0;   /* Allow flex item to shrink below its content size */
+}
   .setting-select {
     flex: 1;
+    /* v38.17: was no min-width — when a sub-label took 140px the select
+       had nowhere to shrink and long option text overflowed the card. */
+    min-width: 140px;
     background: var(--bg-3);
     border: 1px solid var(--line);
     color: var(--ink);
     padding: 8px 10px;
     border-radius: 0;
     font-size: 12px;
+    /* v38.17: long option labels truncate with ellipsis when collapsed,
+       so the dropdown never pushes past its container. Full text still
+       visible in the open dropdown menu. */
+    max-width: 100%;
+    text-overflow: ellipsis;
   }
   .setting-sub-label {
-    flex: 0 0 140px;
+    /* v38.17: was flex: 0 0 140px — fixed-width was the primary cause
+       of overflow. Flex with a basis lets the label shrink on narrow
+       cards and wrap before the select gets squished. */
+    flex: 1 1 140px;
     font-size: 11px;
     color: var(--mute);
     letter-spacing: 0.4px;
+    min-width: 0;
+  }
+  /* v38.17: a .setting-desc nested INSIDE a .setting-row (e.g. the
+     tag-bleed scaling explainer) should occupy its own line below the
+     control, not fight for horizontal space on the flex row. */
+  .setting-row .setting-desc {
+    flex: 1 1 100%;
+    margin-top: 4px;
+    margin-bottom: 0;
   }
   .settings-apply {
-    background: var(--gold);
+    background: var(--bg-3);
     color: var(--bg-0);
     border: none;
     padding: 10px 24px;
@@ -11998,7 +12052,7 @@
         </div>
       </div>
 
-      <div class="setting-card">
+      <div class="setting-card wide">
         <h3>Game Mode</h3>
         <div class="setting-desc">Each match plays under one mode. <strong>Deathmatch</strong> = standard 5v5 best-of-N elimination. <strong>King of the Hill</strong> and <strong>Capture the Flag</strong> run as single continuous matches with their own scoring. <strong>CTF</strong> is classic two-flag: steal the enemy flag and bring it to your base — but you can only score if your own flag is still at home. Touch your own dropped flag to return it instantly. <strong>Team Tag</strong> is team-based: one bot starts as "It" and only "It" can tag, only enemies. Becoming "It" applies a slow bleed; pass "It" by tagging an enemy. Round ends when one team is fully eliminated; matches are best-of-N rounds like Deathmatch. <strong>Explore</strong> is a non-combat mode: each team fields a squad of 3-9 Sweeties (pony wanderers using the GO2 movement engine) and the two squads roam the same arena. After a 5-minute timer, the team that visually identified the most distinct biome-scatter objects wins the round. Slots into the bracket like any other match. Makes for a super weird screensaver.</div>
         <div class="setting-row">
@@ -12384,12 +12438,12 @@
 <div class="tab-content" data-tab="about">
   <div class="about-page">
     <h2>ℹ️ About Float Knights</h2>
-    <div class="sub">An auto-playing mascot tournament sim. Cute, cuddly <b>dodgeball but with guns</b> — that's the closest description. Cute animals in medieval armor wielding futuristic weapons. HP = balloons. Death is permanent (eventually).</div>
+    <div class="sub">An auto-playing mascot tournament sim. Cute, cuddly <b>dodgeball but with guns</b> — that's the closest description. Cute animals in medieval armor wielding futuristic weapons. HP = balloons. Death is permanent (eventually). Plus a pony.</div>
 
     <div class="credits">
       <div class="block">
         <h3>How it works</h3>
-        <p><b>20 teams</b> in the league as of Year 36 mid-season (12 founders + 4 Year 35 closeout expansion teams: Tigers, Polar Bears, Bison, Ravens + 4 Year 36 mid-season Continental Expansion teams: Lynx, Moose, Coyotes, Quetzals). Each season randomly draws 12 teams into the qualifier-then-eight-team ladder — 4 qualifier matches → 4 quarterfinals → 2 semifinals → final. Bracket size is configurable down to 4 in Settings. Each match is best-of-5 rounds. Each round is a <b>7-on-7</b> elimination fight (Healers and Grenadiers joined the original five archetypes in v22).</p>
+        <p><b>20 teams</b> in the league as of Year 36 mid-season — 12 founders + 4 Year 35 closeout expansion teams (Tigers, Polar Bears, Bison, Ravens) + 4 Year 36 Continental Expansion teams (Lynx, Moose, Coyotes, Quetzals). Each season randomly draws 12 teams into the qualifier-then-eight-team ladder — 4 qualifier matches → 4 quarterfinals → 2 semifinals → final. Bracket size is configurable down to 4 in Settings. Each match is best-of-5 rounds. Each round is a <b>7-on-7</b> elimination fight (Healers and Grenadiers joined the original five archetypes in v22).</p>
         <p>A round averages around 40-45 seconds. A full match runs 3-5 minutes. Bets are placed between rounds.</p>
         <p>Knights have <b>3 lives per match</b>. When KO'd in a round, they respawn the next round — <b>unless they've used all 3 lives</b>, in which case they die permanently and their gear drops on the field for survivors to scavenge. Scavenged gear keeps its previous owner's name and accumulates a lineage chain across the league's history.</p>
       </div>
@@ -12405,6 +12459,23 @@
           <li><b>✚ Healer</b> — support unit. Heals the lowest-HP teammate over time. Has a minimum range (won't melee), so it physically follows whoever it's healing. May wander across the battlefield when switching heal targets.</li>
           <li><b>💣 Grenadier</b> — throws ONE grenade at the start of an engagement, dealing AoE damage. Then falls back to weak melee — bring 'em early.</li>
         </ul>
+      </div>
+
+      <div class="block">
+        <h3>Five game modes</h3>
+        <ul style="line-height:1.7;">
+          <li><b>Deathmatch</b> — standard 7v7 best-of-N elimination. The default.</li>
+          <li><b>King of the Hill</b> — first to N points; whoever holds the center crown scores ticks. Crown carriers get a small speed buff (tunable). Continuous match (no per-round resets).</li>
+          <li><b>Capture the Flag</b> — classic two-flag: steal the enemy flag and bring it to your base. You can only score if your own flag is still at home. Touch your own dropped flag to return it instantly. Continuous match to N captures.</li>
+          <li><b>Team Tag</b> — one bot starts as "It" and only "It" can tag, only enemies. Becoming "It" applies a slow bleed; pass "It" by tagging an enemy. Round ends when one team is fully eliminated; matches are best-of-N rounds like Deathmatch.</li>
+          <li><b>Explore</b> — a non-combat mode. Each team fields a squad of 3-9 <b>Sweeties</b> (pony wanderers using the Sweetie-Bot Go2 movement engine — wandering with a forward FOV cone, reactive flee, individual home circles). The two squads roam the same stadium for 5 minutes. The team that visually identifies the most distinct biome-scatter objects wins. Slots into the bracket like any other match. Makes for a super weird screensaver.</li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <h3>The Pony Referee</h3>
+        <p>Every match features a single non-combat pony referee on the field. Small white body, pink-and-purple striped mane, big eyes, REF badge floating above her name. She doesn't fight, doesn't take damage, and reads matches very seriously. Between rounds she stands at the top of the line of scrimmage just left of the center banner; during a round she steers toward the highest concentration of action and watches from a safe distance. Knights who get too close cause her to step aside.</p>
+        <p>She has mode-specific names and lore intros (deathmatch, KOTH, CTF, Tag, Explore variants). The <b>Stories Cabinet</b> in the Lore tab has an 8-tenant collection including her own narrative arc ("The Pony at Center Pitch").</p>
       </div>
 
       <div class="block">
@@ -12427,14 +12498,20 @@
         <h3>Match details</h3>
         <ul style="line-height:1.7;">
           <li>Player names are <b>massively</b> randomized (~4.1 billion combinations) — you won't see a duplicate twice in a lifetime</li>
+          <li><b>3× expanded stadium</b> (v38.11 onward) — 3840×2160 worldspace pitch with a dynamic broadcast camera that frames the action and pulls back for the wide shot between rounds. Knight, Sweetie, referee, and projectile speeds scale to match so traversal stays cinematic, not crawling.</li>
           <li>Projectiles have physics: velocity, range, swept collision, pierce-prevention through walls</li>
           <li>Knights, terrain, and projectiles all collide; dropped items have hitboxes</li>
-          <li>Field obstacle placement is randomized per match (Power Core gets a guaranteed clear zone in the center)</li>
+          <li>Field obstacle placement is randomized per match — centerline blocks plus scattered cover concentrated in the middle column and four corners (Power Core gets a guaranteed clear zone in the center)</li>
           <li><b>1,920 stadium variations</b> — generated by a three-axis factory: 20 cities × 8 sports × 12 effect overlays (Stock + Foundry + Underdig + Submerged + Nightwoods + Hallowtide + Petalfall + Frostfall + Neonspark + Bramble + Aurora + Harvest). Each combination is visually distinct: a Phoenix Sandstone Foundry Pitch doesn't look like a Yukon Tundra-Silver Submerged Pitch. Stadium picked per match; full preview catalog browsable in the Lore tab with an effect-picker for the 12 variants.</li>
           <li>Match outcomes are <b>seeded and procedurally generated</b> — same seed reproduces the same match exactly, every time</li>
           <li>Sim speed is adjustable (bottom-right of the arena)</li>
           <li>The bottom <b>stock-ticker</b> rolls live scores, top streaks, lost-loot callouts, and recent feed events</li>
         </ul>
+      </div>
+
+      <div class="block">
+        <h3>Career identity vs match-time roles</h3>
+        <p>Every knight has a <b>canonical career position</b> (Tank, Striker, Speedster, Brawler, Sniper, Healer, Grenadier) — that's who they are in the league. During a match, a knight may temporarily swap to a different role (filling a tactical gap, scavenging an enemy's weapon kit) — that's their <b>match-time position</b>. Display surfaces (rosters, hall of fame, lineage chains, story panels) all read the career identity; combat AI and sprites read match-time. The LineupFactory module enforces this split so a brief mid-match weapon swap doesn't accidentally rewrite a knight's lifetime identity on autosave.</p>
       </div>
 
       <div class="block">
@@ -12450,12 +12527,16 @@
           <li><i>Mario Kart 64 Battle Mode</i> — balloons as HP</li>
           <li><i>Worms</i> — death cries on KO + gear pickup chaos</li>
           <li><i>Salem / UO</i> — items named after their dead carriers</li>
+          <li><i>Unitree Go2 / Sweetie-Bot</i> — wanderer-kernel movement, reactive flee, FOV cones (used by Sweeties + the pony referee)</li>
         </ul>
       </div>
 
       <div class="block">
         <h3>Roadmap (still cooking)</h3>
         <ul>
+          <li><b>Live referee commentary</b> — ref calls events during a match (tags, knockdowns, captures, crown changes) via the existing commentate() pipeline</li>
+          <li><b>South America league expansion</b> — new themed teams + stadiums</li>
+          <li><b>Theme picker (alpha)</b> — switchable visual themes; deep red theme launches it</li>
           <li><b>AI sportscaster commentary</b> — live narration of the action via the ai-text-plugin</li>
           <li><b>Replay viewer</b> — re-watch any past match (made possible by the deterministic seeded sim)</li>
           <li><b>Cross-user shared league</b> — every visitor sees the same match in progress at the same time, via uploadPlugin checkpoints</li>
@@ -12469,6 +12550,7 @@
         <p>Built by <a href="https://github.com/therealwestninja" target="_blank" rel="noopener">therealwestninja</a> · <a href="https://www.deviantart.com/west-ninja" target="_blank" rel="noopener">@west-ninja</a> on DeviantArt.</p>
         <p>The four-syllable random-name generator is by @WestNinja (Feb 2020), originally adapted from a Shakespearean insult generator by Darren G. Holloway, Jerry Maguire, and J. Kessels.</p>
         <p>Mascot surnames are a custom mix designed for sports-broadcast vibes.</p>
+        <p>Sweetie + referee movement adapted from the <a href="https://github.com/therealwestninja/Sweetie-Bot_for_Unitree-GO2" target="_blank" rel="noopener">Sweetie-Bot Go2</a> reference kernel.</p>
       </div>
     </div>
   </div>
@@ -37846,7 +37928,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // === v37.92: single source of truth for the build label ===
 // Used by the console boot log AND by the save's gameVersion stamp.
 // Bump in ONE place per release.
-const BUILD_LABEL = "v38.16";
+const BUILD_LABEL = "v38.17";
 
 // === v37.34: build-identification stamp ===
 // Prints once on script load. If the user reports crashes and this line is
