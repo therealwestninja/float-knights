@@ -11967,18 +11967,18 @@
           </select>
         </div>
         <div class="setting-row" id="tagBleedRow">
-          <label class="setting-sub-label">Tag IT bleed (HP/sec)</label>
+          <label class="setting-sub-label">Tag IT base bleed (HP/sec)</label>
           <select id="setTagBleedDps" class="setting-select">
-            <option value="1">1.0 HP/sec (slow — emphasis on passing)</option>
-            <option value="1.5" selected>1.5 HP/sec (balanced)</option>
-            <option value="2">2.0 HP/sec</option>
-            <option value="2.5">2.5 HP/sec</option>
-            <option value="3">3.0 HP/sec (urgent passing)</option>
-            <option value="3.5">3.5 HP/sec</option>
-            <option value="4">4.0 HP/sec</option>
-            <option value="4.5">4.5 HP/sec</option>
-            <option value="5">5.0 HP/sec (lethal — must pass fast)</option>
+            <option value="2">2 HP/sec base (gentle — long matches)</option>
+            <option value="3">3 HP/sec base</option>
+            <option value="4">4 HP/sec base</option>
+            <option value="5" selected>5 HP/sec base (default — urgency rises)</option>
+            <option value="6">6 HP/sec base</option>
+            <option value="7">7 HP/sec base (aggressive)</option>
+            <option value="8">8 HP/sec base</option>
+            <option value="10">10 HP/sec base (brutal — pass or die)</option>
           </select>
+          <div class="setting-desc">Base bleed scales with how long the bot has held IT:<br>0-7s: <b>base</b> · 7-12s: <b>1.4×</b> · 12-15s: <b>2.4×</b> · 15-20s: <b>3.0×</b> · 20s+: <b>4.0×</b>. Default 5 → tiers of 5/7/12/15/20.</div>
         </div>
         <div class="setting-row" id="tagFreezeRow">
           <label class="setting-sub-label">Tag freeze duration (seconds)</label>
@@ -13071,18 +13071,23 @@ const LEAGUE_CONFIG = {
       // Death mechanics:
       //  - Tagging does NOT damage (was tagDamagePerHit: 50 → 0).
       //  - Being frozen does NOT damage (was tagDpsWhileFrozen: 130 → 0).
-      //  - Being IT slowly bleeds itBleedDps damage/sec (NEW). This is
-      //    the only damage source in Tag mode. Encourages passing IT
-      //    quickly. 0.5 dps means ~200 sec to die at full HP if held
-      //    continuously — passes will normally split that across bots.
+      //  - Being IT slowly bleeds, with the rate scaling by how long
+      //    the bot has held IT (v38.03 tiered scaling). User spec:
+      //    base 5 dps at 0-7s, escalating to 7/12/15/20 over time
+      //    tiers. Encourages aggressive tag-passing — the longer you
+      //    hold IT, the faster you bleed.
       tagFreezeFrames: 60,    // 3 seconds @ 20fps — stuns the new IT only
       tagDamagePerHit: 0,     // v37.94: tagging deals no damage
       tagDpsWhileFrozen: 0,   // v37.94: freeze deals no damage either
-      itBleedDps: 1.5,        // v37.94: slow drain on whoever is currently IT.
-                              //         User-adjustable 1-5 in 0.5 increments via Settings.
-                              //         1.0 = ~67-100s to die (rounds time out first);
-                              //         1.5 = ~67s (matches roundMaxFrames ~75s);
-                              //         5.0 = ~20s (must pass IT fast).
+      itBleedDps: 5,          // v38.03: BASE bleed dps (was flat 1.5).
+                              //         Tier-scaled in tickTag:
+                              //           0-7s  : 1.0× = 5 dps (base)
+                              //           7-12s : 1.4× = 7 dps
+                              //           12-15s: 2.4× = 12 dps
+                              //           15-20s: 3.0× = 15 dps
+                              //           20s+  : 4.0× = 20 dps
+                              //         User-adjustable 1-10 base via Settings.
+                              //         The tier multipliers are fixed in code.
     },
   },
 };
@@ -13123,6 +13128,193 @@ const POSITIONS = [
     bias: { hp:  -8, dmg:  -2, def:  +0, spd:  0,   crit: +0.01 } },
 ];
 const POS_BY_ID = Object.fromEntries(POSITIONS.map(p => [p.id, p]));
+
+// ════════════════════════════════════════════════════════════════════
+// v38.04 — LineupFactory
+// ════════════════════════════════════════════════════════════════════
+// Per-game-mode roster composition. Pre-v38.04 every match used the
+// same 7-position roster (tank/striker/speed/brawl/sniper/healer/
+// grenadier) regardless of mode — fine for Deathmatch and CTF, but
+// wrong for KOTH and Tag where a Sniper or Healer doesn't fit the
+// gameplay shape.
+//
+// User direction: "Rather than patching, we should use another Factory
+// module." So this is the factory: a single entry point that takes a
+// career roster + gameMode and returns the match-time lineup.
+//
+// Career identity is PRESERVED. Each knight's career `position` stays
+// what it always was. For the match, we set a `_careerPosition` snapshot
+// and overwrite `position` with the mode-recipe's pick. After the match
+// (in finalizeMatch or its equivalent), the career position is restored.
+// All 59 consumers of `p.position` in the rest of the code naturally
+// pick up the match-time identity during the match — no per-consumer
+// edits needed.
+//
+// Recipes per mode (the "lineups"):
+//   deathmatch : all 7 positions (canonical archetype variety)
+//   ctf        : all 7 (objective play has room for all roles)
+//   koth       : 7, favor brawl/tank/striker/speed (melee scrum)
+//   tag        : 5 max, mobility only (speed/striker/brawl)
+//
+// The factory pulls one knight per recipe slot, preferring career
+// matches first (sniper-career → striker-match for Tag, etc.) before
+// falling back to any available knight. Substitution bench (for Tag's
+// 5-bot lineup with 7-knight roster) holds the leftover knights for
+// emergency call-ups if any starter perma-dies mid-match.
+const LineupFactory = (function() {
+  // Each recipe defines (a) the list of match-time positions to fill,
+  // and (b) for each match-time position, a priority list of career
+  // positions to pull from (best fit first). Career position not in
+  // any priority list = excluded from the lineup.
+  //
+  // The order of the `slots` array determines display order; the
+  // `priorities` are how the factory picks WHICH career knight fills
+  // each slot.
+  const RECIPES = {
+    deathmatch: {
+      slots: [
+        { match: "tank",      priorities: ["tank", "brawl"] },
+        { match: "striker",   priorities: ["striker"] },
+        { match: "speed",     priorities: ["speed"] },
+        { match: "brawl",     priorities: ["brawl", "tank"] },
+        { match: "sniper",    priorities: ["sniper", "striker"] },
+        { match: "healer",    priorities: ["healer"] },
+        { match: "grenadier", priorities: ["grenadier", "sniper"] },
+      ],
+    },
+    ctf: {
+      // Same 7 positions; the ordering reflects CTF role assignment
+      // (capture-runners first, defenders/snipers last). Recipe could
+      // diverge from DM in future; kept identical for now.
+      slots: [
+        { match: "speed",     priorities: ["speed"] },        // RACE
+        { match: "speed",     priorities: ["striker"] },      // RUNNER 2
+        { match: "brawl",     priorities: ["brawl"] },        // ESCORT
+        { match: "tank",      priorities: ["tank"] },         // BLOCKER
+        { match: "striker",   priorities: ["striker"] },      // DEFENDER
+        { match: "sniper",    priorities: ["sniper"] },       // SNIPER cover
+        { match: "healer",    priorities: ["healer"] },       // SUPPORT
+      ],
+    },
+    koth: {
+      // KOTH is a melee scrum around the crown — favor brawl/tank/
+      // striker/speed; allow ONE sniper and ONE healer for cover.
+      slots: [
+        { match: "tank",      priorities: ["tank"] },         // CROWN carrier candidate
+        { match: "brawl",     priorities: ["brawl"] },        // CROWN escort
+        { match: "brawl",     priorities: ["brawl", "tank"] },// CROWN escort
+        { match: "striker",   priorities: ["striker"] },      // PRESSURE/intercept
+        { match: "speed",     priorities: ["speed"] },        // CHASER/CROWN-grab
+        { match: "sniper",    priorities: ["sniper"] },       // backline cover
+        { match: "healer",    priorities: ["healer"] },       // backline support
+      ],
+    },
+    tag: {
+      // Tag is a 5-bot mobility-only chase game. Sniper/Healer/Grenadier
+      // make no sense in a melee-tag context (sniper has no range
+      // advantage, healer can't help when tagging is the only verb,
+      // grenadier's bomb is anti-fun in a chase). Use a tight 5-slot
+      // lineup of speed+striker+brawl career knights; the remaining
+      // 2 knights sit on the bench for sub-on-permadeath.
+      slots: [
+        { match: "speed",     priorities: ["speed"] },
+        { match: "speed",     priorities: ["speed", "striker"] },
+        { match: "striker",   priorities: ["striker"] },
+        { match: "brawl",     priorities: ["brawl"] },
+        { match: "brawl",     priorities: ["brawl", "tank"] },
+      ],
+    },
+  };
+
+  // Build the match-time lineup. Returns { active: [...], bench: [...] }.
+  //   careerRoster : LEAGUE.rosters[teamId] (career knights, may include
+  //                  injured/deceased — caller filters those out first)
+  //   gameMode     : "deathmatch" | "koth" | "ctf" | "tag"
+  //   teamId       : (passed for diagnostics; recipes don't depend on it)
+  //   opts.allowFallback : if true, fill any unfilled slots with the
+  //                  remaining knights regardless of career position
+  //                  (default true — keeps lineup full even if recipe
+  //                  priorities miss).
+  function build(careerRoster, gameMode, teamId, opts) {
+    const recipe = RECIPES[gameMode] || RECIPES.deathmatch;
+    const allowFallback = (opts && opts.allowFallback === false) ? false : true;
+    const active = [];
+    const claimed = new Set();
+    // Pass 1: walk each slot, pull the best-priority knight available
+    for (const slot of recipe.slots) {
+      let pick = null;
+      for (const careerPos of slot.priorities) {
+        pick = careerRoster.find(k => !claimed.has(k.id) && k.position === careerPos);
+        if (pick) break;
+      }
+      if (pick) {
+        claimed.add(pick.id);
+        active.push({ knight: pick, matchPosition: slot.match });
+      } else if (allowFallback) {
+        // Slot unmatched by priority — pull any unclaimed knight
+        const any = careerRoster.find(k => !claimed.has(k.id));
+        if (any) {
+          claimed.add(any.id);
+          active.push({ knight: any, matchPosition: slot.match });
+        }
+        // (If we run out of knights entirely, the slot is simply empty.
+        // The emergency-call-up code in startMatch handles undersized
+        // lineups — same as it always did pre-v38.04.)
+      }
+    }
+    // Bench: leftover knights for emergency sub on perma-death
+    const bench = careerRoster.filter(k => !claimed.has(k.id));
+    return { active, bench };
+  }
+
+  // Apply the recipe to a roster: swap each knight's `position` to
+  // their `matchPosition` (with career snapshot in `_careerPosition`)
+  // and re-roll their stat bias for the match-time position. Returns
+  // the array of knights, ready for use as the match team line.
+  function applyToMatch(careerRoster, gameMode, teamId, opts) {
+    const built = build(careerRoster, gameMode, teamId, opts);
+    for (const entry of built.active) {
+      const k = entry.knight;
+      k._careerPosition = k.position;
+      // If the recipe assigned a different match position, re-derive
+      // stats by removing the old bias and applying the new bias on top.
+      // (Knight's base = current stats minus old position bias.)
+      if (entry.matchPosition !== k.position) {
+        const oldBias = (POS_BY_ID[k.position] || {}).bias || {hp:0,dmg:0,def:0,spd:0,crit:0};
+        const newBias = (POS_BY_ID[entry.matchPosition] || {}).bias || {hp:0,dmg:0,def:0,spd:0,crit:0};
+        // Snapshot original stats so we can restore after the match
+        if (!k._careerStats) k._careerStats = { ...k.stats };
+        k.stats = {
+          hp:   clamp(k.stats.hp - oldBias.hp + newBias.hp, 30, CAPS.hp),
+          dmg:  clamp(k.stats.dmg - oldBias.dmg + newBias.dmg, 4, CAPS.dmg),
+          def:  clamp(k.stats.def - oldBias.def + newBias.def, 0, CAPS.def),
+          spd:  clamp(+(k.stats.spd - oldBias.spd + newBias.spd).toFixed(2), 0.6, CAPS.spd),
+          crit: clamp(k.stats.crit - oldBias.crit + newBias.crit, 0.02, 0.30),
+        };
+      }
+      k.position = entry.matchPosition;
+    }
+    return { active: built.active.map(e => e.knight), bench: built.bench };
+  }
+
+  // Restore career identity after the match. Called from finalizeMatch
+  // (or wherever match-end cleanup runs). Knights revert to their
+  // canonical career position + stats.
+  function restoreCareer(knights) {
+    for (const k of knights || []) {
+      if (k._careerPosition) {
+        k.position = k._careerPosition;
+        delete k._careerPosition;
+      }
+      if (k._careerStats) {
+        k.stats = k._careerStats;
+        delete k._careerStats;
+      }
+    }
+  }
+
+  return { build, applyToMatch, restoreCareer, RECIPES };
+})();
 
 // === v37.23: Knight personalities ===
 // Per-knight AI-weight modifiers picked at debut, persistent for the
@@ -15882,30 +16074,66 @@ function startMatch() {
     _processInjuryStatuses(b.teamB);
   }
 
-  const teamA = LEAGUE.rosters[b.teamA].filter(p => !p.deceased && !p.injury);
-  const teamB = LEAGUE.rosters[b.teamB].filter(p => !p.deceased && !p.injury);
+  // === v38.04: LineupFactory drives mode-appropriate roster ===
+  // Pre-v38.04 every match used all 7 career-positions regardless of
+  // mode. v38.04 introduces per-mode position recipes (see
+  // LineupFactory.RECIPES). For Tag specifically, this drops the
+  // lineup from 7→5 (mobility-only) and benches the rest for
+  // perma-death substitution. For KOTH/CTF/DM it's 7 with slight
+  // reordering. Career identity is preserved — see LineupFactory
+  // module header for details.
+  const careerA = LEAGUE.rosters[b.teamA].filter(p => !p.deceased && !p.injury);
+  const careerB = LEAGUE.rosters[b.teamB].filter(p => !p.deceased && !p.injury);
+  const mode = LEAGUE_CONFIG.gameMode || "deathmatch";
+  const builtA = LineupFactory.applyToMatch(careerA, mode, b.teamA);
+  const builtB = LineupFactory.applyToMatch(careerB, mode, b.teamB);
+  const teamA = builtA.active;
+  const teamB = builtB.active;
+  // Stash bench on the match object for emergency-sub on permadeath
+  // (consumed by handleKO or its equivalent — wiring TBD as needed).
+  const _lineupBenchA = builtA.bench;
+  const _lineupBenchB = builtB.bench;
 
-  // === v37.23: emergency call-up if injuries opened a position ===
-  // If a position is empty in either team's active line because of
-  // injuries, mint a rookie to fill it. The roster already has the
-  // injured knight; this rookie is a temporary cover and joins the
-  // pool permanently (will compete for the slot when the injured
-  // returns; backfillRosters next match will reconcile).
+  // === v37.23 / v38.04: emergency call-up if injuries opened a position ===
+  // If a recipe slot is empty in either team's active line because of
+  // injuries, mint a rookie to fill it. v38.04: iterate over RECIPE
+  // SLOTS, not all POSITIONS — for Tag (5-slot recipe) we don't want
+  // to mint a healer rookie just because healer isn't in the lineup;
+  // the recipe deliberately excluded it.
+  const _lineupRecipeSlots = (LineupFactory.RECIPES[mode] || LineupFactory.RECIPES.deathmatch).slots;
+  // Count how many of each position the recipe NEEDS (recipe slots
+  // can repeat — e.g. Tag has 2× speed and 2× brawl).
+  const _recipeCounts = {};
+  for (const s of _lineupRecipeSlots) {
+    _recipeCounts[s.match] = (_recipeCounts[s.match] || 0) + 1;
+  }
   for (const teamId of [b.teamA, b.teamB]) {
     const teamRoster = LEAGUE.rosters[teamId];
     const lineup = teamId === b.teamA ? teamA : teamB;
-    const filledPositions = new Set(lineup.map(p => p.position));
-    for (const pos of POSITIONS) {
-      if (!filledPositions.has(pos.id)) {
-        const rookie = makePlayer(teamId, pos);
-        rookie.debutSeason = LEAGUE.season;
-        if (typeof _drawLineageNameFor === "function") {
-          const lineageName = _drawLineageNameFor(teamId, pos.id);
-          if (lineageName) rookie.name = lineageName;
+    // Tally how many of each match-position the lineup currently has
+    const lineupCounts = {};
+    for (const p of lineup) {
+      lineupCounts[p.position] = (lineupCounts[p.position] || 0) + 1;
+    }
+    // For every recipe-required position, mint rookies up to the count
+    for (const posId in _recipeCounts) {
+      const need = _recipeCounts[posId];
+      const have = lineupCounts[posId] || 0;
+      if (have < need) {
+        const pos = POS_BY_ID[posId];
+        if (!pos) continue;
+        const shortBy = need - have;
+        for (let r = 0; r < shortBy; r++) {
+          const rookie = makePlayer(teamId, pos);
+          rookie.debutSeason = LEAGUE.season;
+          if (typeof _drawLineageNameFor === "function") {
+            const lineageName = _drawLineageNameFor(teamId, pos.id);
+            if (lineageName) rookie.name = lineageName;
+          }
+          teamRoster.push(rookie);
+          lineup.push(rookie);
+          feed("spawn", `🪖 ${TEAM_BY_ID[teamId]?.short}: ${escapeHTML(rookie.name)} called up to cover ${pos.label}.`);
         }
-        teamRoster.push(rookie);
-        lineup.push(rookie);
-        feed("spawn", `🪖 ${TEAM_BY_ID[teamId]?.short}: ${escapeHTML(rookie.name)} called up to cover injured ${pos.label}.`);
       }
     }
   }
@@ -16271,6 +16499,7 @@ function startRound() {
         lastIt: null,
         tagFreezes: Object.create(null),
         _bleedAcc: 0,
+        _itSinceFrame: m.roundFrame,  // v38.03: tier-clock starts now
       };
       feed("match", `🏷 Round ${m.currentRoundIndex}: ${newIt.name} (${TEAM_BY_ID[newIt.teamId]?.short || "?"}) starts as IT.`);
     }
@@ -16433,6 +16662,7 @@ function _initModeEntities(m) {
         lastIt: null,                    // ID of previous IT (cannot be re-tagged)
         tagFreezes: Object.create(null), // playerId → frame freeze ends
         _bleedAcc: 0,                    // sub-1 HP bleed accumulator
+        _itSinceFrame: m.roundFrame,     // v38.03: tier-clock starts now
       };
       // Mark the It bot so AI can branch on it (we read m.tag.itId in AI dispatch).
     }
@@ -16721,6 +16951,7 @@ function tickTag(m) {
         m.tag.itId = best.id;
         m.tag.lastIt = null;  // chain broken — new IT can tag anyone on enemy team
         m.tag._bleedAcc = 0;  // fresh bleed accumulator for the new IT
+        m.tag._itSinceFrame = m.roundFrame;  // v38.03: tier-clock resets
         feed("match", `🏷 IT passes to ${best.name} (${TEAM_BY_ID[best.teamId]?.short || "?"}) — predecessor down.`);
         it = best;
       } else {
@@ -16732,12 +16963,33 @@ function tickTag(m) {
   }
 
   // === v37.94: IT slow-bleed ===
-  // 0.5 damage per second on whoever is currently IT. At 20fps that's
-  // 0.025 per frame; accumulate in m.tag._bleedAcc and apply 1 HP via
-  // applyDamage when ≥ 1 (so handleKO fires correctly on death).
+  // === v38.03: TIERED bleed scaling ===
+  // Pre-v38.03 the bleed was a flat dps (default 1.5). The user
+  // observation was that this was too gentle — a bot could hold IT for
+  // the whole round and still survive. New design: bleed RATE scales
+  // with how long the bot has held IT. Tiers (per user spec):
+  //   0-7s   :  5 dps   (settled in — fair starting drain)
+  //   7-12s  :  7 dps   (clock is ticking)
+  //   12-15s : 12 dps   (you should have passed by now)
+  //   15-20s : 15 dps   (running out of time)
+  //   20s+   : 20 dps   (catastrophic — must pass NOW)
+  // Frames-as-IT tracked in m.tag._itSinceFrame (reset on every IT
+  // change at the same sites that reset _bleedAcc).
+  // The cfg.itBleedDps value is now the BASE rate (default 5) and
+  // multiplied by the tier factor — users can still scale via Settings.
   if (it && it.alive && typeof applyDamage === "function") {
-    const itBleedDps = cfg.itBleedDps || 0.5;
-    const perFrame = itBleedDps / (1000 / COMBAT.frameMs);
+    const baseBleedDps = cfg.itBleedDps || 5;
+    const itSince = m.tag._itSinceFrame || 0;
+    const secondsAsIt = (m.roundFrame - itSince) / (1000 / COMBAT.frameMs);
+    // Tier factor as a multiplier of base (base=5 → 5/7/12/15/20)
+    let tierFactor;
+    if (secondsAsIt < 7)       tierFactor = 1.0;   // base
+    else if (secondsAsIt < 12) tierFactor = 1.4;   // 5*1.4 = 7
+    else if (secondsAsIt < 15) tierFactor = 2.4;   // 5*2.4 = 12
+    else if (secondsAsIt < 20) tierFactor = 3.0;   // 5*3.0 = 15
+    else                       tierFactor = 4.0;   // 5*4.0 = 20
+    const effectiveDps = baseBleedDps * tierFactor;
+    const perFrame = effectiveDps / (1000 / COMBAT.frameMs);
     m.tag._bleedAcc = (m.tag._bleedAcc || 0) + perFrame;
     while (m.tag._bleedAcc >= 1) {
       // Self-attribution: IT bleed isn't from any specific attacker, but
@@ -16805,6 +17057,7 @@ function applyTagHit(attacker, defender, m) {
   m.tag.lastIt = m.tag.itId;
   m.tag.itId = defender.id;
   m.tag._bleedAcc = 0;  // fresh bleed accumulator for new IT
+  m.tag._itSinceFrame = m.roundFrame;  // v38.03: tier-clock resets
   feed("match", `🏷 ${defender.name} (${TEAM_BY_ID[defender.teamId]?.short || "?"}) is now IT — cannot tag ${attacker.name} back.`);
   return true;
 }
@@ -19862,23 +20115,38 @@ const MODE_AI = (function() {
     }
 
     if (role === "pressure") {
-      // Engage furthest-from-carrier enemy cluster — draw enemies away
+      // === v38.02: rewrite from "draw away" to "intercept" ===
+      // Pre-v38.02 pressure engaged the FURTHEST enemy from the carrier
+      // — intent was "draw enemies away". In practice this dispersed
+      // defenders when the carrier needed them most. User's spec:
+      // carrier's whole team GUARDS; enemy team tries to KILL the
+      // carrier. Now: intercept the CLOSEST enemy threat to carrier.
+      // (Matches the v38.02 BT version above.)
       const carrier = (p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers)
                         .find(t => t.id === m.crown.carrierId);
       if (carrier && enemyAlive.length > 0) {
-        // Pick furthest-from-carrier enemy; if multiple, prefer closest-to-us
-        let best = null, bestScore = -Infinity;
+        let best = null, bestScore = Infinity;
         for (const e of enemyAlive) {
           const distFromCarrier = distance(e, carrier);
           const distFromUs = distance(e, p);
-          // Score: prefer far-from-carrier and close-to-us
-          const score = distFromCarrier - distFromUs * 0.5;
-          if (score > bestScore) { bestScore = score; best = e; }
+          const score = distFromCarrier + distFromUs * 0.3;
+          if (score < bestScore) { bestScore = score; best = e; }
         }
         if (best) {
           p.target = best;
-          p.aiState = "ENGAGE";
-          return "ENGAGE";
+          const dToThreat = distance(p, best);
+          if (dToThreat > 80) {
+            const interceptT = 0.35;
+            p._escort_x = best.x + (carrier.x - best.x) * interceptT;
+            p._escort_y = best.y + (carrier.y - best.y) * interceptT;
+            p.aiState = "KOTH_FLANK";
+            return "KOTH_FLANK";
+          } else {
+            p._escort_x = null;
+            p._escort_y = null;
+            p.aiState = "ENGAGE";
+            return "ENGAGE";
+          }
         }
       }
     }
@@ -21306,6 +21574,21 @@ const MODE_AI = (function() {
 
     // === Action: pressure (engage furthest-from-carrier enemy) ===
     function actPressure(p, m, bb) {
+      // === v38.02: rewrite from "draw away" to "intercept" ===
+      // Pre-v38.02 pressure had carrier-teammates engage the FURTHEST
+      // enemy from the carrier — intent was "draw enemies away to give
+      // the carrier breathing room". In practice this dispersed the
+      // defenders right when the carrier needed protection most, and
+      // made KOTH feel like an individual mode despite team-based
+      // scoring (which v37.94 already shipped). User's spec restated:
+      // carrier's whole team should GUARD the carrier; enemy team
+      // should try to KILL the carrier. Tension comes from guards
+      // fending off attackers trying to reach the crown.
+      //
+      // New pressure behavior: INTERCEPT the closest enemy threat to
+      // the carrier. The bot's target is the closest-to-carrier enemy,
+      // and the bot moves to a position BETWEEN the carrier and that
+      // enemy — functioning as a shield while engaging.
       const enemies = (p.teamId === m.teamAId) ? m.teamBplayers : m.teamAplayers;
       const enemyAlive = enemies.filter(e => e.alive);
       const carrier = (p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers)
@@ -21314,18 +21597,43 @@ const MODE_AI = (function() {
         // v37.87: pressure needs both carrier and an enemy to pressure
         return _kothRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
       }
-      let best = null, bestScore = -Infinity;
+      // Pick the enemy CLOSEST to the carrier — that's the most urgent
+      // threat to intercept. Among enemies of similar distance to
+      // carrier, prefer the one we're already positioned to intercept
+      // (close to our current line between us and the carrier).
+      let best = null, bestScore = Infinity;
       for (const e of enemyAlive) {
         const distFromCarrier = distance(e, carrier);
         const distFromUs = distance(e, p);
-        const score = distFromCarrier - distFromUs * 0.5;
-        if (score > bestScore) { bestScore = score; best = e; }
+        // Lower score = better target. Carrier-proximity dominates;
+        // own-distance tie-breaks (we'd rather not chase across the
+        // arena while another guard handles a closer threat).
+        const score = distFromCarrier + distFromUs * 0.3;
+        if (score < bestScore) { bestScore = score; best = e; }
       }
       if (!best) {
         return _kothRoleFallback(p, m) ? BT.SUCCESS : BT.FAILURE;
       }
       p.target = best;
-      p.aiState = "ENGAGE";
+      // Position ourselves between the carrier and the threat (intercept
+      // point at 35% of the threat→carrier line, closer to the carrier).
+      // Reuse the KOTH_FLANK pattern: set _escort_x/y to the intercept
+      // point; KOTH_FLANK handles "move to point, then close on target,
+      // fire when in range" — exactly the intercept-then-engage flow.
+      // If we're already close to the threat (within 80px), skip the
+      // intercept positioning and just engage directly — we're already
+      // in position to fend it off.
+      const dToThreat = distance(p, best);
+      if (dToThreat > 80) {
+        const interceptT = 0.35;
+        p._escort_x = best.x + (carrier.x - best.x) * interceptT;
+        p._escort_y = best.y + (carrier.y - best.y) * interceptT;
+        p.aiState = "KOTH_FLANK";
+      } else {
+        p._escort_x = null;
+        p._escort_y = null;
+        p.aiState = "ENGAGE";
+      }
       return BT.SUCCESS;
     }
 
@@ -26023,6 +26331,18 @@ function finalizeMatch(matchDraw) {
   }
 
   if (typeof showIntermission === "function") showIntermission();
+
+  // === v38.04: restore career identity after the match ===
+  // LineupFactory.applyToMatch may have swapped knight positions and
+  // stats to match-time variants (e.g. sniper-career → striker-match
+  // for Tag). Restore canonical career identity so the Ladder UI,
+  // career stats, scouting reports, and cross-match consumers see the
+  // career-defining position. Career stats/identity are unchanged by
+  // the match-time swap.
+  if (typeof LineupFactory !== "undefined") {
+    LineupFactory.restoreCareer(m.teamAplayers);
+    LineupFactory.restoreCareer(m.teamBplayers);
+  }
 }
 
 // Refund all match-scoped bets (used on draws — no winner exists)
@@ -36058,7 +36378,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // === v37.92: single source of truth for the build label ===
 // Used by the console boot log AND by the save's gameVersion stamp.
 // Bump in ONE place per release.
-const BUILD_LABEL = "v38.01";
+const BUILD_LABEL = "v38.04";
 
 // === v37.34: build-identification stamp ===
 // Prints once on script load. If the user reports crashes and this line is
@@ -37342,10 +37662,14 @@ function bindSettings() {
   if (ctfCapsSel && LEAGUE_CONFIG && LEAGUE_CONFIG.modeConfig) {
     ctfCapsSel.value = String(LEAGUE_CONFIG.modeConfig.ctf.capsToWin || 5);
   }
-  // v37.94: populate tag bleed dps select with saved value (fallback 1.5)
+  // v37.94 / v38.03: populate tag base-bleed select with saved value.
+  // v38.03 changed the meaning from "flat dps" to "BASE dps that scales
+  // by tier"; default rose from 1.5 → 5. Old saves with 1.5 will now be
+  // a gentle base (still scales to 6 at 20s+); we don't migrate, since
+  // the new model is meaningfully different per-tier even at the old base.
   if (tagBleedSel && LEAGUE_CONFIG && LEAGUE_CONFIG.modeConfig) {
     const saved = LEAGUE_CONFIG.modeConfig.tag && LEAGUE_CONFIG.modeConfig.tag.itBleedDps;
-    tagBleedSel.value = String(saved != null ? saved : 1.5);
+    tagBleedSel.value = String(saved != null ? saved : 5);
   }
   // v37.97: populate crown speed mult select (fallback 1.05)
   if (crownSpeedSel && LEAGUE_CONFIG && LEAGUE_CONFIG.modeConfig) {
@@ -37580,13 +37904,13 @@ function bindSettings() {
           if (LEAGUE_CONFIG.modeConfig.ctf) {
             LEAGUE_CONFIG.modeConfig.ctf.capsToWin = +($("#setCtfCaps")?.value || 5);
           }
-          // v37.94: tag bleed DPS — validated to 1.0–5.0 in 0.5 increments
+          // v38.03: tag base bleed DPS — validated to 2–10 (whole numbers).
+          // The tier multipliers (1.0/1.4/2.4/3.0/4.0) are fixed in code.
           if (LEAGUE_CONFIG.modeConfig.tag) {
-            const rawBleed = +($("#setTagBleedDps")?.value || 1.5);
-            // Clamp to spec range and quantize to nearest 0.5
-            const clamped = Math.max(1, Math.min(5, rawBleed));
-            const quantized = Math.round(clamped * 2) / 2;
-            LEAGUE_CONFIG.modeConfig.tag.itBleedDps = quantized;
+            const rawBleed = +($("#setTagBleedDps")?.value || 5);
+            const clamped = Math.max(2, Math.min(10, rawBleed));
+            // Round to nearest whole number — new UI only offers integers.
+            LEAGUE_CONFIG.modeConfig.tag.itBleedDps = Math.round(clamped);
             // v37.97: tag freeze duration — UI is seconds, config is frames (20fps)
             const rawSec = +($("#setTagFreezeSec")?.value || 3);
             const clampedSec = Math.max(0.5, Math.min(5, rawSec));
@@ -37745,10 +38069,10 @@ function bindSettings() {
         if (cc > 0 && LEAGUE_CONFIG.modeConfig.ctf) {
           LEAGUE_CONFIG.modeConfig.ctf.capsToWin = cc;
         }
-        // v37.94: tag bleed DPS — validated, clamped 1.0-5.0, quantized to 0.5 increments
+        // v38.03: tag base bleed DPS — validated 2-10 whole numbers
         const tb = +($("#setTagBleedDps")?.value || 0);
-        if (tb >= 1 && tb <= 5 && LEAGUE_CONFIG.modeConfig.tag) {
-          LEAGUE_CONFIG.modeConfig.tag.itBleedDps = Math.round(tb * 2) / 2;
+        if (tb >= 2 && tb <= 10 && LEAGUE_CONFIG.modeConfig.tag) {
+          LEAGUE_CONFIG.modeConfig.tag.itBleedDps = Math.round(tb);
         }
         // v37.97: tag freeze duration — UI is seconds (0.5-5.0), config is frames @ 20fps
         const tfs = +($("#setTagFreezeSec")?.value || 0);
