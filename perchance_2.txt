@@ -2926,6 +2926,27 @@
     margin-bottom: 10px;
     padding: 0;
   }
+  /* === v38.22: un-nested glossary bucket ===
+     Glossary buckets are no longer <details> — terms can never be
+     hidden inside a collapsed element, so external links to a term
+     always resolve. Same visual frame as the old details bucket but
+     the header is a plain non-interactive div (no collapse toggle). */
+  .lore-glossary-bucket-open {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--gold);
+    margin-bottom: 10px;
+    padding: 0;
+  }
+  .lore-glossary-bucket-open > .bucket-header {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
   details.lore-glossary-bucket > summary,
   details.lore-timeline-era > summary {
     padding: 10px 14px;
@@ -11514,17 +11535,17 @@
         <h3>Glossary of Terms</h3>
         <div class="meta">Reference · maintained by the League Office Editorial Board</div>
         <dl>
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">-</span> <span class="bucket-count">1 term</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">-</span> <span class="bucket-count">1 term</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The 412-Pace Mark</dt>
               <dd>The League's longest single-shot kill on record, named for the LMG kinetics tracker's measurement of the firing distance — four hundred and twelve paces along the diagonal of the venue. Set by Hester Quillstrike, HED Sniper, at the Helena Glacier Rink in HED's inaugural season — the same shot was, in the moment of its making, the shot that took her life, by the coordinated four-Otter rush at the next round's open. Tied — exactly, never broken — by Sundip Hootington Jr., OWL Sniper, at the Reno Open Court later that same year, on a shot taken with the Rifle Hester had carried first. The mark is now jointly held, posthumously, by both shooters. The mark's measurement is contested, in colloquial usage, by a small but persistent Reno-academy faction that refers to it as "the 412-pixel mark" — a piece of slang that originated in a Year-36 graduate-thesis presentation in which the student, having spent six weeks in the Cultural Office's Old-Ones-screen archive, used the wrong word for the unit and was, mid-presentation, gently corrected by her advisor. The slang escaped the seminar room. The slang has not, in two seasons, escaped the Reno-academy. The Records Committee uses paces. The Foundation uses paces. The fans who care about the figure use paces. The slang exists. We are noting that it exists. We are, for clarity, calling it the 412-Pace Mark in this glossary. The slang is fine. The pace is the unit.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">A</span> <span class="bucket-count">3 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">A</span> <span class="bucket-count">3 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt><em>A Hug Is Technically Legal</em></dt>
               <dd>The sixth tenant of the Foundation Archive's Stories Cabinet. Paired cartoon archive of two young continental Float Knights cartoonists — Saskia Goldenpaw (twelve, Olympia Harbor, Golden Retriever) and Theo Nightwhisker (eleven, Saint-Laurent, black-furred cat) — whose youthful and entirely affectionate mockery of the Portland Punching Pandas' non-play eccentricities (the hug formation, the six-to-nine-second tactical-call confirmation, the bat-discomfort, the four-minute pre-match meditation, the never-finishing-above-tenth Hallowtide Tag record) first appeared on the Wing Standard's Y41 Hallowtide youth cartoon supplement and has, with the Pandas' coach Yu Cobblepad's gracefully written approval (the standing one-line letter: <em>"the cartoons are kind. we are, in turn, grateful. — Yu, Portland."</em>), run in every Hallowtide special edition since. Neither cartoonist mocks the play. The two met for the first time at the Y42 Hallowtide Tag in Reno; their joint six-cartoon collaborative series for the Y42 Hallowtide supplement is the largest single-author-pair feature in continental Hallowtide history. Title taken from Saskia's Y40 caption on the hug formation: <em>"WHAT IS THE HUG, IF NOT A HUG?"</em></dd>
@@ -11536,10 +11557,10 @@
               <dd>The single Caucus standing rule that, by ratified Year-36 protocol, applies only to one team and one position. The Rule states that a Saint-Laurent Antlerlords knight in the L'Ancrage stance (the team's standing-anchor position, held since Théodred I in the founding regional circuit and currently held by Théodred III) is exempt from the wave-doctrine respawn protocol's ten-second movement-mandate. Antlerlords' L'Ancrage may, by the Rule, remain stationary at center pitch for the entire match, by which they mean the entire match. The Rule was ratified in Year 35 closeout after the Year 34 Final, in which Théodred III stood at center pitch for the full thirty-one-minute match without moving and the wave-doctrine review committee was unable to determine whether his stillness constituted a rules violation. The committee's eventual finding — which became the Rule — was that Théodred III's stillness was, by every measurable kinetic standard, "in fact a position the moose has held for ninety-three years and which the species, by long-standing biological commitment, considers home." The Rule is, by Caucus standing language, "specific to the L'Ancrage and no other position. the Rule is, by intent, narrow. the Rule is, by long-standing precedent, also correct." Other Antlerlord knights are subject to the standard wave-doctrine. So is every other moose in the League (currently zero, but the Rule's drafting committee wanted the language explicit).</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">B</span> <span class="bucket-count">15 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">B</span> <span class="bucket-count">15 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The Balloon Contract</dt>
               <dd>The standard agreement signed by every Knight before joining a roster. Specifies that a Knight is allotted three balloons per match, popped one-per-knockout. The third pop ends the Knight's match (and, after enough cumulative pops across their career, ends the Knight). Allegedly proposed by Splinter Tooth in Year 28.</dd>
@@ -11587,10 +11608,10 @@
               <dd>A southern continent venue, located in the river-delta wetlands south of what the Old Ones called Buenos Aires. Maintained by the wetlands alligator-line community. The venue is, by the southern coordinator's description, <em>"a venue where every match would be played in approximately ankle-deep water, regardless of season. The water is the venue. The northern teams will, on visiting, need to plan accordingly. We are honored, in any case, to host."</em> The Sharks' coaching staff has, on receipt of the invitation, expressed informal interest. The Sharks have not formally requested the exhibition match; the Caucus has not, in any case, scheduled one. The Sharks are, by Caucus analyst's read, the most likely League team to eventually visit, on the grounds that they are the only team currently rostered whose archetype-line is comfortable in standing water. The alligators are, by every available account, comfortable hosting them; the Sharks are, by every available account, comfortable visiting; the trip is, by either's account, expensive.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">C</span> <span class="bucket-count">17 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">C</span> <span class="bucket-count">17 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>Caracas Canopy Hall</dt>
               <dd>A southern continent venue, located in the upper canopy of the tropical jungle north of what the Old Ones called Caracas. Maintained by the Caracas tropical-bird community (multiple species, organized by canopy level rather than by team). The Hall is, by the southern coordinator's description, <em>"more rafters than venue. The northern teams' Snipers would, by canopy structure, find the venue accommodating. The northern teams' Tanks would, by canopy structure, find the venue impossible. We are, in extending the invitation, suggesting that the League consider a Sniper-roster-only exhibition match at the Hall. We will, in such a match, host with our own Snipers; the matchup would be, by every honest reading, lopsided in our favor; we are willing to accept this asymmetry as the cost of hospitality. The League is welcome to decline."</em> The League has, as of Year 36, neither accepted nor declined.</dd>
@@ -11644,10 +11665,10 @@
               <dd>"Group healing" — the Capybara-class Healer-beam technique developed at Manaus by Saira Capytlán (Capybara, captain of the Manaus Capybaras since Year 33) and the only documented Healer technique in either league's combined record that is species-specific to a non-Hedgehog Healer. The technique distributes the beam's restorative effect across all teammates within a five-meter radius simultaneously, at reduced per-target throughput but, on the right formation, at higher total throughput than single-target healing. Possible only because Capybaras are, by their species' standing pre-League social structure, accustomed to operating in groups of indeterminate size and composition; the Capybara Healer treats the line as the same kind of group the Capybaras' default river-quarter pond contains. The technique has been studied, by Federación tactical analysts, across nine seasons of Saira's career; it is not, by their analysis, transferable to non-Capybara Healers. North American Caucus tactical analysts have, in three Inkbeak-relayed correspondences, requested a technical demonstration; Saira has, in three responses, declined politely on the grounds that "la técnica no se demuestra. la técnica se hace. la técnica es de la línea, no de la cámara" ("the technique is not demonstrated; the technique is done. the technique belongs to the line, not the camera").</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">D</span> <span class="bucket-count">3 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">D</span> <span class="bucket-count">3 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The Denver Stand</dt>
               <dd>The Bison's home-match tradition: the patriarch (Yellowhide, as of Year 35) stands at the south end of the Highland-Plains pitch in full ceremonial harness for the duration of every home match. Not a coaching role. The herd-rotation tactical style requires every Bison knight to know where the herd's center of gravity is at all moments; Yellowhide is, by tradition, that gravity. Opposing teams have learned to orient on him too — by the third pre-League exhibition match, every visiting knight had unconsciously adjusted their positioning relative to his standing point.</dd>
@@ -11659,10 +11680,10 @@
               <dd>The Sonora Coyotes' signature tactical pattern. A Coyote Speedster, mid-engagement, appears to retreat — unhurriedly, in a wide arc, in a manner that the opposing team's tactical attention reads as <em>"that knight has left the engagement"</em>. The Coyote then drifts behind cover at the perimeter and, by the opposing team's perception, ceases to exist on the tactical map. Coach Reyes of CYT calls this <em>la borradura</em> ("the erasure"). With four Coyotes drifting simultaneously across an engagement, the opposing team's perception of the field collapses to one or two visible Coyotes — and, when the drift reverses and the Coyotes re-engage from their drift positions, the opposing team's tactical map registers a sixth Coyote that was not, in fact, ever there. Reyes calls this <em>el sexto</em> ("the sixth"). The Coyotes have, by Caucus statistical record, never fielded more than five active knights in a sanctioned match. The opposing team always counts six.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">E</span> <span class="bucket-count">3 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">E</span> <span class="bucket-count">3 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The Eleven Federación Teams</dt>
               <dd>The eleven-team roster of the Federación Sudamericana, in two phases of admission. <b>The original seven (Year 12 founding):</b> the Bogotá Cordillera Bears (Spectacled Bears, Andean highlands; the Federación's standing senior team and home to its commissioner's office), the Manaus Capybaras (Capybaras, Amazon basin; the Federación's largest fan community by attendance), the Cusco Vicuñas (Vicuñas, Andes; high-altitude specialists, six-time Federación champions), the Buenos Aires Maned Wolves (Maned Wolves, Pampas; the Federación's southernmost original-seven team), the Caracas Sloths (Three-toed Sloths, Venezuelan coastal range; deliberately and by every account the slowest team in either league's combined history), the La Paz Chinchillas (Chinchillas, Andean altiplano; the Federación's smallest knights by mass and the team that has, by Federación record, fielded the most Speedster-class knights per match-day in the league's history), and the Iquitos Lowland Tapirs (Lowland Tapirs, Amazon basin's western reaches; the Federación's most-decorated Healer-development program, by way of the Cordillera-Selva diagonal). <b>The Year-22 Expansión del Cono Sur (Southern Cone Expansion):</b> the Asunción Howler Monkeys (Howler Monkeys, Paraguay; the only team in either league's combined record whose pre-match ritual is acoustic — the team's senior knight calls the line in by howling at a frequency the visiting team has never, by any account, been able to anticipate the response timing of), the Belém Giant Anteaters (Giant Anteaters, Amazon mouth; the Federación's tank-class specialists), the Montevideo Coatis (Coatis, Uruguay coast; nimble, omnivore-strategy), and the Santiago Pampas Foxes (Pampas Foxes, Chilean cordillera; the Federación's youngest team and the second team in either league's combined roster to use a "fox" species classification — distinct from, and not formally related to, the Phoenix Furious Foxes, though the two teams have exchanged a single goodwill correspondence via Inkbeak in Year 35).</dd>
@@ -11674,10 +11695,10 @@
               <dd>"The Southern Cone Expansion" — the Federación Sudamericana's Year-22 (League Common dating) admission of four new teams, expanding the Federación from its founding seven to its current eleven. The four admitted teams: Asunción Howler Monkeys, Belém Giant Anteaters, Montevideo Coatis, and Santiago Pampas Foxes. The Expansion is parallel in concept and timing to the North American League's Year-30 and Year-36 expansions (Tigers/Polar Bears/Bison/Ravens in Year 30; Lynx/Moose/Coyotes/Quetzals in Year 36) but did not, by every Federación-side account, draw on any North American precedent — the Federación had completed its own admission process for the four new teams approximately two seasons before Inkbeak Sr.'s Flight 1 brought first-contact between the leagues. The two expansions arriving at similar mathematical structures (founding-seven plus four-team blocks) is, by every Caucus-side and Federación-side analyst's read, a matter of independent institutional convergence rather than influence. The Federación's stated reason for the four-team block: "Espinaobscura's standing position, in pre-publication notes available to his successor, was that any expansion should add at least four teams in a single admission cycle, on the grounds that fewer than four creates dynamics in which the new teams are perceived as 'an addition' rather than 'a peer admission.' the four-team block makes the new teams, by their own reading and by the Federación's, peers from the founding bell of their first season."</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">F</span> <span class="bucket-count">15 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">F</span> <span class="bucket-count">15 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The Federación Sudamericana</dt>
               <dd>The Federation of Floating Knights of South America — the parallel league operating on the South American continent, founded Year 12 (League Common dating) at Bogotá by Mateo Espinaobscura (Spectacled Bear, first Federación commissioner). Currently eleven teams, founded in two phases: the original seven (Bogotá Cordillera Bears, Manaus Capybaras, Cusco Vicuñas, Buenos Aires Maned Wolves, Caracas Sloths, La Paz Chinchillas, Iquitos Lowland Tapirs) plus the four-team Year-22 <em>Expansión del Cono Sur</em> ("Southern Cone Expansion": Asunción Howler Monkeys, Belém Giant Anteaters, Montevideo Coatis, Santiago Pampas Foxes). The Federación and the North American League share the substantive rules of the sport — five-knight teams, balloon contracts, perma-death, position archetypes — and share the canonical Whittlestone Address as their convocation speech in a Bogotá-drafted Spanish-and-Inca-composite-creole translation ratified at the Federación's founding-bell convocation. The two leagues differ on several matters of detail, the most notable of which is the six-balloon contract (versus the North American three-balloon) with three reserved <em>balones de honor</em>; see the separate entry. The two leagues are connected via the Pittsburgh Murder's flying-Raven correspondence program, established Year 33. The leagues have not, as of Year 36, scheduled a sanctioned cross-continental match. The Federación's current commissioner is Doña Inés de la Niebla, a Spectacled Bear of, by every Bogotá-side description, considerable scholarly inclination, who took the office in Year 28 (Federación dating; also Year 28 in League Common dating, by chronological coincidence the two leagues' calendars happen to share for this season).</dd>
@@ -11725,19 +11746,19 @@
               <dd>The Boise venue selected by the Caucus as the official neutral-ground for the Cold Stones Frostfall Friendly. Distinguished by its central feature: a long ridge of low ice that runs north-south down the middle of the pitch, which deteriorates over the course of a match into a series of low pillars, then into a flat surface, depending on how heavily the round has trampled it. The ridge is not, by League rule, considered a permanent terrain feature; it is, in practice, the most influential single piece of cover on any League pitch, on the grounds that it is constantly changing under play. The Caucus has discussed regulating the ridge. The Caucus has, on each occasion, decided not to regulate the ridge, on the grounds that <em>"the ridge is the venue; we cannot regulate the venue without rebuilding the venue; we are not in the rebuilding-venues business this season."</em></dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">G</span> <span class="bucket-count">1 term</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">G</span> <span class="bucket-count">1 term</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>Greylane's Carry</dt>
               <dd>The Year 35 quarterfinal in which Wolves' captain Halfmoon Greylane carried a downed Healer (Pinedrift) across forty-eight paces of open pitch under sustained fire from two opposing Snipers and a Brawler. Greylane took fourteen separate hit registers, three of which dropped her HP into the red, and did not return fire during the carry. Pinedrift survived. The match playback is in the Caucus's tactical archive under the file name <em>"Greylane carry — do not edit"</em> — the most-viewed playback in the archive, by Foundation steward measurement. Greylane has refused to allow the Wolves' coaching staff to use it as a training video. Her own statement on the record: <em>"That was not a teaching moment. That was the only thing I knew how to do. The Healer's name is Pinedrift. The Healer is alive. That is the lesson, if you need a lesson. I would prefer you did not need a lesson."</em></dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">H</span> <span class="bucket-count">9 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">H</span> <span class="bucket-count">9 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The Hall of Fallen Heroes</dt>
               <dd>A long, narrow room in the Foundation Hall (Boston) maintained by the Float Foundation. Lists, in order of permadeath, every Knight who has ever been recorded as permadeceased on a sanctioned League field. Eight rows of names, at this writing, with room for forty more rows. Visited by every Wolves' active line at the start of every season's Brewer's Reach match — the captain bows for eleven seconds at Avery Loambright's name (third row from the door, sixth name) and the line follows. The Bears, the Antlerlords, the Lynx, and the Quetzals have, since their respective League entries, observed similar visits with their own teams' fallen — the Bears' visit takes the form of a single shared minute of held breath; the Antlerlords' visit takes the form of a slow, deep nod from L'Ancrage that lasts (by Foundation steward measurement) twenty-three seconds; the Lynx visit individually, in rotation across the whole pre-season, never as a group; the Quetzals have not, as of Year 36, lost a knight to permadeath, and so do not yet have a Hall ritual. The Foundation has set aside, against the Quetzals' wishes, a row for them anyway. The Quetzals have not protested.</dd>
@@ -11767,19 +11788,19 @@
               <dd>The collective non-verbal sound the Hallowtide Tag's Reno Hallowtide Hollow crowd makes during the match's mid-engagement and final-pair circling moments — a low, sustained, multi-throated hum, distinct from a cheer or a gasp, that the LMG broadcast booth has, in three years of Hallowtide coverage, transcribed only by name. The Hum is, by long-standing Hallowtide tradition, the only sound the Hollow's crowd makes during the match's final-pair circling sequence — the crowd is asked, by long-standing Hallowtide protocol, to be quieter than at other matches, but the Hum is, by tradition, exempt from the quiet rule. The Hum is, by every Hallowtide attendee's pre-match expectation, going to happen at least twice during the match: once at mid-match (when a major engagement closes), and once at the match's resolution (when the final tag is taken). The Hum has, in three Year-36 Hallowtide Tag matches, lasted, on average, ninety seconds after the final tag — extending past the broadcast's cut-to-black and into the venue's natural ambient soundscape. The Hum is not, by Caucus standing rule, considered part of the broadcast. The Hum is, by Caucus standing rule, considered part of the venue.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">I</span> <span class="bucket-count">1 term</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">I</span> <span class="bucket-count">1 term</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>Ink and Pencil</dt>
               <dd>The Foundation Library's standing curatorial convention for distinguishing finished filings from working drafts. <b>Ink</b> is what the Library uses for canonical entries — published bios, ratified glossary entries, archived match logs, official Foundation Drawer findings, the Caucus working-session minutes after they have been ratified by the Caucus chair. <b>Pencil</b> is what the Library uses for working drafts, marginal notes, curator commentary, and any document the curator considers "still in motion." The convention is unwritten; it has been Library practice since founding and is enforced by senior curator preference rather than Foundation Library standing rule. Sigridweave's draft response to the Year-34 albatross is the only document filed in the Foundation Drawer in pencil rather than ink — her stated reason: <em>"ink is what we use for the file. pencil is what we use for the draft. the draft is, by my own read, still the draft."</em> The Foundation Library's archivists have, on three separate occasions over the past four years, requested that the Pencil/Ink convention be formally written into the Library's standing-rules document. The request has, on three occasions, been declined by the senior curator on the grounds that <em>"the convention works because it is unwritten. writing it down would, by my own honest read, be the kind of decision the convention itself instructs us not to make in ink without at least two years of drafting in pencil first. we have not drafted it in pencil. we are in pencil. the rules document remains in ink. that is the right division."</em> The standing-rules document remains unchanged.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">L</span> <span class="bucket-count">12 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">L</span> <span class="bucket-count">12 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>L'Ancrage</dt>
               <dd>The Saint-Laurent Antlerlords' tank-class tradition: the team's anchoring Tank — currently Théodred Brisefer III — stands in the center of the pitch as a stationary tactical anchor while the other four Antlerlord knights rotate around him in concentric arcs. The position name translates from the Saint-Laurent native creole as "The Anchor." The role is, technically, just a Moose; the Antlerlords' tank assignment under League rules has no separate plate kit because the Moose's own mass and antler rack constitute the kit. The current L'Ancrage is approximately one and three-quarters of an Old-Ones cargo lorry by the Caucus's mass register; the Caucus has not been able to measure him precisely because their measurement scale ends at one cargo lorry. He has, by Antlerlords' coaching account, never lost a one-on-one engagement on a sanctioned field. Opposing teams have, by tactical necessity, started organizing their pitch geometry around his standing point — even when they intend not to engage him directly.</dd>
@@ -11818,10 +11839,10 @@
               <dd>The Yukon Hunting Lynx training tradition, in which each active knight trains alone with a single position-coach for the bulk of the season; the team only forms up on match day. The five active Lynx knights have five separate position-coaches; the team's senior coach (Tessik Snowstep, as of Year 36) reviews training but does not direct it. The League considers the practice unusual but compliant — the rule book requires teams to <em>have</em> training programs, not to specify what they look like.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">M</span> <span class="bucket-count">4 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">M</span> <span class="bucket-count">4 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt><em>Marin's Classroom</em></dt>
               <dd>The fifth tenant of the Foundation Archive's Stories Cabinet. The paired archive of Marin Bristlebeard — Boston schoolteacher of forty-six years' standing at the Brewer's Row Common School (classroom 3-B), wife of the retired Beaver Tank known to the canon as Bristlebeard the Second, mother of Bjorn Bristlebeard III — and her secondary-school student Hollis (older brother of the Tenant Four letter-writer Penn). The intergenerational friendship across fifty-some years of age has, since Y40 founding bell, been conducted principally on the after-school broadcast Saturdays of Beavers home matches in classroom 3-B. The Y15 Beavers-blue cotton banner above the chalkboard was sewn by Marin's older sister Sigrid Marrowby; the banner carries student Roan Halverick's Y22 pencil-R initial in the lower-right hem. Marin has not attended a Wolves visiting match at Brewer's Reach in person since Y32 R7 — the day her husband killed Avery Loambright — at his standing pencil-note request (see <em>Bristlebeard the Second's Y32 R7 Pencil Note to Marin</em> in Found Papers). Tally as of Y42 closeout: 79 of 86 Saturdays attended.</dd>
@@ -11836,19 +11857,19 @@
               <dd>The collective name for the Raven settlement built into the foundry ruins of post-Long-Quiet Pittsburgh. ("Murder" is the corvid collective noun; the Ravens use it without irony.) The Murder is governed by an elder-council known only as the Roost; major decisions require consensus among nine elders. The Pittsburgh Plundering Ravens are the Murder's official League representation. The Murder, as a body, does not bury its dead — cremation in the foundry-fires has been their practice for as long as anyone has counted, including back into the time the Old Ones still walked.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">N</span> <span class="bucket-count">1 term</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">N</span> <span class="bucket-count">1 term</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The Northwalk</dt>
               <dd>The journey the Anchorage Polar Bears completed on foot in the Year 35 mid-season — from Anchorage to Brewer's Reach in thirty-two days — to deliver their inclusion application to the League in person. The Polar Bears do not consider the Northwalk a feat. They consider it the courtesy that an application of that gravity required. The League considers it remarkable. Whitepaw, on arrival, is reported to have asked only for water and a chair before reading the application aloud to Whiskerstone. Whiskerstone read the application in silence afterward. The audio of Whitepaw's reading, captured by Treadwell at Whiskerstone's request, is in LMG archive vault 2. It has been requested for public broadcast eleven times. It has been released zero times.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">O</span> <span class="bucket-count">3 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">O</span> <span class="bucket-count">3 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The Old Ones</dt>
               <dd>The prior dominant species on this continent. Walked upright on two legs. Built the cities every animal community now lives in. Wrote the runes painted on every concrete wall, metal sign, and street pole. Have been gone, by the most careful Reno-academy dating, for between three and five centuries — the dating is contested but no scholar puts the Long Quiet at less than three hundred years ago. They lived alongside our great-great-great-grandparents at the most generous reading. Their physical artifacts (concrete, steel, glass, latex paint, foundry slag, the occasional intact dolly rig) persist where they were sheltered from rain. The League does not, formally, take a position on what the Old Ones were. Most animals do not, in daily life, think about them at all. Some scholars think about them more than is healthy.</dd>
@@ -11860,10 +11881,10 @@
               <dd>The Yucatan-sourced tropical-ocean currency, used primarily at the Yucatan Jungle-Canopy venue's concessions and (since Year 36) at the Concession Row in-shell oyster cart that the lobster vendor herself sponsored, on the grounds that <em>"the lobster is one bit; the oyster is something else; the something else needs its own booth, and I am not adding the something else to my booth, but the something else is good and people should be able to buy it. I am introducing the Quetzals' supplier to the Foundation. The Foundation will handle it from here. I do not need to be involved further."</em> Oysters trade at approximately 0.7 lobsters per oyster, in-shell, requiring shucker — the rate is high on a per-unit basis because the Yucatan-sourced oyster is, by every culinary read, exceptional, and the shucking is, by professional oyster-shucker rate, additional. The Oyster Tab is the only currency in Foundation accountancy's books that has a formal supplemental fee for skilled labor (the shucking fee, paid in lobster, two units per dozen oysters). The fee was negotiated by the Quetzals' coaching staff on behalf of the supplier, who is a single Yucatan jungle-floor opossum named Rosalva Jirónsalado. Jirónsalado does not, by her own preference, ever travel to non-Yucatan venues. The shucking, when oysters are shipped to Concession Row, is done by a contracted shucker the Foundation has retained — by her recommendation — at the standard fee.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">P</span> <span class="bucket-count">13 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">P</span> <span class="bucket-count">13 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The Pawington Arc</dt>
               <dd>An unusually wide arcing flag-running route, named for Reka Pawington (KIT, rookie Year 35) who used it during her debut Pawington Cup to set the Cup's single-match capture record at three captures. The arc takes the carrier near the field's edges instead of straight back to base, adding approximately 30% to the direct route distance but consistently evading defenders, who anticipate a straight-line return. Three other Speedsters across the League have attempted to copy the Arc; none have replicated Reka's cap rate. Reka has, on multiple occasions, attributed the Arc to advice received from her aunt Mira Pawington (her first cousin once removed; senior captain that same season): <em>"Mira always said the corners watch you. The middle doesn't care."</em> League historians do not know what this means. Reka has declined to explain why the arc works for her and not for the imitators.</dd>
@@ -11905,10 +11926,10 @@
               <dd>The Reno Cultural Office's internal working paper documenting how Reno's lower-Strip survived the Long Quiet. The paper's central finding: a single dedicated power line on the lower Strip stayed lit when the rest of the city went dark, because that line had been installed by the Old Ones' casino consortium specifically to keep slot machines spinning during outages — and the line had been chained to a sub-grid the rest of the city did not know about. Three blocks. Twelve buildings. The Raccoons moved in within "a season" of the Old Ones' disappearance, by the founding-generation oral account; food trade organized along the lit blocks shortly after; engineering guilds gathered in the slot-machine bays within a generation. The original Old-Ones hardware has been replaced and re-replaced across twelve generations of Raccoon engineers; what is unbroken is the continuity of light. The Cultural Office classified the paper internal-only. A junior intern photocopied it in Year 35 and leaked it to The Wing Standard. The Cultural Office has never commented. The intern is now a junior columnist at the same paper. The leak did not damage anyone, the League Library quietly accessioned a copy, and the Cultural Office continues to write polished sentences for orientation pamphlets.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">Q</span> <span class="bucket-count">3 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">Q</span> <span class="bucket-count">3 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The Quetzal Nest</dt>
               <dd>The rafter-nest maintained personally by Cintzli of the Yucatan canopy in the Yucatan Jungle-Canopy venue's overgrown rafters. The nest is not formally registered as terrain but functions, in matches at the Yucatan venue, as Cintzli's preferred shooting position. The Caucus has discussed registering the nest on three separate occasions and has, on each occasion, declined to register it on the grounds that doing so would imply the League had built it (the League did not build it; Cintzli built it; the rafters were there before either). The Quetzals have not asked for the nest to be registered; the Caucus has not asked it to be removed; the matter is, by mutual silent agreement, not a matter.</dd>
@@ -11920,10 +11941,10 @@
               <dd>The Reno pawn shop owned by Moss Quickfingers (a beaver of unknown allegiance, sixteen-year shop-tenure), at which the Coronation Cup brass crown has, by the Raccoons' annual practice, been deposited overnight every Cup year the Raccoons have won. The shop's official function is general pawnbroking; the crown is the only item Quickfingers is on record as accepting from the same client every year, and the only item he has ever stored under the same pawn ticket-name (a member of the active Raccoon roster, varying by year). The shop accepts payment for storage in lobster only. Quickfingers has, in three separate interviews, declined to comment on whether the practice is technically pawning, layaway, or some informal hybrid. He has said only: <em>"The crown is at my shop. The Foundation knows where it is. The Raccoons know where it is. I am paid in lobster. The lobster is good. I have stopped asking questions."</em> The shop is on Reno's South Strip, between a tobacconist and a tea-and-coffee importer; it has not, in sixteen years, been moved.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">R</span> <span class="bucket-count">8 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">R</span> <span class="bucket-count">8 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The Raccoon Dignity</dt>
               <dd>The Raccoons' annual post-Coronation-Cup ritual, established by Dustpaw Trashbright at the inaugural Cup in Year 31 and continued by every subsequent Raccoon captain. On winning the Cup, the captain accepts the brass crown on the broadcast post-match line, makes a brief statement that includes the phrase <em>"I will be taking it home,"</em> and transports the crown — by team transport, at speed — toward Pittsburgh. The crown is then, on every winning year, recovered the following morning at Moss Quickfingers' Reno pawn shop, where it has been stored overnight in exchange for a small lobster fee. The Foundation has built a recurring annual budget line for the recovery. The line is called <em>"crown retrieval logistics"</em> and amounts, annually, to four lobsters and a small storage fee. The practice has, in six of eight Cup years, occurred on schedule. (The two non-Raccoon Cup wins did not, by the winning teams' respective decisions, involve any pawning.) The Foundation has stopped commenting on the practice. Featherquill has called it <em>"the cleanest sport I have ever covered."</em></dd>
@@ -11950,10 +11971,10 @@
               <dd>An experimental Antlerlords tactical formation in which L'Ancrage (the team's anchoring Tank) abandons his stationary center-pitch stance and joins the perimeter rotation as a slow-moving fifth knight. By every Caucus analyst's pre-existing tactical literature, the formation is theoretically possible but practically compromised — L'Ancrage's mass is a feature of his stationary stance, and a moving L'Ancrage cannot, by his own walking speed, sustain the rotation's pacing. The formation was first deployed in a sanctioned match in Year 36 R7 (BDG vs MOS at the Boise Highland Pitch), in real-time response to the Badgers' Wide Draw tactical debut, with no prior team drill. The Antlerlords lost the match 4-1. The formation has not, by Antlerlords' coaching staff's pre-Year-37 commitment, been retired; it is being drilled into the team's off-season exhibition schedule and is, by Marc-Olivier Brisefer's stated intent, expected to debut in fully-drilled form in Year 37's regular season.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">S</span> <span class="bucket-count">15 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">S</span> <span class="bucket-count">15 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>Sandbagged Knight</dt>
               <dd>A knight who is performing measurably below their stat sheet for reasons unrelated to injury, fatigue, or known field conditions. The most common cause, since Year 35, is the Personal Sandbag item. The term predates the item — it was originally used to describe knights whose teams had quietly arranged for them to lose, in order to extend the franchise's playoff window. The Commissioner's Office prefers the post-LY-8 usage and has discouraged the older sense.</dd>
@@ -12001,10 +12022,10 @@
               <dd>The wing of the Owl Hall in Seattle dedicated to Sundip Hootington Jr., OWL Sniper, who tied Hester Quillstrike's 412-pace record at the Reno Open Court in Year 35 R8 and died in the same match when the Power Core he climbed to celebrate the shot overloaded. The Wing is, by Owl tradition, the only knight memorial in the League named for a knight who tied rather than broke a record. The Owl Hall's board justified the dedication, in the original ratification statement: <em>"The shot was the equal of Quillstrike's. The Power Core's overload was, by League technical analysis, the result of a latency the Caucus has since patched. The shot stands. The shot tied. The Owl who took it died at the moment of celebration. We will, in his Hall's wing, keep his rifle and the Power Core's casing — the shot's two halves — and we will, in our seasons going forward, remember what the shot took."</em> The wing is open to the public during all Owl Hall business hours. Visitors are asked, at the door, to remove their hats. The hats remain off, by Owl Hall steward record, an average of fifty-one seconds per visitor. The Hall does not measure this; the Hall has, in two seasons, only known the average because a single Brewer's Reach Reader columnist measured it for a column the Reader's senior columnist refused to publish.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">T</span> <span class="bucket-count">7 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">T</span> <span class="bucket-count">7 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>Tactical Erasure</dt>
               <dd>Sniper jargon, originating with the Tampa Sharks scouts' shared journal: a kill on a Healer that determines the outcome of an engagement before the engagement has even begun. Many Snipers find the term distasteful but most consider it accurate.</dd>
@@ -12028,10 +12049,10 @@
               <dd>The fourth tenant of the Foundation Archive's Stories Cabinet. The paired correspondence and shared-archive material of two young Boston Beavers fans whose paths converged in the Wing Standard letters page in Y41 mid-season and, in person for the first time, at Bess Beaverfoot's Concession Row stand at Y41 closeout — Penn (Beaver kit, Brewer's Row, "the small house with the green door," named in print, author of four direct-to-Commissioner letters across Y36-Y41 including the Y39 founding-bell letter that produced the Caucus's Healer-mid-heal tactical-speech rule clarification) and the unnamed coyote pup of Section 14 Row N seat 5 (signs <em>— the small pew, Row N</em>; LMG booth apprentice; not named, by family preference and Section 14 fan-anonymity tradition). The two boys' families had, in the way of the Brewer's Row block, vaguely known each other for years before either child knew it: their fathers had been parallel members of Petra Marrowby's bakery 4:30 AM bread-queue careful-readers' circle (see <em>The Bread Queue</em>) for over a decade, and were eventually introduced by Bess Beaverfoot under the standing protocol now known as <em>The "You Read the Same Way" Introduction</em> (see entry).</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">V</span> <span class="bucket-count">3 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">V</span> <span class="bucket-count">3 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The Velvet Lacquer</dt>
               <dd>A jazz lounge two blocks off Reno's South Strip, named for the dark red sheen the bar takes on when only the wall sconces are lit. The kind of place that survives because it is loved — by the regulars, by the bartenders who have outlasted three different ownerships, by the singers who made their names here in the first decades of the calendar and still drop in unannounced to play a number on a slow Wednesday. Owned since Y23 by Halloran (see his bio entry); cooked by Wallis (river otter, head cook since Y22); accompanied at piano by Mr. Ardel (Donal "Mr. Ardel" Ardel, house pianist Thursday-Saturday late sets since Y22). The chip in the piano lid is from Junie Valeris, knocked there during a take that became the studio version of <em>What I Owe the Rain</em>. Byakko sings the late set Thursday/Friday/Saturday, eleven to one, when the room has thinned enough that everyone left is listening on purpose. The Tuesday open mic, in continuous standing institution since Y14, has the single hard rule (never written down anywhere but understood by every regular) that you do not record anyone without asking. The venue is the principal locus of the Foundation Archive's Stories Cabinet first tenant (<em>South Strip Songbook</em>, see entry).</dd>
@@ -12043,10 +12064,10 @@
               <dd>A small brass bell at the corner of the lobster vendor's booth at Brewer's Reach Pitch's Concession Row. The bell is rung by the vendor, by long-standing personal practice, when a child purchases their first lobster from her stall. The bell rings once. The vendor does not announce the ring. The vendor does not, by any accessible record, count the rings. The bell has been at the booth since the booth opened. The bell's clapper, by Foundation steward measurement, has worn approximately four millimeters of brass over eight seasons. The bell will, by reasonable extrapolation, last approximately three more lifetimes at this rate. The vendor has not, by any account, ever moved the bell from its corner. The bell rings, by booth steward's count, on average twice per match-day. The total ring count is, by no one's count, a knowable number. The bell rings. The child gets a piece of paper, in extraordinary circumstances. The child, in ordinary circumstances, gets a lobster, melted butter, and a moment in which a vendor sees them and rings a bell. This is enough.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">W</span> <span class="bucket-count">5 terms</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">W</span> <span class="bucket-count">5 terms</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The Wave Doctrine</dt>
               <dd>League rule, ratified Year 36 founding bell. Governs respawn formation: when three or more knights of a single team have been downed in the same round, they respawn together at a single bench-side line, then walk together back onto the pitch as a connected wave during a seven-second formation period. The Doctrine includes a slowest-knight sprint allowance — the slowest knight in the wave is granted a temporary speed adjustment so the wave does not stretch out into a disorganized trickle on the way to the center engagement. In continuous-mode tournaments (Crown, Capture-the-Pole, Tag), the Doctrine applies on a fixed-delay timer rather than the round-based three-knight threshold. Designed by the Caucus to break the snowball — the previous staggered-respawn protocol's tendency to compound a team's losses by re-introducing downed knights piecemeal into a still-standing opposing line. The Doctrine produced two consecutive comeback wins in its first two sanctioned applications (RCC vs PLR Year 36 R2 Crown, and the second under the regular-match three-knight rule); Pell Whittlestone has called it <em>"the second-largest single-rule contribution to the League's tactical balance since the Marshmallow Protocol"</em> and is, by her own admission, "still not certain whether that ranking is too high or too low." The seven-second walk has, by Featherquill's column "On Watching the Wave," become an informally-protected window in which downed knights exchange brief teammate-to-teammate sentences before re-engagement; the Caucus's draft minutes proposing a four-second reduction were amended to retain the seven-second minimum after the column ran.</dd>
@@ -12064,15 +12085,15 @@
               <dd>The Boston-anchored continental newspaper of record for Float Knights coverage and continental sports more broadly, in continuous daily publication since Y26 (predating the League's Y28 founding by two years; the paper was originally a generalist daily covering Boston and the Brewer's Row warehouse district before re-anchoring to the Float Knights beat at the Y28 founding bell). Its sports page has been the canon's standing voice across two long-tenured editorships: Featherquill (sports editor Y26-Y38, retired; standing phrases include <em>"by my read,"</em> <em>"on the matter,"</em> <em>"in due course,"</em> <em>"by every measurable standard"</em>) and Maelis Snowstep (Y39+; terser, <em>"the bracket holds its shape"</em>). Its culture page hosts Cyril Halberd's <em>South Strip Songbook</em> (see entry; in continuous publication since Y28). Its letters page is the standing forum for fan-correspondence the Commissioner's office wishes to publicly acknowledge and is the printed-page meeting point of Stories Cabinet Tenant Four's two principal correspondents (see <em>Two Letters That Found Each Other</em>). Its annual Hallowtide youth cartoon supplement (see entry) is the canonical incubator of Stories Cabinet Tenant Six's principals. The Wing Standard is, by every reading, the canon's most-cited single source.</dd>
 
             </dl>
-          </details>
+          </div>
 
-          <details class="lore-glossary-bucket" open>
-            <summary><span class="bucket-letter">Y</span> <span class="bucket-count">1 term</span></summary>
+          <div class="lore-glossary-bucket-open">
+            <div class="bucket-header"><span class="bucket-letter">Y</span> <span class="bucket-count">1 term</span></div>
             <dl class="lore-glossary-bucket-list">
               <dt>The "You Read the Same Way" Introduction</dt>
               <dd>The standing introduction protocol applied by Bess Beaverfoot, Boston Concession Row lobster-roll vendor since Y39, on the strength of her standing observation across the counter of the readers who come to her stand. The protocol is, by Bess's own subsequent standing report, a roughly seventy-percent successful method for producing what she calls <em>"a standing arrangement of two readers who would otherwise have gone on missing each other."</em> Applied on average twice a season. The line, transcribed in the Tenant Four closeout article <em>"Bess Beaverfoot's introduction at the lobster-roll stand"</em> and now the protocol's canonical wording: <em>"I don't know if you two have met. You should, on the matter. You read the same way."</em> The protocol's most-cited application produced the Y41 closeout in-person introduction of Penn's father and the apprentice's father (Tenant Four, <em>Two Letters That Found Each Other</em>), who had been parallel members of the Brewer's Row 4:30 AM bread queue's careful-readers' circle for twelve and eleven years respectively without ever speaking, in observance of the queue's standing decorum-protocol. The introduction took place at Bess's stand approximately twenty minutes after the match's final whistle. Both fathers, on Bess's introduction, exchanged names. Both still queue silently at the bakery the next morning. The friendship is conducted elsewhere.</dd>
             </dl>
-          </details>
+          </div>
         </dl>
       </article>
     </div>
@@ -39065,7 +39086,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // === v37.92: single source of truth for the build label ===
 // Used by the console boot log AND by the save's gameVersion stamp.
 // Bump in ONE place per release.
-const BUILD_LABEL = "v38.21";
+const BUILD_LABEL = "v38.22";
 
 // === v37.34: build-identification stamp ===
 // Prints once on script load. If the user reports crashes and this line is
@@ -43295,9 +43316,11 @@ function jumpToLoreArticle(loreId) {
     // TOC entry for an article inside a closed chapter silently fails to
     // reveal it: the article's lore-collapsed class is gone but the
     // surrounding <details> is still closed.
-    // === v37.55: also opens the alphabetical glossary bucket containing
-    // a stub target. The bucket is a <details class="lore-glossary-bucket">
-    // ancestor of the stub. ===
+    // === v38.22: glossary buckets are NO LONGER <details> — they were
+    // un-nested into plain .lore-glossary-bucket-open divs so terms can
+    // never be hidden. This loop still runs for Timeline/Stories eras;
+    // for a glossary stub it simply finds no <details> ancestor, which
+    // is correct — the term is already visible. ===
     let node = target.parentElement;
     while (node) {
       if (node.tagName === "DETAILS" && !node.open) node.open = true;
@@ -43424,7 +43447,25 @@ function jumpToRandomLoreArticle() {
   }
   const pick = articles[Math.floor(Math.random() * articles.length)];
   const id = pick.dataset.loreid;
-  if (id) jumpToLoreArticle(id);
+  if (!id) return;
+  // === v38.22 bugfix: switch to the Lore MAIN tab before jumping ===
+  // jumpToLoreArticle activates the lore SUB-tab and expands the
+  // article, but it never switches the main .tab-content. When Random
+  // is clicked from another tab (Game/League/etc.) the article expands
+  // inside a hidden tab-content — the user sees nothing happen. The
+  // bookmark cards never hit this because they're only clickable from
+  // within the already-open Lore tab. Switching the main tab first
+  // settles the DOM so jumpToLoreArticle's expand is visible.
+  const loreTabActive = document.querySelector('.tab-content[data-tab="lore"]')?.classList.contains("active");
+  if (!loreTabActive && typeof switchTab === "function") {
+    switchTab("lore");
+    // switchTab re-renders; defer the jump one frame so the lore
+    // tab-content is laid out before jumpToLoreArticle's own setTimeout
+    // tries to scroll to / expand the target article.
+    requestAnimationFrame(() => requestAnimationFrame(() => jumpToLoreArticle(id)));
+  } else {
+    jumpToLoreArticle(id);
+  }
 }
 window.jumpToRandomLoreArticle = jumpToRandomLoreArticle;
 
@@ -43476,6 +43517,30 @@ function _buildLoreSearchIndex() {
     idx.push({
       id, section, title, meta, body,
       lower: (title + "\n" + meta + "\n" + body).toLowerCase(),
+    });
+  });
+  // === v38.22: also index glossary terms ===
+  // Glossary terms are div.glossary-stub[data-loreid="glossary::SLUG"]
+  // (a <dt> term + <dd> definition), not <article> elements — so the
+  // article scan above never reached them and glossary terms were
+  // unsearchable. After the v38.22 un-nesting they're plain visible
+  // divs; index each one: title from the <dt>, body from the <dd>.
+  const stubs = document.querySelectorAll('.glossary-stub[data-loreid]');
+  stubs.forEach(stub => {
+    const id = stub.dataset.loreid;
+    if (!id) return;
+    const dt = stub.querySelector("dt");
+    const dd = stub.querySelector("dd");
+    let title = "";
+    if (dt) {
+      const clone = dt.cloneNode(true);
+      clone.querySelectorAll(".glossary-stub-actions, .lore-bookmark-btn, .lore-share-btn").forEach(el => el.remove());
+      title = (clone.textContent || "").trim();
+    }
+    const body = dd ? (dd.textContent || "").replace(/\s+/g, " ").trim().slice(0, 800) : "";
+    idx.push({
+      id, section: "glossary", title, meta: "Glossary term", body,
+      lower: (title + "\nGlossary term\n" + body).toLowerCase(),
     });
   });
   return idx;
