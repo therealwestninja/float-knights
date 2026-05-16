@@ -775,6 +775,27 @@
        (line ~3216) where the source assets ARE hand-drawn pixel art. */
     image-rendering: auto;
   }
+  /* === Plan A Task 4: large-screen field scale-up ===
+     The base rule above is width:100% + aspect-ratio, so the field
+     already fills its column fluidly. On large displays the field
+     was still letterboxed because nothing let it use vertical space.
+     These rules cap the canvas by viewport HEIGHT (so it never grows
+     past what's visible) while keeping the 16:9 ratio — on a big
+     monitor the field now scales up to fill the available height.
+     The 240px reserve covers header + arena-header + controls. */
+  @media (min-width: 1400px) {
+    canvas#arena {
+      max-height: calc(100vh - 240px);
+      max-width: calc((100vh - 240px) * 1.7778);
+      margin: 0 auto;
+    }
+  }
+  @media (min-width: 1900px) {
+    canvas#arena {
+      max-height: calc(100vh - 200px);
+      max-width: calc((100vh - 200px) * 1.7778);
+    }
+  }
   /* CRT scanline overlay */
   .arena-wrap::after {
     content: "";
@@ -3587,6 +3608,37 @@
     font-weight: 600;
   }
 
+  /* === Plan A Task 1: League tab mobile compaction === */
+  @media (max-width: 720px) {
+    .league-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .league-team-card { padding: 11px; }
+    .league-team-emoji { font-size: 28px; }
+    .league-team-name { font-size: 13px; }
+    .league-team-lore {
+      font-size: 10.5px;
+      line-height: 1.4;
+      margin-bottom: 7px;
+    }
+    .league-team-facts {
+      column-gap: 7px;
+      row-gap: 2px;
+      font-size: 10px;
+    }
+    .league-section-h {
+      font-size: 13px;
+      letter-spacing: 1px;
+      margin: 16px 0 9px;
+    }
+  }
+  @media (max-width: 420px) {
+    .league-team-card { padding: 9px; }
+    .league-team-emoji { font-size: 24px; }
+    .league-team-lore { font-size: 10px; }
+  }
+
   /* v28.29: Lore tab — Teams sub-section quick-reference cards.
      A dense 3-column grid (1 column on mobile) of all 20 teams' canonical
      facts, pulled from TEAM_PROFILES. Sits above the prose bios so a
@@ -4267,7 +4319,7 @@
     font-family: "Courier New", monospace;
     font-weight: 700;
     white-space: nowrap;
-    max-width: 360px;
+    max-width: 440px;
   }
   .ticker-score-pill {
     display: inline-flex;
@@ -4377,6 +4429,24 @@
     .ticker-scores { font-size: 9px; padding: 0 6px; gap: 6px; }
     .ticker-brand { font-size: 9px; padding: 0 6px; }
     .ticker-content { font-size: 10px; }
+  }
+  /* === Plan A Task 3: 3-row ticker on very narrow screens ===
+     The v28.28 two-row layout still puts scores + brand on a shared
+     row; with multiple live matches the score pills get squeezed. At
+     <=340px scores get their own full-width row (total 3 rows = 90px). */
+  @media (max-width: 340px) {
+    .ticker-scores {
+      flex: 1 1 100%;
+      width: 100%;
+      order: 1;
+      justify-content: center;
+      border-right: none;
+      border-bottom: 1px solid rgba(247,201,72,0.25);
+    }
+    .ticker-brand { flex: 1 1 100%; width: 100%; order: 2; justify-content: center; }
+    .ticker-feed { order: 3; }
+    :root, body { --ticker-h: 90px; }
+    body { padding-bottom: 90px; }
   }
 
   .toast-stack {
@@ -5500,13 +5570,27 @@
     min-width: 100px;
     text-shadow: 0 1px 2px rgba(0,0,0,0.85);
   }
+  /* === Plan A Task 2: Broadcast scorebug responsive sizing ===
+     The pre-Plan-A block set child heights but never constrained
+     .broadcast-scorebug itself, so the centered (translateX(-50%))
+     bug could still overflow both screen edges. max-width:96vw is
+     the actual fix; the child-shrink tiers refine the fit. */
   @media (max-width: 720px) {
+    .broadcast-scorebug { max-width: 96vw; }
     .scorebug-team { height: 44px; }
+    .scorebug-team .team-band { width: 3px; }
     .scorebug-team .team-code { font-size: 16px; padding: 0 8px; }
     .scorebug-team .team-score { font-size: 22px; padding: 0 12px 0 2px; }
     .scorebug-period, .scorebug-clock, .scorebug-status { height: 44px; padding: 0 8px; font-size: 12px; min-width: 0; }
     .scorebug-status { font-size: 13px; }
     .broadcast-scorebug { bottom: 32px; }
+  }
+  @media (max-width: 380px) {
+    .scorebug-team { height: 38px; }
+    .scorebug-team .team-code { font-size: 13px; padding: 0 6px; }
+    .scorebug-team .team-score { font-size: 18px; padding: 0 8px 0 2px; }
+    .scorebug-period, .scorebug-clock, .scorebug-status { height: 38px; padding: 0 6px; font-size: 11px; }
+    .scorebug-clock { font-size: 12px; }
   }
   /* Exit button — small ✕ in canvas top-right */
   .broadcast-exit {
@@ -26333,7 +26417,10 @@ function hasLineOfSight(ax, ay, bx, by, terrain) {
   // visible to enemies because your CENTER was outside the rect.
   // The inflation makes cover work as it visually appears.
   // v38.18: read w/h with size fallback for v38.17-and-earlier save compat.
-  const pad = COMBAT.hitRadius || 13;
+  // v38.20: scale the inflation pad by gridScale so cover-inflation
+  // matches the 3x-expanded field and the scaled hitboxes.
+  const _g = (typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1;
+  const pad = (COMBAT.hitRadius || 13) * _g;
   for (const t of terrain) {
     const tw = t.w != null ? t.w : t.size;
     const th = t.h != null ? t.h : t.size;
@@ -26521,10 +26608,18 @@ function fireAttack(attacker, target, m) {
    envelope), and drawHitboxes (debug overlay).
    ============================================================ */
 function _hitProfile(p) {
-  if (!p || !p.position) return { rx: COMBAT.hitRadius, ry: COMBAT.hitRadius };
-  if (p.position === "tank" || p.position === "brawl") return { rx: 15, ry: 11 };
-  if (p.position === "speed") return { rx: 11, ry: 12 };
-  return { rx: 13, ry: 11 };
+  // v38.20: base literals are gridScale-1 values; multiply by
+  // COMBAT.gridScale so hitboxes match the 3x-expanded field and the
+  // 3x sprite scale (beginSpriteScale). Pre-v38.20 the hitboxes were
+  // 1/3 the sprite size — visually-connecting shots missed.
+  const g = (typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1;
+  if (!p || !p.position) {
+    const r = (COMBAT.hitRadius || 13) * g;
+    return { rx: r, ry: r };
+  }
+  if (p.position === "tank" || p.position === "brawl") return { rx: 15 * g, ry: 11 * g };
+  if (p.position === "speed") return { rx: 11 * g, ry: 12 * g };
+  return { rx: 13 * g, ry: 11 * g };
 }
 
 /* === v37.59: per-weapon melee-switch range (Tier 3.F) ===
@@ -31612,6 +31707,13 @@ function drawDrops(m) {
     const bob = Math.sin((m.frame + d.x) * 0.12) * 1.5;
     const legendary = (d.gear.scavengedCount || 0) >= 3;
 
+    // v38.20: drops were drawn with raw gridScale-1 literals (~11px
+    // radius) — invisible specks on the 3x field. Wrap in the shared
+    // beginSpriteScale/endSpriteScale transform (same mechanism the
+    // knight/sweetie/referee sprites use) so the drop renders 3x in
+    // world space and reads at the intended on-screen size.
+    beginSpriteScale(d.x, d.y);
+
     if (d.slot === "health") {
       // Pulsing red cross — visually distinct from gear drops
       const pulse = 0.7 + 0.3 * Math.sin(m.frame * 0.18 + d.x);
@@ -31625,6 +31727,7 @@ function drawDrops(m) {
       ctx.fillStyle = "#ef4d4d";
       ctx.fillRect(d.x - 5, d.y - 1 + bob, 10, 2); // horizontal bar
       ctx.fillRect(d.x - 1, d.y - 5 + bob, 2, 10); // vertical bar
+      endSpriteScale();
       continue;
     }
 
@@ -31649,6 +31752,7 @@ function drawDrops(m) {
     ctx.textBaseline = "middle";
     ctx.fillText(d.gear.ico || "?", d.x, d.y + bob);
     ctx.textBaseline = "alphabetic";
+    endSpriteScale();
   }
 }
 
@@ -31661,6 +31765,10 @@ function drawProjectiles(m) {
   const grenadeSmokeOff = LEAGUE_CONFIG && LEAGUE_CONFIG.disableGrenadeSmoke;
   for (const pr of m.projectiles) {
     const team = TEAM_BY_ID[pr.teamId];
+    // v38.20: projectiles drew with raw gridScale-1 literals (3.5px
+    // grenade, 2-3px bullets) — near-invisible on the 3x field. Wrap
+    // each projectile's render in the shared sprite-scale transform.
+    beginSpriteScale(pr.x, pr.y);
     // === v28.5 grenade-in-flight — tumbling dark sphere + smoke trail ===
     if (pr.isGrenade) {
       const f = m.frame || 0;
@@ -31691,6 +31799,7 @@ function drawProjectiles(m) {
         ctx.fillStyle = "#fff";
         ctx.fillRect(pr.x, pr.y - 4, 1, 1);
       }
+      endSpriteScale();
       continue;
     }
     const isRailgun = pr.wpn?.id === "railgun";
@@ -31734,6 +31843,7 @@ function drawProjectiles(m) {
       ctx.fillStyle = "#fff";
       ctx.fillRect(pr.x - 1, pr.y - 1, 2, 2);
     }
+    endSpriteScale();
   }
 }
 
@@ -31769,7 +31879,9 @@ function drawHitboxes(m) {
   // now 13 via COMBAT.hitRadius), AND the shape is now ellipse not
   // circle. This shows what the sim ACTUALLY uses per knight via
   // _hitProfile, plus a secondary ring at the dodge envelope.
-  const PROJECTILE_ENVELOPE = (COMBAT.hitRadius || 13) + 6;
+  // v38.20: scale by gridScale to match the scaled _hitProfile.
+  const _hbG = (typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1;
+  const PROJECTILE_ENVELOPE = ((COMBAT.hitRadius || 13) + 6) * _hbG;
 
   ctx.save();
   ctx.lineWidth = 1;
@@ -32090,6 +32202,11 @@ function drawPowerCore(m) {
   const pc = m.powerCore;
   const t = m.frame;
   const pulse = 0.7 + 0.3 * Math.sin(t * 0.15);
+  // v38.20: power-core graphic was raw gridScale-1 literals (30px
+  // gradient, 60px rect) while its v38.18 collision keepout is
+  // 70*gridScale=210 — the graphic was 1/7 the gameplay footprint.
+  // Wrap in the shared sprite-scale transform so the visual matches.
+  beginSpriteScale(pc.x, pc.y);
   const grd = ctx.createRadialGradient(pc.x, pc.y, 4, pc.x, pc.y, 30);
   grd.addColorStop(0, `rgba(247,201,72,${0.55 * pulse})`);
   grd.addColorStop(1, "rgba(247,201,72,0)");
@@ -32120,6 +32237,7 @@ function drawPowerCore(m) {
   ctx.textBaseline = "middle";
   ctx.fillText("⚡POWER", pc.x, pc.y - 22);
   ctx.textBaseline = "alphabetic";
+  endSpriteScale();
 }
 
 /* ============================================================
@@ -32136,6 +32254,10 @@ function drawModeEntities(m) {
   if (mode === "koth" && m.crown) {
     const c = m.crown;
     const pulse = 0.75 + 0.25 * Math.sin(t * 0.12);
+    // v38.20: mode entities (crown/flags/bases/tag) drew with raw
+    // gridScale-1 literals — undersized on the 3x field. Each entity
+    // is wrapped in the shared sprite-scale transform.
+    beginSpriteScale(c.x, c.y);
     // Glow halo
     const grd = ctx.createRadialGradient(c.x, c.y, 4, c.x, c.y, 28);
     grd.addColorStop(0, `rgba(247,201,72,${0.55 * pulse})`);
@@ -32166,6 +32288,7 @@ function drawModeEntities(m) {
       ctx.fillText("CROWN", c.x, c.y - 18);
       ctx.textBaseline = "alphabetic";
     }
+    endSpriteScale();
   }
 
   // ----- CTF flags (classic two-flag, v37.69) -----
@@ -32180,6 +32303,7 @@ function drawModeEntities(m) {
       const ownerTeam = TEAM_BY_ID[flagOwnerId];
       const flagColor = (ownerTeam && ownerTeam.color) || "#ffffff";
       const fx = Math.floor(f.x), fy = Math.floor(f.y);
+      beginSpriteScale(f.x, f.y);
       // Pole
       ctx.fillStyle = "#3a2a1a";
       ctx.fillRect(fx, fy - 16, 2, 20);
@@ -32230,6 +32354,7 @@ function drawModeEntities(m) {
         ctx.setLineDash([]);
         ctx.globalAlpha = 1;
       }
+      endSpriteScale();
     }
   }
 
@@ -32250,6 +32375,7 @@ function drawModeEntities(m) {
       const team = TEAM_BY_ID[teamId];
       const color = (team && team.color) || "#888";
       const isDenied = denialPendingByTeam[teamId];
+      beginSpriteScale(b.x, b.y);
       // Base pad — colored ring on the floor.
       // v37.69: if denial-pending (own flag stolen), pulse gold/red instead
       // of the team color so the user immediately sees "captures here won't count".
@@ -32282,6 +32408,7 @@ function drawModeEntities(m) {
       ctx.textBaseline = "middle";
       ctx.fillText(team ? team.emoji : "?", b.x, b.y);
       ctx.textBaseline = "alphabetic";
+      endSpriteScale();
     }
   }
 
@@ -32291,6 +32418,7 @@ function drawModeEntities(m) {
     if (it) {
       // Halo on the It bot
       const pulse3 = 0.55 + 0.45 * Math.sin(t * 0.18);
+      beginSpriteScale(it.x, it.y);
       ctx.strokeStyle = `rgba(239,77,77,${pulse3})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -32303,11 +32431,13 @@ function drawModeEntities(m) {
       ctx.textBaseline = "middle";
       ctx.fillText("⚡ IT", it.x, it.y - 56);
       ctx.textBaseline = "alphabetic";
+      endSpriteScale();
     }
     // Frozen indicators on tagged bots
     for (const id in m.tag.tagFreezes) {
       const target = [...m.teamAplayers, ...m.teamBplayers].find(p => p.id === Number(id) && p.alive);
       if (!target) continue;
+      beginSpriteScale(target.x, target.y);
       ctx.strokeStyle = "rgba(136,192,208,0.9)";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -32320,6 +32450,7 @@ function drawModeEntities(m) {
       ctx.textBaseline = "middle";
       ctx.fillText("❄", target.x, target.y - 40);
       ctx.textBaseline = "alphabetic";
+      endSpriteScale();
     }
   }
 }
@@ -32462,23 +32593,27 @@ function drawArena() {
     }
 
     ctx.strokeStyle = lineColor;
-    ctx.lineWidth = 2.5;
+    // v38.20: generic-court fallback markings were raw gridScale-1
+    // literals (70/55/90 radii) — on the 3x field the centre circle
+    // was 1/3 size. Scale geometry + line widths by gridScale.
+    const _cmG = (typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1;
+    ctx.lineWidth = 2.5 * _cmG;
     ctx.beginPath();
     ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H); ctx.stroke();
 
-    ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(W/2, H/2, 70, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = 2.5 * _cmG;
+    ctx.beginPath(); ctx.arc(W/2, H/2, 70 * _cmG, 0, Math.PI * 2); ctx.stroke();
     ctx.strokeStyle = brandColor;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(W/2, H/2, 55, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = 1.5 * _cmG;
+    ctx.beginPath(); ctx.arc(W/2, H/2, 55 * _cmG, 0, Math.PI * 2); ctx.stroke();
 
     ctx.strokeStyle = lineColor;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 * _cmG;
     ctx.beginPath();
-    ctx.arc(0, H/2, 90, -Math.PI/2, Math.PI/2);
+    ctx.arc(0, H/2, 90 * _cmG, -Math.PI/2, Math.PI/2);
     ctx.stroke();
     ctx.beginPath();
-    ctx.arc(W, H/2, 90, Math.PI/2, -Math.PI/2);
+    ctx.arc(W, H/2, 90 * _cmG, Math.PI/2, -Math.PI/2);
     ctx.stroke();
 
     if (m && m.teamAId && m.teamBId) {
@@ -38545,7 +38680,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // === v37.92: single source of truth for the build label ===
 // Used by the console boot log AND by the save's gameVersion stamp.
 // Bump in ONE place per release.
-const BUILD_LABEL = "v38.19";
+const BUILD_LABEL = "v38.20";
 
 // === v37.34: build-identification stamp ===
 // Prints once on script load. If the user reports crashes and this line is
