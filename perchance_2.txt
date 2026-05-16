@@ -4563,6 +4563,51 @@
     min-width: 0;
     accent-color: var(--gold);
   }
+  /* === v38.21: checkbox + button settings controls === */
+  .setting-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .setting-check input[type=checkbox] {
+    accent-color: var(--gold);
+    cursor: pointer;
+  }
+  .setting-btn {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 12px;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 0;
+  }
+  .setting-btn:hover { border-color: var(--gold); color: var(--gold); }
+  /* === v38.21: theme chip grid === */
+  #themeChipGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  .theme-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--dim);
+  }
+  .theme-chip input[type="color"] {
+    width: 32px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid var(--line);
+    background: none;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
   .setting-val {
     color: var(--ink);
     font-family: "Courier New", monospace;
@@ -12137,6 +12182,18 @@
       </div>
 
       <div class="setting-card">
+        <h3>Theme</h3>
+        <div class="setting-desc">Pick a color preset or build your own. Custom colors layer on top of the chosen preset — pick a preset as a starting point, then tweak individual chips below. The page background is themeable too. Changes preview live.</div>
+        <div class="setting-row">
+          <select id="setThemePreset" class="setting-select"></select>
+        </div>
+        <div class="setting-row" id="themeChipGrid"></div>
+        <div class="setting-row">
+          <button class="setting-btn" id="themeResetBtn" type="button">Reset to preset</button>
+        </div>
+      </div>
+
+      <div class="setting-card">
         <h3>Field Obstacles</h3>
         <div class="setting-desc">Which cover style fills the play field. <strong>Blocks</strong> is the historical look — square 36-wsp obstacles in a centerline ribbon, scattered through the interior, and (new in v38.18) clustered in the four corners for richer flanking play. <strong>Walls</strong> is a city-scape: 5–12 wall segments arranged as partial building footprints with doorway gaps, like the top-down view of an unfinished office floor. <strong>Pillars</strong> is round columns — 8–14 ~30 wsp circles scattered across the field for a colonnade feel; no edge to peek around, so flanks open up. <strong>Forts</strong> (v38.19, designed for CTF) wraps each team's spawn in its own structure — two different fort templates per match (never the same on both sides), so the west and east halves are genuinely asymmetric. <strong>Hurdles</strong> (v38.19) lays staggered teeth along the top and bottom edges plus a mid-field row, intended to slow wall-tracing flee paths so chasers can close the gap. Effective at the next match.</div>
         <div class="setting-row">
@@ -12147,6 +12204,23 @@
             <option value="forts">Forts (asymmetric two-fort layout — designed for CTF)</option>
             <option value="hurdles">Hurdles (staggered teeth — slows flee paths)</option>
           </select>
+        </div>
+      </div>
+
+      <div class="setting-card">
+        <h3>Sound</h3>
+        <div class="setting-desc">Procedurally-generated retro-style sound effects — square-wave blips and noise bursts in homage to the 8-bit and 16-bit era (no sampled audio). Off by default. When on, you can mute individual categories below.</div>
+        <div class="setting-row">
+          <label class="setting-check"><input type="checkbox" id="setSoundEnabled"> Enable Sounds</label>
+        </div>
+        <div class="setting-row" id="soundCatRow">
+          <label class="setting-check"><input type="checkbox" id="setSoundUi" checked> UI clicks</label>
+          <label class="setting-check"><input type="checkbox" id="setSoundCombat" checked> Combat</label>
+          <label class="setting-check"><input type="checkbox" id="setSoundMatch" checked> Match events</label>
+          <label class="setting-check"><input type="checkbox" id="setSoundAmbient" checked> Ambient</label>
+        </div>
+        <div class="setting-row">
+          <button class="setting-btn" id="soundTestBtn" type="button">▶ Test sound</button>
         </div>
       </div>
 
@@ -13298,6 +13372,17 @@ const LEAGUE_CONFIG = {
   // round columns scattered across the field for a colonnade look.
   // Effective at the START of the next match (read once in generateTerrain).
   fieldObstacles: "blocks",  // "blocks" | "walls" | "pillars"
+  // === v38.21: sound system ===
+  // soundEnabled gates ALL audio (default false — silent by default).
+  // soundCats holds per-category enable flags; a missing/true value
+  // means the category is on (when soundEnabled is also true).
+  soundEnabled: false,
+  soundCats: { ui: true, combat: true, match: true, ambient: true },
+  // === v38.21: theme system (decoupled from continent) ===
+  // themePreset names a ThemeFactory preset; themeCustom holds optional
+  // per-CSS-var hex overrides layered on top of the preset.
+  themePreset: "stadium-blue",
+  themeCustom: {},
   // === v28 game mode selector + per-mode config ===
   // gameMode determines how a match is structured. "deathmatch" is the
   // canonical 5v5 best-of-N round-elimination mode. The three new modes
@@ -14715,6 +14800,303 @@ const ObstacleFactory = (function() {
     BLOCK_SIZE, WALL_THICKNESS, PILLAR_DIAM,
   };
 })();
+
+// ════════════════════════════════════════════════════════════════════
+// v38.21 — SoundFactory
+// ════════════════════════════════════════════════════════════════════
+// Procedurally synthesizes short retro-game-style sound effects via the
+// Web Audio API. No audio files, no sampled/copyrighted audio — every
+// sound is generated from oscillators + envelopes at call time. The
+// palette is a HOMAGE to 8-bit/16-bit era sound design (square-wave
+// blips, noise bursts, pitch sweeps) — references to the feel of
+// classic games, not reproductions of any specific game's audio.
+//
+// Categories (each independently toggleable via LEAGUE_CONFIG.soundCats):
+//   ui      — tab clicks, toggles, menu blips
+//   combat  — shots, hits, explosions
+//   match   — round start/end, victory, whistle
+//   ambient — crowd swell, low-priority flourishes
+//
+// All playback is gated by LEAGUE_CONFIG.soundEnabled (default false).
+// The AudioContext is created lazily on first real play (browsers
+// require a user gesture before audio can start).
+const SoundFactory = (function() {
+  let _ctx = null;
+  let _master = null;
+
+  function _ensureCtx() {
+    if (_ctx) return _ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    _ctx = new AC();
+    _master = _ctx.createGain();
+    _master.gain.value = 0.35;  // global headroom — retro SFX are punchy
+    _master.connect(_ctx.destination);
+    return _ctx;
+  }
+
+  // Is sound on, and is this category enabled?
+  function _allowed(cat) {
+    if (typeof LEAGUE_CONFIG === "undefined" || !LEAGUE_CONFIG) return false;
+    if (!LEAGUE_CONFIG.soundEnabled) return false;
+    const cats = LEAGUE_CONFIG.soundCats || {};
+    return cats[cat] !== false;  // categories default ON when sound is ON
+  }
+
+  // Core synth primitive: an oscillator with an ADSR-ish gain envelope.
+  function _tone(opts) {
+    const ctx = _ensureCtx();
+    if (!ctx) return;
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = opts.type || "square";
+    osc.frequency.setValueAtTime(opts.freq || 440, t0);
+    if (opts.freqTo != null) {
+      osc.frequency.exponentialRampToValueAtTime(
+        Math.max(1, opts.freqTo), t0 + (opts.dur || 0.12));
+    }
+    const peak = opts.gain != null ? opts.gain : 0.5;
+    const dur = opts.dur || 0.12;
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(peak, t0 + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain);
+    gain.connect(_master);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  }
+
+  // Noise burst (for hits/explosions) — short buffer of white noise.
+  function _noise(opts) {
+    const ctx = _ensureCtx();
+    if (!ctx) return;
+    const t0 = ctx.currentTime;
+    const dur = opts.dur || 0.18;
+    const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const filt = ctx.createBiquadFilter();
+    filt.type = opts.filter || "lowpass";
+    filt.frequency.setValueAtTime(opts.cutoff || 1200, t0);
+    const gain = ctx.createGain();
+    const peak = opts.gain != null ? opts.gain : 0.4;
+    gain.gain.setValueAtTime(peak, t0);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(filt);
+    filt.connect(gain);
+    gain.connect(_master);
+    src.start(t0);
+    src.stop(t0 + dur);
+  }
+
+  // === Named sounds — the public retro-homage palette ===
+  const SOUNDS = {
+    uiClick:   { cat: "ui",     play: () => _tone({ type:"square", freq:660, dur:0.06, gain:0.3 }) },
+    uiToggle:  { cat: "ui",     play: () => _tone({ type:"square", freq:520, freqTo:780, dur:0.09, gain:0.3 }) },
+    uiBack:    { cat: "ui",     play: () => _tone({ type:"square", freq:400, freqTo:240, dur:0.10, gain:0.3 }) },
+    shot:      { cat: "combat", play: () => _tone({ type:"sawtooth", freq:880, freqTo:220, dur:0.10, gain:0.35 }) },
+    hit:       { cat: "combat", play: () => _noise({ cutoff:900, dur:0.12, gain:0.4 }) },
+    explosion: { cat: "combat", play: () => _noise({ cutoff:500, dur:0.32, gain:0.6, filter:"lowpass" }) },
+    roundStart:{ cat: "match",  play: () => _tone({ type:"square", freq:520, freqTo:1040, dur:0.22, gain:0.4 }) },
+    victory:   { cat: "match",  play: () => {
+                   // ascending 3-note arpeggio — classic win jingle homage
+                   _tone({ type:"square", freq:523, dur:0.12, gain:0.4 });
+                   setTimeout(() => _tone({ type:"square", freq:659, dur:0.12, gain:0.4 }), 110);
+                   setTimeout(() => _tone({ type:"square", freq:784, dur:0.20, gain:0.4 }), 220);
+                 } },
+    whistle:   { cat: "match",  play: () => _tone({ type:"triangle", freq:1800, freqTo:2100, dur:0.18, gain:0.3 }) },
+    crowdSwell:{ cat: "ambient",play: () => _noise({ cutoff:700, dur:0.6, gain:0.25, filter:"bandpass" }) },
+  };
+
+  // Public: play a named sound if its category + global toggle allow it.
+  function play(name) {
+    const s = SOUNDS[name];
+    if (!s) return;
+    if (!_allowed(s.cat)) return;
+    try { s.play(); } catch (_) { /* audio failures never break the game */ }
+  }
+
+  function categories() { return ["ui", "combat", "match", "ambient"]; }
+  function names() { return Object.keys(SOUNDS); }
+
+  return { play, categories, names };
+})();
+if (typeof window !== "undefined") window.SoundFactory = SoundFactory;
+
+// ════════════════════════════════════════════════════════════════════
+// v38.21 — ThemeFactory
+// ════════════════════════════════════════════════════════════════════
+// Owns the page's themeable CSS-variable palette. Applies a named
+// preset or a custom hex map by writing CSS custom properties onto
+// document.documentElement (which cascades to everything via :root).
+//
+// The themeable VARS list is the consolidated palette — near-duplicate
+// colors from the original :root were merged: --pos-speed shared --gold,
+// --pos-sniper shared --pur, so the editor exposes one picker for each
+// shared pair. Team colors (--t-*) are NOT themeable (team identity).
+//
+// Replaces the old applyContinentTheme/.theme-sa coupling: theme is now
+// independent of continent. "Desert Rust" is the preset equivalent of
+// the old SA red palette.
+const ThemeFactory = (function() {
+  // Canonical themeable variables — label is what the settings UI shows.
+  const VARS = [
+    { key: "--bg-0",  label: "Background (deepest)" },
+    { key: "--bg-1",  label: "Background (panels)" },
+    { key: "--bg-2",  label: "Background (cards)" },
+    { key: "--bg-3",  label: "Background (raised)" },
+    { key: "--line",  label: "Borders / lines" },
+    { key: "--ink",   label: "Primary text" },
+    { key: "--dim",   label: "Dim text" },
+    { key: "--mute",  label: "Muted text" },
+    { key: "--gold",  label: "Gold accent" },
+    { key: "--red",   label: "Red accent" },
+    { key: "--grn",   label: "Green accent" },
+    { key: "--blu",   label: "Blue accent" },
+    { key: "--pur",   label: "Purple accent" },
+    { key: "--crt",   label: "Field surface" },
+  ];
+
+  // Presets. Each is a full map of VAR key -> hex. "stadium-blue" is the
+  // default (the historical :root palette).
+  const PRESETS = {
+    "stadium-blue": {
+      label: "Stadium Blue",
+      colors: { "--bg-0":"#07090c","--bg-1":"#0f1318","--bg-2":"#161c24","--bg-3":"#1f2731",
+        "--line":"#2a323d","--ink":"#e8eef5","--dim":"#8a98a8","--mute":"#5a6675",
+        "--gold":"#f7c948","--red":"#ef4d4d","--grn":"#4dd58a","--blu":"#4d9bef",
+        "--pur":"#b46df0","--crt":"#1a2129" },
+    },
+    "desert-rust": {
+      label: "Desert Rust",
+      colors: { "--bg-0":"#0c0808","--bg-1":"#181010","--bg-2":"#211616","--bg-3":"#2c1f1f",
+        "--line":"#3a2a2a","--ink":"#f0e8e6","--dim":"#b09898","--mute":"#7a6262",
+        "--gold":"#d8d0c4","--red":"#e83838","--grn":"#3da872","--blu":"#d04444",
+        "--pur":"#c8606a","--crt":"#241818" },
+    },
+    "magic-purple": {
+      label: "Magic Purple",
+      colors: { "--bg-0":"#0b0814","--bg-1":"#140f22","--bg-2":"#1d1630","--bg-3":"#281f40",
+        "--line":"#372a52","--ink":"#ece6f7","--dim":"#a596c0","--mute":"#6f5f8c",
+        "--gold":"#d6a8f0","--red":"#ef5d8a","--grn":"#6dd5b4","--blu":"#7d8bef",
+        "--pur":"#b46df0","--crt":"#1c1530" },
+    },
+    "forest-canopy": {
+      label: "Forest Canopy",
+      colors: { "--bg-0":"#070c08","--bg-1":"#0f1810","--bg-2":"#162117","--bg-3":"#1f2c20",
+        "--line":"#2a3a2c","--ink":"#e6f2e8","--dim":"#94b09a","--mute":"#5f7a64",
+        "--gold":"#c9d86b","--red":"#ef7d5d","--grn":"#4dd58a","--blu":"#5db4a0",
+        "--pur":"#9fc86d","--crt":"#152017" },
+    },
+    "calming-yellow": {
+      label: "Calming Yellow",
+      colors: { "--bg-0":"#141107","--bg-1":"#1a160b","--bg-2":"#241f12","--bg-3":"#2f291c",
+        "--line":"#3d3526","--ink":"#f5efe0","--dim":"#bdb088","--mute":"#857a5a",
+        "--gold":"#f7d048","--red":"#ef9d4d","--grn":"#b8d56b","--blu":"#d9c86b",
+        "--pur":"#e0b070","--crt":"#211c10" },
+    },
+    "bubbly-pink": {
+      label: "Bubbly Pink",
+      colors: { "--bg-0":"#140810","--bg-1":"#220f1c","--bg-2":"#301628","--bg-3":"#401f35",
+        "--line":"#522a45","--ink":"#f7e6f1","--dim":"#c096b4","--mute":"#8c5f7c",
+        "--gold":"#f0a8d6","--red":"#ef4d8a","--grn":"#6dd5b4","--blu":"#b47def",
+        "--pur":"#ef6db4","--crt":"#2a1522" },
+    },
+    "speedy-light-blue": {
+      label: "Speedy Light Blue",
+      colors: { "--bg-0":"#070f14","--bg-1":"#0f1c24","--bg-2":"#162833","--bg-3":"#1f3540",
+        "--line":"#2a4452","--ink":"#e6f2f7","--dim":"#94b0c0","--mute":"#5f7a8c",
+        "--gold":"#6bd0d8","--red":"#ef6e6e","--grn":"#5dd5b4","--blu":"#4dc4ef",
+        "--pur":"#6db4ef","--crt":"#152028" },
+    },
+    "starry-midnight": {
+      label: "Starry Midnight",
+      colors: { "--bg-0":"#04060f","--bg-1":"#080c1a","--bg-2":"#0e1428","--bg-3":"#161e3a",
+        "--line":"#222c4e","--ink":"#dfe6f7","--dim":"#8a96bd","--mute":"#5a648c",
+        "--gold":"#c9d0f0","--red":"#ef5d7d","--grn":"#5db4d5","--blu":"#5d7def",
+        "--pur":"#9d7def","--crt":"#0c1228" },
+    },
+    "sunny-rainbow": {
+      label: "Sunny Rainbow Day",
+      colors: { "--bg-0":"#0c0a14","--bg-1":"#15131f","--bg-2":"#1e1b2b","--bg-3":"#2a2638",
+        "--line":"#39344a","--ink":"#f2eef5","--dim":"#a89db8","--mute":"#6f6985",
+        "--gold":"#f7c948","--red":"#ef4d4d","--grn":"#4dd58a","--blu":"#4d9bef",
+        "--pur":"#b46df0","--crt":"#1a1626" },
+    },
+    "country-harvest": {
+      label: "Country Harvest Orange",
+      colors: { "--bg-0":"#0f0a07","--bg-1":"#1a120b","--bg-2":"#241a12","--bg-3":"#2f241c",
+        "--line":"#3d3026","--ink":"#f5ebe0","--dim":"#bda88c","--mute":"#85705a",
+        "--gold":"#f0a848","--red":"#e8683d","--grn":"#b0c06b","--blu":"#d8924d",
+        "--pur":"#d88a5a","--crt":"#211810" },
+    },
+    "inverted": {
+      label: "Inverted",
+      colors: { "--bg-0":"#f5f3ee","--bg-1":"#e8e5dd","--bg-2":"#dad6cc","--bg-3":"#c8c3b6",
+        "--line":"#a8a294","--ink":"#12161c","--dim":"#4a4f57","--mute":"#6a6f77",
+        "--gold":"#9a7a08","--red":"#c42020","--grn":"#1f8a4d","--blu":"#1f5fae",
+        "--pur":"#6a2fa0","--crt":"#d0ccc0" },
+    },
+    "high-contrast": {
+      label: "High Contrast",
+      colors: { "--bg-0":"#000000","--bg-1":"#0a0a0a","--bg-2":"#141414","--bg-3":"#1f1f1f",
+        "--line":"#4a4a4a","--ink":"#ffffff","--dim":"#cccccc","--mute":"#999999",
+        "--gold":"#ffd000","--red":"#ff3030","--grn":"#00e060","--blu":"#3098ff",
+        "--pur":"#c060ff","--crt":"#0a0a0a" },
+    },
+    "majestic-grey": {
+      label: "Majestic Light Grey",
+      colors: { "--bg-0":"#1a1c1e","--bg-1":"#26292c","--bg-2":"#33373b","--bg-3":"#42474c",
+        "--line":"#565c62","--ink":"#eef0f2","--dim":"#aab0b6","--mute":"#787e84",
+        "--gold":"#d8c890","--red":"#e07878","--grn":"#88c0a0","--blu":"#88a8d0",
+        "--pur":"#b098d0","--crt":"#2c3034" },
+    },
+  };
+
+  function presetKeys() { return Object.keys(PRESETS); }
+  function presetLabel(k) { return PRESETS[k] ? PRESETS[k].label : k; }
+  function vars() { return VARS.slice(); }
+  function presetColors(k) {
+    return PRESETS[k] ? Object.assign({}, PRESETS[k].colors) : null;
+  }
+
+  // Apply a color map (key -> hex) by writing CSS custom properties on
+  // the document root. Unknown keys are ignored.
+  function applyColors(colors) {
+    if (typeof document === "undefined" || !document.documentElement) return;
+    if (!colors) return;
+    const root = document.documentElement;
+    for (const v of VARS) {
+      if (colors[v.key]) root.style.setProperty(v.key, colors[v.key]);
+    }
+  }
+
+  // Apply a named preset. Returns the applied color map (or null).
+  function applyPreset(key) {
+    const colors = presetColors(key);
+    if (colors) applyColors(colors);
+    return colors;
+  }
+
+  // Resolve + apply the theme from LEAGUE_CONFIG. Custom colors (if any)
+  // layer on top of the chosen preset, so a user can pick a preset and
+  // then tweak individual chips.
+  function applyFromConfig() {
+    if (typeof LEAGUE_CONFIG === "undefined" || !LEAGUE_CONFIG) return;
+    const presetKey = LEAGUE_CONFIG.themePreset || "stadium-blue";
+    const base = presetColors(presetKey) || presetColors("stadium-blue");
+    const custom = LEAGUE_CONFIG.themeCustom || {};
+    const merged = Object.assign({}, base, custom);
+    applyColors(merged);
+  }
+
+  return { presetKeys, presetLabel, vars, presetColors, applyColors,
+           applyPreset, applyFromConfig };
+})();
+if (typeof window !== "undefined") window.ThemeFactory = ThemeFactory;
 
 // === v37.23: Knight personalities ===
 // Per-knight AI-weight modifiers picked at debut, persistent for the
@@ -17810,6 +18192,8 @@ function startMatch() {
 function startRound() {
   const m = LEAGUE.match;
   if (!m) return;
+  // v38.21: round-start sound (no-op when sound off or match category muted)
+  if (typeof SoundFactory !== "undefined") SoundFactory.play("roundStart");
   // v28.16: defensive structural-integrity check on the league pool. Within
   // an active match this is almost always a no-op (deceased flag doesn't
   // flip until match end), but it's safe to run and protects against any
@@ -36904,27 +37288,18 @@ function renderStore() {
   }
 }
 
-/* === v37.91: continent-driven theme application ===
-   Idempotent helper that syncs document.body's .theme-sa class with
-   LEAGUE.continent. Called from renderAll so it stays in sync with
-   every UI refresh — load, settings-apply, season-rollover, etc.
+/* === v37.91 → v38.21: theme application ===
+   Pre-v38.21 this toggled body.theme-sa based on LEAGUE.continent.
+   v38.21 decouples theme from continent — the name is kept as a thin
+   alias (renderAll still calls it) but it now applies the user-chosen
+   theme via ThemeFactory. The .theme-sa CSS rule is left in place as a
+   harmless dead rule; "Desert Rust" is its preset equivalent.
 
-   Theme mapping:
-     "na"   → default palette (NA cool blue/gold)
-     "sa"   → theme-sa palette (warm red/silver/white)
-     "both" → default palette (the unified league shows NA palette;
-              SA teams' identity colors still pop through naturally)
-
-   Safe to call before document.body exists (early boot); silently no-ops.
-   Safe to call multiple times — classList operations are idempotent. */
+   Safe to call before document.body exists (early boot) and safe to
+   call repeatedly — ThemeFactory.applyFromConfig just re-writes the
+   same CSS custom properties. */
 function applyContinentTheme() {
-  if (typeof document === "undefined" || !document.body) return;
-  const c = (typeof LEAGUE !== "undefined" && LEAGUE && LEAGUE.continent) || "na";
-  if (c === "sa") {
-    document.body.classList.add("theme-sa");
-  } else {
-    document.body.classList.remove("theme-sa");
-  }
+  if (typeof ThemeFactory !== "undefined") ThemeFactory.applyFromConfig();
 }
 if (typeof window !== "undefined") window.applyContinentTheme = applyContinentTheme;
 
@@ -38279,9 +38654,19 @@ function showGraveyard() {
     const t = TEAM_BY_ID[g.teamId];
     // Find the actual roster entry (deceased players are still in roster, just .deceased=true)
     const rosterEntry = (LEAGUE.rosters[g.teamId] || []).find(p => p.name === g.name);
-    const clickAttr = rosterEntry
-      ? `onclick='openMemorialFor(${g.teamId ? `"${g.teamId}"` : "null"}, ${JSON.stringify(g.name)})' style="cursor:pointer;"`
-      : "";
+    // v38.20 bugfix (defensive): the onclick was single-quoted while
+    // JSON.stringify emits double-quoted strings — safe for the common
+    // case, but a knight name containing an apostrophe would break the
+    // single-quoted attribute (the same bug class as the lore-bookmark
+    // Remove button). Build the JS payload then HTML-escape the whole
+    // attribute value so embedded quotes of either kind survive.
+    let clickAttr = "";
+    if (rosterEntry) {
+      const teamArg = g.teamId ? "'" + String(g.teamId).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'" : "null";
+      const nameArg = "'" + String(g.name || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'";
+      const memJs = `openMemorialFor(${teamArg}, ${nameArg})`;
+      clickAttr = `onclick="${escapeHTML(memJs)}" style="cursor:pointer;"`;
+    }
     html += `<tr ${clickAttr}>
       <td>S${g.season}</td>
       <td>${g.round || "—"}</td>
@@ -38680,7 +39065,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // === v37.92: single source of truth for the build label ===
 // Used by the console boot log AND by the save's gameVersion stamp.
 // Bump in ONE place per release.
-const BUILD_LABEL = "v38.20";
+const BUILD_LABEL = "v38.21";
 
 // === v37.34: build-identification stamp ===
 // Prints once on script load. If the user reports crashes and this line is
@@ -39983,6 +40368,84 @@ function bindSettings() {
     const allowed = ["blocks", "walls", "pillars", "forts", "hurdles"];
     fieldObsSel.value = allowed.includes(saved) ? saved : "blocks";
   }
+
+  // === v38.21: sound settings ===
+  const soundEnabledEl = $("#setSoundEnabled");
+  if (soundEnabledEl) {
+    soundEnabledEl.checked = !!(LEAGUE_CONFIG && LEAGUE_CONFIG.soundEnabled);
+  }
+  const _soundCatMap = { setSoundUi: "ui", setSoundCombat: "combat", setSoundMatch: "match", setSoundAmbient: "ambient" };
+  for (const elId in _soundCatMap) {
+    const el = $("#" + elId);
+    if (el) {
+      const cat = _soundCatMap[elId];
+      const cats = (LEAGUE_CONFIG && LEAGUE_CONFIG.soundCats) || {};
+      el.checked = cats[cat] !== false;
+    }
+  }
+  const soundTestBtn = $("#soundTestBtn");
+  if (soundTestBtn) {
+    soundTestBtn.addEventListener("click", () => {
+      // Honor the live checkbox states so Test works before Apply.
+      if (LEAGUE_CONFIG) {
+        LEAGUE_CONFIG.soundEnabled = !!($("#setSoundEnabled")?.checked);
+        LEAGUE_CONFIG.soundCats = {
+          ui: !!($("#setSoundUi")?.checked),
+          combat: !!($("#setSoundCombat")?.checked),
+          match: !!($("#setSoundMatch")?.checked),
+          ambient: !!($("#setSoundAmbient")?.checked),
+        };
+      }
+      if (typeof SoundFactory !== "undefined") SoundFactory.play("roundStart");
+    });
+  }
+
+  // === v38.21: theme settings ===
+  const themeSel = $("#setThemePreset");
+  if (themeSel && typeof ThemeFactory !== "undefined") {
+    themeSel.innerHTML = ThemeFactory.presetKeys().map(k =>
+      `<option value="${k}">${ThemeFactory.presetLabel(k)}</option>`).join("");
+    themeSel.value = (LEAGUE_CONFIG && LEAGUE_CONFIG.themePreset) || "stadium-blue";
+    themeSel.addEventListener("change", () => {
+      // Switching preset clears custom overrides and re-renders chips.
+      if (LEAGUE_CONFIG) { LEAGUE_CONFIG.themePreset = themeSel.value; LEAGUE_CONFIG.themeCustom = {}; }
+      ThemeFactory.applyPreset(themeSel.value);
+      _renderThemeChips();
+    });
+  }
+  function _renderThemeChips() {
+    const grid = $("#themeChipGrid");
+    if (!grid || typeof ThemeFactory === "undefined") return;
+    const presetKey = (LEAGUE_CONFIG && LEAGUE_CONFIG.themePreset) || "stadium-blue";
+    const base = ThemeFactory.presetColors(presetKey) || {};
+    const custom = (LEAGUE_CONFIG && LEAGUE_CONFIG.themeCustom) || {};
+    grid.innerHTML = ThemeFactory.vars().map(v => {
+      const val = custom[v.key] || base[v.key] || "#000000";
+      return `<label class="theme-chip">
+        <input type="color" data-var="${v.key}" value="${val}">
+        <span>${v.label}</span>
+      </label>`;
+    }).join("");
+    grid.querySelectorAll('input[type="color"]').forEach(inp => {
+      inp.addEventListener("input", () => {
+        const key = inp.dataset.var;
+        if (LEAGUE_CONFIG) {
+          LEAGUE_CONFIG.themeCustom = LEAGUE_CONFIG.themeCustom || {};
+          LEAGUE_CONFIG.themeCustom[key] = inp.value;
+        }
+        ThemeFactory.applyFromConfig();  // live preview
+      });
+    });
+  }
+  _renderThemeChips();
+  const themeResetBtn = $("#themeResetBtn");
+  if (themeResetBtn) {
+    themeResetBtn.addEventListener("click", () => {
+      if (LEAGUE_CONFIG) LEAGUE_CONFIG.themeCustom = {};
+      ThemeFactory.applyFromConfig();
+      _renderThemeChips();
+    });
+  }
   if (kothPointsSel && LEAGUE_CONFIG && LEAGUE_CONFIG.modeConfig) {
     kothPointsSel.value = String(LEAGUE_CONFIG.modeConfig.koth.pointsToWin || 50);
   }
@@ -40239,6 +40702,18 @@ function bindSettings() {
       if (LEAGUE_CONFIG) {
         LEAGUE_CONFIG.gameMode = newMode;
         LEAGUE_CONFIG.fieldObstacles = newFieldObs;
+        // === v38.21: sound settings ===
+        LEAGUE_CONFIG.soundEnabled = !!($("#setSoundEnabled")?.checked);
+        LEAGUE_CONFIG.soundCats = {
+          ui: !!($("#setSoundUi")?.checked),
+          combat: !!($("#setSoundCombat")?.checked),
+          match: !!($("#setSoundMatch")?.checked),
+          ambient: !!($("#setSoundAmbient")?.checked),
+        };
+        // === v38.21: theme — themePreset/themeCustom are written live by
+        // the Theme card handlers; re-apply here so Apply guarantees the
+        // current theme is on-screen even if a handler was missed.
+        if (typeof ThemeFactory !== "undefined") ThemeFactory.applyFromConfig();
         if (LEAGUE_CONFIG.modeConfig) {
           if (LEAGUE_CONFIG.modeConfig.koth) {
             LEAGUE_CONFIG.modeConfig.koth.pointsToWin = +($("#setKothPoints")?.value || 50);
@@ -42170,6 +42645,8 @@ window.fastForwardSim = fastForwardSim;
    TAB SWITCHING — Game / Bet / Store / About
    ============================================================ */
 function switchTab(tabId) {
+  // v38.21: UI click sound (no-op when sound is off or ui category muted)
+  if (typeof SoundFactory !== "undefined") SoundFactory.play("uiClick");
   $$(".tab-content").forEach(el => el.classList.toggle("active", el.dataset.tab === tabId));
   $$(".nav-tabs button").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tabId));
   if (tabId === "bet" && typeof renderBetTab === "function") renderBetTab();
@@ -43557,14 +44034,27 @@ function renderBookmarksLore() {
       </div>`;
     html += bmEntries.map(e => {
       const safeId = e.id.replace(/'/g, "\\'");
-      const safeTitle = JSON.stringify(e.title || "");
+      // v38.20 bugfix: the Remove button passed JSON.stringify(title)
+      // straight into a double-quoted onclick attribute. A title like
+      // 'A Hug Is Technically Legal' became `"A Hug..."` — the inner
+      // double quotes collided with the attribute delimiters and the
+      // browser truncated the attribute, parsing the rest as broken
+      // HTML attrs (a="" hug="" ...). Fix: build the full JS payload as
+      // a string, then HTML-escape the WHOLE thing so every embedded
+      // quote becomes an entity. The browser un-escapes it back to
+      // valid JS when the handler fires. Single-quoted JS string args
+      // are used for the title so escapeHTML's &#39; handles any
+      // apostrophes in the title text too.
+      const titleArg = "'" + String(e.title || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'";
+      const jumpJs = `event.stopPropagation();jumpToLoreArticle('${safeId}');`;
+      const removeJs = `event.stopPropagation();toggleLoreBookmark('${safeId}', '${e.section}', ${titleArg});`;
       return `<div class="lore-bookmark-card" onclick="jumpToLoreArticle('${safeId}')">
         <div class="bm-section">${escapeHTML(sectionLabels[e.section] || e.section)}</div>
         <div class="bm-title">${escapeHTML(e.title || "Untitled")}</div>
         ${e.snippet ? `<div class="bm-snippet">${escapeHTML(e.snippet)}</div>` : ""}
         <div class="bm-actions">
-          <button onclick="event.stopPropagation();jumpToLoreArticle('${safeId}');">Jump to article</button>
-          <button onclick="event.stopPropagation();toggleLoreBookmark('${safeId}', '${e.section}', ${safeTitle});">Remove</button>
+          <button onclick="${escapeHTML(jumpJs)}">Jump to article</button>
+          <button onclick="${escapeHTML(removeJs)}">Remove</button>
         </div>
       </div>`;
     }).join("");
