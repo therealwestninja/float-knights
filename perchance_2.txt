@@ -14675,17 +14675,32 @@ const ObstacleFactory = (function() {
       w: T, h: Math.round(fh),
       shape: "wall",
     });
-    // Top wall — horizontal, spans full fort width
+    // === v38.28: top + bottom walls are SPLIT into two segments with a
+    // central doorway gap. Pre-v38.28 these spanned the full fort width
+    // and, combined with the back wall sitting only ~2.8% off the arena
+    // edge, boxed spawning bots into the narrow pocket between the arena
+    // wall and the fort — bots got permanently wedged there. The gap
+    // gives that pocket an exit. DOOR_W is the opening width; each wall
+    // becomes [outer segment][gap][inner segment].
+    const DOOR_W = Math.round(fw * 0.34);   // doorway opening
+    const segW = Math.round((fw - DOOR_W) / 2);
+    // Top wall — two segments
     result.push({
       x: Math.round(x0), y: Math.round(y0),
-      w: Math.round(fw), h: T,
-      shape: "wall",
+      w: segW, h: T, shape: "wall",
     });
-    // Bottom wall — horizontal, spans full fort width
+    result.push({
+      x: Math.round(x0) + segW + DOOR_W, y: Math.round(y0),
+      w: segW, h: T, shape: "wall",
+    });
+    // Bottom wall — two segments (mirrors the top)
     result.push({
       x: Math.round(x0), y: Math.round(y1 - T),
-      w: Math.round(fw), h: T,
-      shape: "wall",
+      w: segW, h: T, shape: "wall",
+    });
+    result.push({
+      x: Math.round(x0) + segW + DOOR_W, y: Math.round(y1 - T),
+      w: segW, h: T, shape: "wall",
     });
     // Interior pillar at ~70% into the fort (near the opening) — gives
     // the carrier a point of cover during the run-out.
@@ -14722,11 +14737,20 @@ const ObstacleFactory = (function() {
       w: T, h: Math.round(fh * 0.70),
       shape: "wall",
     });
-    // Top wall — horizontal, full width
+    // === v38.28: top wall SPLIT into two segments with a doorway gap
+    // (same spawn-pocket fix as _fortTemplateU). The L-fort already has
+    // a south slip-out from the 70%-height back wall, but the full-width
+    // top wall could still box a bot against the arena edge — the gap
+    // guarantees a second exit.
+    const DOOR_W = Math.round(fw * 0.32);
+    const segW = Math.round((fw - DOOR_W) / 2);
     result.push({
       x: Math.round(x0), y: Math.round(y0),
-      w: Math.round(fw), h: T,
-      shape: "wall",
+      w: segW, h: T, shape: "wall",
+    });
+    result.push({
+      x: Math.round(x0) + segW + DOOR_W, y: Math.round(y0),
+      w: segW, h: T, shape: "wall",
     });
     // Forward cover wall — vertical, sits ~25% in from the opening,
     // covers the middle 40% of the fort height
@@ -25531,6 +25555,9 @@ function fireGrenade(attacker, target, m) {
 
 /* Detonate a grenade projectile — AoE damage + knockback to enemies in radius. */
 function detonateGrenade(pr, m) {
+  // v38.28: explosion sound. Detonations are infrequent — no throttle
+  // needed; one play per blast. No-op when sound is off.
+  if (typeof SoundFactory !== "undefined") SoundFactory.play("explosion");
   const enemies = pr.teamId === m.teamAId ? m.teamBplayers : m.teamAplayers;
   for (const e of enemies) {
     if (!e.alive) continue;
@@ -27096,6 +27123,27 @@ function computeCooldown(p, effSpd) {
 /* ============================================================
    FIRE ATTACK — branches melee vs projectile
    ============================================================ */
+// ════════════════════════════════════════════════════════════════════
+// v38.28 — _SfxThrottle: rate-limiter for combat sounds
+// ════════════════════════════════════════════════════════════════════
+// Combat events (shots, hits) fire many times per second across every
+// bot. Playing a sound on each would be a continuous buzz. This gates a
+// named sound channel to at most one play per `minGapMs`. Returns true
+// if enough time has passed (caller should play), false otherwise.
+// Uses wall-clock time so it's independent of sim tick rate.
+const _SfxThrottle = (function() {
+  const _last = {};
+  return function(channel, minGapMs) {
+    const now = (typeof performance !== "undefined" && performance.now)
+      ? performance.now() : Date.now();
+    const prev = _last[channel] || 0;
+    if (now - prev < minGapMs) return false;
+    _last[channel] = now;
+    return true;
+  };
+})();
+if (typeof window !== "undefined") window._SfxThrottle = _SfxThrottle;
+
 function fireAttack(attacker, target, m) {
   const wpn = attacker.weapon || {};
   const range = wpn.range || 0;
@@ -27121,6 +27169,13 @@ function fireAttack(attacker, target, m) {
         return;  // cover blocks the shot
       }
     }
+  }
+  // === v38.28: shot sound (throttled) ===
+  // fireAttack runs many times per second across all bots — playing a
+  // sound per call would be an unlistenable buzz. _SfxThrottle gates it
+  // to at most one shot blip per ~70ms. No-op when sound is off.
+  if (typeof SoundFactory !== "undefined" && _SfxThrottle("shot", 70)) {
+    SoundFactory.play("shot");
   }
 
   if (range <= 30) {
@@ -27397,6 +27452,12 @@ function applyDamage(attacker, defender, dmg, isCrit, m, opts) {
   const hpFracBefore = defender.hp / defender.stats.hp;
   defender.hp -= dmg;
   const hpFracAfter = defender.hp / defender.stats.hp;
+  // === v38.28: hit sound (throttled) ===
+  // Like shots, hits land frequently across all bots — throttle to one
+  // hit blip per ~60ms. No-op when sound is off.
+  if (typeof SoundFactory !== "undefined" && _SfxThrottle("hit", 60)) {
+    SoundFactory.play("hit");
+  }
   // Balloon pop thresholds at 2/3 and 1/3
   for (const t of [2/3, 1/3]) {
     if (hpFracBefore > t && hpFracAfter <= t && defender.hp > 0) {
@@ -28301,6 +28362,8 @@ function finalizeRound(forfeit) {
     forfeit ||
     (m.currentRoundIndex >= m.bestOf && m.roundsWonA !== m.roundsWonB);
   if (matchOver) {
+    // v38.28: victory jingle on match win. No-op when sound is off.
+    if (typeof SoundFactory !== "undefined") SoundFactory.play("victory");
     finalizeMatch();
     return;
   }
@@ -28310,6 +28373,9 @@ function finalizeRound(forfeit) {
     return;
   }
 
+  // v38.28: round-end whistle (only when the match continues — a match-
+  // ending round plays the victory jingle above instead).
+  if (typeof SoundFactory !== "undefined") SoundFactory.play("whistle");
   m.phase = "betweenRounds";
   // === v37.22: spawn cleanup crew for the inter-round break ===
   if (typeof spawnJanitors === "function") spawnJanitors(m);
@@ -32168,12 +32234,18 @@ function drawCrowd(m) {
       }
     }
     const fy = f.y + bob;
+    // v38.28: fan dots were raw 2x4 / 2x2 px literals — invisible on
+    // the 3x field even though the crowd BAND depth (CROWD_DEPTH) was
+    // already scaled. Wrap each fan in the shared sprite-scale transform
+    // so the spectator reads at the intended size.
+    beginSpriteScale(f.x, fy);
     // Body — 2px wide rectangle
     ctx.fillStyle = f.palette[0];
     ctx.fillRect(f.x - 1, fy + 1, 2, 4);
     // Head — 2x2 dot
     ctx.fillStyle = f.palette[1];
     ctx.fillRect(f.x - 1, fy - 2, 2, 2);
+    endSpriteScale();
   }
 
   // === v37.61: stadium corner art (banners + mascot signs) ===
@@ -32219,15 +32291,22 @@ function drawCrowd(m) {
         // is baked into the canvas so it appears to hang from the stadium
         // structure). A subtle pendulum sway adds life — the scoreboard
         // is *hanging*, after all.
+        // v38.28: corner art (scoreboard, mascot heads, signs) was
+        // composited at native cache size on the 3x-expanded field —
+        // 1/3 the intended size. Each drawImage now gets explicit
+        // destination dimensions scaled by gridScale, and the corner
+        // offsets below scale too so the art still hugs the corners.
+        const _cg = (COMBAT.gridScale || 1);
         const swayAng = Math.sin(t * 0.025) * 0.4;  // gentle pendulum, ~degrees
-        const scoreboardX = (W - SCOREBOARD_W) / 2;
+        const scoreboardX = (W - SCOREBOARD_W * _cg) / 2;
         const scoreboardY = -CROWD_DEPTH + inset;
         // Apply tiny rotation around the strap-mount points (top-center)
         ctx.save();
         ctx.translate(W / 2, scoreboardY);
         ctx.rotate(swayAng * Math.PI / 180);
         ctx.translate(-W / 2, -scoreboardY);
-        ctx.drawImage(_crowdCornerCache.scoreboard, scoreboardX, scoreboardY);
+        ctx.drawImage(_crowdCornerCache.scoreboard, scoreboardX, scoreboardY,
+                      SCOREBOARD_W * _cg, SCOREBOARD_H * _cg);
         ctx.restore();
 
         // === TOP-LEFT — small mascot head ===
@@ -32248,13 +32327,15 @@ function drawCrowd(m) {
         ctx.drawImage(
           _crowdCornerCache.homeTopHead,
           inset,
-          -CROWD_DEPTH + inset + topBaseBobL + topCheerBobL
+          -CROWD_DEPTH + inset + topBaseBobL + topCheerBobL,
+          TOP_MASCOT_W * _cg, TOP_MASCOT_H * _cg
         );
         // === TOP-RIGHT — small mascot head ===
         ctx.drawImage(
           _crowdCornerCache.visitingTopHead,
-          W - TOP_MASCOT_W - inset,
-          -CROWD_DEPTH + inset + topBaseBobR + topCheerBobR
+          W - TOP_MASCOT_W * _cg - inset,
+          -CROWD_DEPTH + inset + topBaseBobR + topCheerBobR,
+          TOP_MASCOT_W * _cg, TOP_MASCOT_H * _cg
         );
 
         // === Bottom corner mascot signs — UNCHANGED from v37.61/v37.62 ===
@@ -32271,13 +32352,15 @@ function drawCrowd(m) {
         ctx.drawImage(
           _crowdCornerCache.homeSign,
           inset,
-          H + inset + baseBobL + cheerBobL
+          H + inset + baseBobL + cheerBobL,
+          CORNER_SIGN_W * _cg, CORNER_SIGN_H * _cg
         );
         // === BOTTOM-RIGHT — visiting mascot sign ===
         ctx.drawImage(
           _crowdCornerCache.visitingSign,
-          W - CORNER_SIGN_W - inset,
-          H + inset + baseBobR + cheerBobR
+          W - CORNER_SIGN_W * _cg - inset,
+          H + inset + baseBobR + cheerBobR,
+          CORNER_SIGN_W * _cg, CORNER_SIGN_H * _cg
         );
       }
     }
@@ -32286,6 +32369,12 @@ function drawCrowd(m) {
 
 function drawScenery() {
   for (const s of SCENERY) {
+    // v38.28: stadium scenery (pillars, banners, rubble) was drawn with
+    // raw gridScale-1 literals — tiny specks on the 3x-expanded field,
+    // the same legacy-scale bug fixed for drops/projectiles in v38.20.
+    // Wrap each prop in the shared sprite-scale transform so it renders
+    // 3x in world space, matching the field and the knight sprites.
+    beginSpriteScale(s.x, s.y);
     if (s.type === "pillar") {
       // Stone pillar with shadow
       ctx.fillStyle = "rgba(0,0,0,0.35)";
@@ -32314,6 +32403,7 @@ function drawScenery() {
       ctx.fillRect(s.x - 6, s.y + 2, 4, 3);
       ctx.fillRect(s.x + 2, s.y + 1, 4, 3);
     }
+    endSpriteScale();
   }
 }
 
@@ -39296,7 +39386,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // === v37.92: single source of truth for the build label ===
 // Used by the console boot log AND by the save's gameVersion stamp.
 // Bump in ONE place per release.
-const BUILD_LABEL = "v38.27";
+const BUILD_LABEL = "v38.28";
 
 // === v37.34: build-identification stamp ===
 // Prints once on script load. If the user reports crashes and this line is
