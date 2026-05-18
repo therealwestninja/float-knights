@@ -12963,7 +12963,7 @@ function hpFrac(p) {
 }
 /* All players in the match, flat — both teams concatenated.
    v37.92: consolidates 8+ inline sites that wrote
-   `m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)`. The
+   `_allPlayers(m)`. The
    underlying optimization: a per-tick cache (m._allPlayersFlat) is
    rebuilt once per AI-tick in tickArena. Callers outside that scope
    fall back to a fresh concat. Returns empty if m is null/missing
@@ -13420,6 +13420,25 @@ const LEAGUE_CONFIG = {
   //   ~0.35 rad ≈ 20°/tick. Math.PI effectively disables the cap.
   botDecisionCommitFrames: 6,
   botMaxTurnPerTick: 0.35,
+  // === v38.40: Unitree Go2-grounded vehicle pathing ===
+  // The bots model the Unitree Go2 quadruped (the robot the Sweetie /
+  // referee movement was adapted from). Real Go2: ~2 rad/s yaw (≈0.35
+  // rad/tick @20Hz — that's botMaxTurnPerTick above), ~120° front-camera
+  // FOV.
+  // botPivotThreshold — if the required heading change exceeds this, the
+  //   target is substantially "behind" the bot. If the bot also lacks
+  //   room to arc, it pivots in place instead. ~2.1 rad ≈ 120°.
+  // botMinTurnRadius — px; the turn-room probe distance. Derived from the
+  //   Go2 scale (~56 px/m): a couple of body-lengths.
+  // botFovHalfAngle — half the vision cone. Go2 camera ≈120° → 60° half.
+  // botVisionRange — px a bot can perceive (scaled by gridScale at use).
+  // botTargetMemoryFrames — once a target is acquired, keep it this long
+  //   after it leaves the cone/LOS, so rounding cover doesn't drop it.
+  botPivotThreshold: 2.10,
+  botMinTurnRadius: 90,
+  botFovHalfAngle: 1.047,        // 60° — half of the Go2 120° camera FOV
+  botVisionRange: 520,
+  botTargetMemoryFrames: 25,
   // === v28 game mode selector + per-mode config ===
   // gameMode determines how a match is structured. "deathmatch" is the
   // canonical 5v5 best-of-N round-elimination mode. The three new modes
@@ -13510,10 +13529,14 @@ const LEAGUE_CONFIG = {
       durationSec: 300,         // 5 minutes default (3-10 range)
       // v38.11: FOV cone area reduced to 1/6 per user report — at
       // the old 80°/220px Sweeties finished their task in 10 seconds.
-      // Both angle and range scaled by ~0.55 so combined cone area
-      // (0.5 × r² × θ in radians) is exactly 1/6 of pre-v38.11.
-      fovDeg: 44,               // forward cone in degrees (was 80)
-      fovRangeMax: 120,         // max range a Sweetie can "see" objects (was 220)
+      // v38.40: Explore Sweeties now model the real Unitree Go2 camera —
+      // a 120° forward FOV — matching combat bots and the Go2 hardware.
+      // (Was 44°, a v38.11 scoring-balance tune; realism takes priority
+      // per the Go2-grounding pass. visitThresholdFrames left as-is; the
+      // wider cone makes object-spotting easier — acceptable, and tunable
+      // later if Explore scores run high.)
+      fovDeg: 120,              // Go2 front-camera FOV
+      fovRangeMax: 120,         // max range a Sweetie can "see" objects
       visitThresholdFrames: 8,  // frames in FOV to count as "looked at"
       // Curiosity radius — Sweeties drift toward the nearest unseen
       // scatter object within this range, to give the wandering a soft
@@ -13869,7 +13892,7 @@ const RefereeFactory = (function() {
       // concentration of action"). Empty/no-alive falls through to
       // sign-left default.
       let sx = 0, sy = 0, count = 0;
-      const all = m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers);
+      const all = _allPlayers(m);
       for (const p of all) {
         if (!p.alive) continue;
         sx += p.x; sy += p.y; count++;
@@ -13888,7 +13911,7 @@ const RefereeFactory = (function() {
 
     // === Step 2: reactive flee (Go2 sweetie pattern) ===
     let nearest = null, nearestD = Infinity;
-    const all2 = m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers);
+    const all2 = _allPlayers(m);
     for (const p of all2) {
       if (!p.alive) continue;
       const dx = ref.x - p.x, dy = ref.y - p.y;
@@ -15489,7 +15512,6 @@ const WEAPONS = [
   // Long cooldown, heavy damage in an AoE radius. Very inaccurate.
   { id: "launcher", ico: "💣", name: "Grenade Launcher", defMod: -1, dmgMod: +6, cdMod: +0.80, critMod: -0.05, stun: 0,    range: 220, projSpeed: 6,  inacc: 0.12, flavorPos: "grenadier" },
 ];
-const WEAPON_BY_ID = Object.fromEntries(WEAPONS.map(w => [w.id, w]));
 
 /* Melee fallback profiles — used by AI's MELEE state when a ranged-weapon
    bot is being swarmed. We don't actually swap inventories (that would
@@ -15557,6 +15579,24 @@ function _GS() {
 }
 if (typeof window !== "undefined") window._GS = _GS;
 
+// v38.43: shared roster helpers. The pattern
+//   _allPlayers(m)
+// was hand-rolled at 16 sites — _allPlayersFlat is a per-tick cache
+// (set in tickMatch); the concat is the fallback when it's absent.
+// _allPlayers(m) returns the full roster, _alivePlayers(m) the alive
+// subset. Centralizing also means a future roster-storage change has
+// one edit site instead of sixteen.
+function _allPlayers(m) {
+  return m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers);
+}
+function _alivePlayers(m) {
+  return _allPlayers(m).filter(e => e.alive);
+}
+if (typeof window !== "undefined") {
+  window._allPlayers = _allPlayers;
+  window._alivePlayers = _alivePlayers;
+}
+
 const ARMORS = [
   { id: "plate",   ico: "🪖", name: "Plate Cuirass",   defMod: +10, spdMod:  0,    critMod:  0,    flavorPos: "tank" },
   { id: "brig",    ico: "🎽", name: "Brigandine",      defMod:  +5, spdMod:  0,    critMod:  0,    flavorPos: "striker" },
@@ -15566,7 +15606,6 @@ const ARMORS = [
   { id: "robe",    ico: "🥻", name: "Medic Robe",      defMod:  +2, spdMod: +0.2,  critMod:  0,    flavorPos: "healer" },
   { id: "vest",    ico: "🦺", name: "Flak Vest",       defMod:  +4, spdMod:  0,    critMod:  0,    flavorPos: "grenadier" },
 ];
-const ARMOR_BY_ID = Object.fromEntries(ARMORS.map(a => [a.id, a]));
 
 // Items have a trigger: "start" (fires once at match begin),
 // "passive" (active for whole match), "lowHP" (fires once when HP <30%).
@@ -15577,7 +15616,6 @@ const ITEMS = [
   { id: "grenade",   ico: "🧨", name: "Frag Grenade",    trigger: "lowHP",   desc: "Hits nearest enemy for 18 at <25%" },
   { id: "powercell", ico: "🔋", name: "Power Cell",      trigger: "start",   desc: "+25% DMG for 15s" },
 ];
-const ITEM_BY_ID = Object.fromEntries(ITEMS.map(i => [i.id, i]));
 
 // "Score" a piece of gear so the AI can compare its current piece to
 // a scavengable upgrade. Higher = better for that slot.
@@ -16765,15 +16803,6 @@ window.updateFollowedKnightBadge = updateFollowedKnightBadge;
    left in LEAGUE.followedKnights so the user's intent persists if the
    knight is still in the graveyard but visible in lore — but they don't
    appear in this resolved list. */
-function getFollowedKnights() {
-  const ids = LEAGUE.followedKnights || [];
-  const out = [];
-  for (const id of ids) {
-    const k = findKnightById(id);
-    if (k) out.push(k);
-  }
-  return out;
-}
 
 /* === Lineage system ===
    Surnames carry across knight generations. When a knight perma-dies,
@@ -17766,22 +17795,8 @@ const COMM_MATCH_DRAW = [
 ];
 
 // "Color commentary" — analyst observations, swap in occasionally
-const COMM_COLOR_GENERAL = [
-  "Look at the gear differential — {a} is rolling out heavier armor than usual.",
-  "Both teams played fast in their opener. Watch for fatigue late.",
-  "Power Core's been the difference all season. Don't sleep on it.",
-  "If {a} can keep their snipers alive, they win this comfortably.",
-  "Healers are gonna decide this round. Snipe accordingly.",
-  "These two teams have a history. Should be feisty.",
-  "Fans want chaos and the league is delivering.",
-];
 
 // Death-related — softer than the Worms-style death cries
-const COMM_PERMADEATH = [
-  "And that's it for {p}. {n} kills, {y} seasons, gone forever.",
-  "Tough one — {p} permanently retired. The Hall awaits.",
-  "End of an era. {p} won't suit up again.",
-];
 
 // Power Core captures
 const COMM_CORE_CAPTURE = [
@@ -17822,19 +17837,10 @@ const PHRASE_CRIT = [
   "DEVASTATING blow from {a}!",
   "{a} found a weak spot on {b}!",
 ];
-const PHRASE_LOWHP = [
-  "{p} is barely standing!",
-  "{p} is on death's door!",
-];
 const PHRASE_MATCH_START = [
   "Whistle blows — {a} vs {b} is LIVE!",
   "Five-on-five action begins between {a} and {b}!",
   "{a} and {b} square up at the center circle!",
-];
-const PHRASE_MATCH_WIN = [
-  "{w} take the W with {alive} still standing!",
-  "It's over! {w} advance!",
-  "{w} clinch the match {alive}-to-zero!",
 ];
 
 /* ============================================================
@@ -18514,7 +18520,7 @@ function tickPowerCore(m) {
   if (pc.state === "active") {
     // Check if any alive knight is touching it
     // === v37.21: use cached flat array instead of allocating ===
-    const all = m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers);
+    const all = _allPlayers(m);
     for (const p of all) {
       if (!p.alive) continue;
       const dx = p.x - pc.x, dy = p.y - pc.y;
@@ -18743,7 +18749,7 @@ function tickKOTH(m) {
   const c = m.crown;
   if (!c) return;
   const cfg = LEAGUE_CONFIG.modeConfig.koth;
-  const all = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(p => p.alive);
+  const all = _alivePlayers(m);
 
   // If carrier is dead/null, find a new pickup (any bot within 16px)
   // v37.78: !=null guards against falsy-zero (carrier with id=0)
@@ -18809,7 +18815,7 @@ function tickKOTH(m) {
 */
 function tickCTF(m) {
   if (!m.flagsByTeam || !m.basesById) return;
-  const all = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(p => p.alive);
+  const all = _alivePlayers(m);
   // v38.32: flag pickup/capture radii are world distances — scaled by
   // gridScale so the touch + capture zones keep their intended footprint
   // on the 3x field (squared, so the gridScale factor is squared too).
@@ -18949,7 +18955,7 @@ function tickCTF(m) {
 /* ----- TAG ----- */
 function tickTag(m) {
   if (!m.tag) return;
-  const all = m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers);
+  const all = _allPlayers(m);
   const cfg = LEAGUE_CONFIG.modeConfig.tag;
 
   // === v37.94: IT-death → pass to nearest alive teammate ===
@@ -19276,6 +19282,8 @@ function tickRespawns(m) {
       // frame. Reset them so the bot starts cleanly from rest.
       p._smoothVx = 0; p._smoothVy = 0;
       p._heading = undefined;
+      p._pivoting = false;  // v38.40: clear pivot state on respawn
+      p._navPath = null; p._navGoal = null; p._navReplanTtl = 0;  // v38.42
       p._knockbackVx = 0; p._knockbackVy = 0; p._knockbackTtl = 0;
       // v38.39: snap the render-interp snapshot to the spawn point so
       // the bot does not interpolate (smear) across the respawn jump.
@@ -21631,32 +21639,19 @@ const TEAM_AI = (function() {
     // there; legacy decideAIState callsite (L20238) is the stale one.
     const teamState = m._teamAI && m._teamAI[p.teamId];
 
-    // === v37.90: vision-cone (FOV) filter ===
-    // Bots only "see" enemies within ±FOV_HALF of their heading. The
-    // cone is wide (240° total = ±120°) so most enemies are visible;
-    // only directly-behind enemies are blind. Bots must rotate to
-    // engage rear threats — the heading-rotation system gives them a
-    // few frames of recovery.
+    // === v37.90 / v38.40: vision-cone (FOV) filter — Go2 model ===
+    // Bots only "see" enemies the way the Unitree Go2's forward camera
+    // does: within the ~120° FOV cone of their REAL heading (p._heading),
+    // within vision range, and not occluded by terrain. v38.40 replaces
+    // the old ad-hoc ±120° cone (keyed off the cosmetic headingAng) with
+    // the unified canPerceive() helper so combat vision matches the Go2
+    // hardware and every other perception site.
     //
-    // Cover (terrain LOS) is also enforced here — bots can't target
-    // through walls. Pre-v37.90 this was done piecemeal at fire sites;
-    // now it's a unified filter that prevents picking "blind" targets.
-    const FOV_HALF = Math.PI * 2/3;  // ±120° = 240° cone
-    const heading = typeof p.headingAng === "number" ? p.headingAng : 0;
-    function _inFov(e) {
-      const ang = Math.atan2(e.y - p.y, e.x - p.x);
-      let d = ang - heading;
-      while (d >  Math.PI) d -= Math.PI * 2;
-      while (d < -Math.PI) d += Math.PI * 2;
-      return Math.abs(d) <= FOV_HALF;
-    }
+    // This gates ACQUISITION. Retention is handled by target memory in
+    // decideAIState — a bot rounding cover keeps its lock briefly so the
+    // cone doesn't cause target flicker.
     function _visible(e) {
-      // Skip the cover check if no terrain (cheap path)
-      if (!_inFov(e)) return false;
-      if (m.terrain && m.terrain.length > 0) {
-        if (!hasLineOfSight(p.x, p.y, e.x, e.y, m.terrain)) return false;
-      }
-      return true;
+      return canPerceive(p, e.x, e.y, m);
     }
     if (!teamState) {
       // No team state — naive nearest, FOV-filtered (v37.90)
@@ -22698,7 +22693,7 @@ const MODE_AI = (function() {
      ============================================================ */
   function assignTagRoles(m) {
     if (!m.tag) return;
-    const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(p => p.alive);
+    const allAlive = _alivePlayers(m);
     const it = allAlive.find(p => p.id === m.tag.itId);
 
     if (!it) return;
@@ -22794,7 +22789,7 @@ const MODE_AI = (function() {
   function decideTag(p, m) {
     if (!m.tag) return null;
     const role = p._modeRole || "prey_flock";
-    const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
+    const allAlive = _alivePlayers(m);
     const it = allAlive.find(e => e.id === m.tag.itId);
     const isFrozen = (id) => !!(m.tag.tagFreezes && m.tag.tagFreezes[id]);
 
@@ -23914,7 +23909,7 @@ const MODE_AI = (function() {
       // _tag_move_x/y target in executeAIState's move-vector check chain.
       p._tag_aim_x = null;
       p._tag_aim_y = null;
-      const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
+      const allAlive = _alivePlayers(m);
       const it = allAlive.find(e => e.id === m.tag.itId);
       const cxw = COMBAT.arenaW / 2, cyw = COMBAT.arenaH / 2;
 
@@ -23969,7 +23964,7 @@ const MODE_AI = (function() {
 
     // === Action: IT predator (port of decideTag's role==="it_predator" branch) ===
     function actPredator(p, m, bb) {
-      const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
+      const allAlive = _alivePlayers(m);
       // === v37.96: enemy-team filter + no-tag-back (matches legacy decideTag) ===
       // Pre-v37.96 the BT version was missing the team-aware filter that the
       // legacy decideTag got in v37.94. Result: IT bot in BT-driven path
@@ -24060,7 +24055,7 @@ const MODE_AI = (function() {
       // chase phantom IT-position points instead of their shield target.
       p._tag_aim_x = null;
       p._tag_aim_y = null;
-      const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
+      const allAlive = _alivePlayers(m);
       const it = allAlive.find(e => e.id === m.tag.itId);
       if (!it) return BT.FAILURE;
       const itAng = Math.atan2(it.y - p.y, it.x - p.x);
@@ -24157,7 +24152,7 @@ const MODE_AI = (function() {
       // v38.01: clear stale predictive-aim from any prior IT_predator role
       p._tag_aim_x = null;
       p._tag_aim_y = null;
-      const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
+      const allAlive = _alivePlayers(m);
       const it = allAlive.find(e => e.id === m.tag.itId);
       if (!it) return BT.FAILURE;
       const peers = allAlive.filter(e => e !== p && e !== it && !isFrozen(e.id, m));
@@ -24218,7 +24213,7 @@ const MODE_AI = (function() {
       // v38.01: clear stale predictive-aim from any prior IT_predator role
       p._tag_aim_x = null;
       p._tag_aim_y = null;
-      const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
+      const allAlive = _alivePlayers(m);
       const it = allAlive.find(e => e.id === m.tag.itId);
       if (!it) return BT.FAILURE;
 
@@ -24551,7 +24546,32 @@ function decideAIState(p, enemyAlive, m) {
   }
 
   // Use TEAM_AI to pick a target (focus fire when reachable, else nearest)
-  const focusedTarget = TEAM_AI.pickTarget(p, enemyAlive, m);
+  let focusedTarget = TEAM_AI.pickTarget(p, enemyAlive, m);
+  // === v38.40: target memory ===
+  // pickTarget gates acquisition through the Go2 FOV cone — a bot can't
+  // lock an enemy it can't currently see. But losing SIGHT of an
+  // already-engaged enemy (rounding a pillar, the enemy stepping behind
+  // cover, the bot's heading swinging) must NOT instantly drop the
+  // target, or the cone re-introduces target flicker (the deadband bug
+  // class). So: when pickTarget returns nothing this frame but the bot
+  // has a recently-seen, still-alive target, retain it for up to
+  // botTargetMemoryFrames. Acquiring a fresh visible target refreshes
+  // the memory; the timer only counts down while sight is lost.
+  const _memFrames = (typeof LEAGUE_CONFIG !== "undefined" &&
+    typeof LEAGUE_CONFIG.botTargetMemoryFrames === "number")
+    ? LEAGUE_CONFIG.botTargetMemoryFrames : 25;
+  if (focusedTarget) {
+    // fresh sighting — remember it
+    p._memTarget = focusedTarget;
+    p._memTargetTtl = _memFrames;
+  } else if (p._memTarget && p._memTarget.alive && (p._memTargetTtl || 0) > 0) {
+    // lost sight but memory still warm — keep pursuing the last-known target
+    p._memTargetTtl--;
+    focusedTarget = p._memTarget;
+  } else {
+    p._memTarget = null;
+    p._memTargetTtl = 0;
+  }
   // v37.78: skip corpses in the stale enemyAlive snapshot
   let nearest = null, nearestD = Infinity;
   for (const e of enemyAlive) {
@@ -25045,6 +25065,10 @@ function findBestDropFor(p, m) {
     // Wider detection radius — was 220 (about 1/4 arena width), now 340
     // so AI sees pickups across most of their half of the arena.
     if (dist2 > 340*340) continue;
+    // v38.40: a bot can only evaluate a pickup it can actually SEE — the
+    // Go2 forward FOV cone + terrain occlusion. A drop behind the bot or
+    // behind a wall is unknown to it until it turns / rounds the cover.
+    if (typeof canPerceive === "function" && !canPerceive(p, d.x, d.y, m)) continue;
     const dist = Math.sqrt(dist2);
 
     let upgrade;
@@ -25220,14 +25244,42 @@ function tryDodgeProjectile(p, m, effSpd) {
   return true;
 }
 
-/* Apply any dodge nudge accumulated this frame, AFTER state-driven movement. */
+/* Apply any dodge nudge accumulated this frame.
+   v38.44: BUG FIX — the surge / "zipping". This used to call moveAlong()
+   a SECOND time in the same frame (after the state-driven movement's
+   own moveAlong). moveAlong is the Reynolds steering INTEGRATOR — it
+   maintains a persistent velocity vector and advances position by it,
+   and must run exactly ONCE per bot per frame. Calling it twice made
+   the bot physically move twice that tick (≈27px instead of 15 — an
+   80% surge) AND corrupted _smoothVx/_smoothVy so the velocity wobbled
+   for several frames after. Dodges fire constantly in combat, so this
+   read as frequent zipping.
+   A dodge is a discrete sidestep, not a sustained velocity change, so
+   it must NOT go through the velocity integrator (which would also
+   just truncate it back to the speed cap next frame). Correct fix:
+   apply the nudge as a direct, collision-checked position offset. The
+   nudge magnitude was authored as a per-tick displacement; it is
+   gridScale-scaled to match the field, then applied straight to x/y. */
 function applyDodgeNudge(p, m) {
   if (!p._dodgeNudge) return;
   const n = p._dodgeNudge;
-  const ang = Math.atan2(n.y, n.x);
-  const mag = Math.hypot(n.x, n.y);
-  moveAlong(p, ang, mag);
   p._dodgeNudge = null;
+  const g = (typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1;
+  const ox = n.x * g, oy = n.y * g;
+  const nx = p.x + ox, ny = p.y + oy;
+  // clamp to the arena and reject a step into terrain (same guards
+  // moveAlong applies — a dodge must not phase through a wall).
+  const W = (typeof COMBAT !== "undefined") ? COMBAT.arenaW : 3840;
+  const H = (typeof COMBAT !== "undefined") ? COMBAT.arenaH : 2160;
+  const cx = Math.max(12, Math.min(W - 12, nx));
+  const cy = Math.max(12, Math.min(H - 12, ny));
+  if (m && m.terrain && m.terrain.length &&
+      typeof collidesTerrain === "function" &&
+      collidesTerrain(cx, cy, m.terrain)) {
+    return;  // dodge would clip a wall — skip it
+  }
+  p.x = cx;
+  p.y = cy;
 }
 
 /* ============================================================
@@ -25348,6 +25400,12 @@ function tickHealerBehavior(p, m, effSpd) {
     for (const ally of team) {
       if (!ally.alive) continue;
       if (ally.hp >= ally.stats.hp) continue;  // already topped up
+      // v38.40: a healer can only pick a patient it can actually SEE —
+      // within its Go2 FOV cone, in range, not behind terrain. It must
+      // turn / move to bring an unseen wounded ally into view first.
+      // (LOS-only would be enough for a beam, but full canPerceive keeps
+      // the healer's perception consistent with every other bot.)
+      if (!canPerceive(p, ally.x, ally.y, m)) continue;
       const hpFrac = ally.hp / ally.stats.hp;
       const hpDeficit = (1 - hpFrac);          // 0..1, higher = more wounded
 
@@ -25964,7 +26022,18 @@ function executeAIState(p, enemyAlive, m) {
   }
 
   // Base effective speed (stat × 1.4 baseline scale + booster)
-  let effSpd = (p.stats.spd + (p.boostMods?.spd || 0)) * 1.4;
+  // === v38.40: Unitree Go2 speed calibration ===
+  // The bots model the Go2 quadruped. Scale: the 39px hitbox ≈ the Go2's
+  // 70cm body ⇒ ~56 px/m. Pre-v38.40 the speed chain
+  //   effSpd (≈2.0–5.6) → moveAlong ×gridScale(3) → ≈6–17 px/tick @20Hz
+  // put top-end bots near 6 m/s — over 2× a real Go2. The real Go2 runs
+  // ~2.5 m/s nominal (5 m/s is a lab-only figure we don't model as
+  // normal). GO2_SPEED_CAL = 0.50 maps the existing per-bot spread onto
+  // a realistic ~0.9–3.0 m/s envelope centred near the Go2's 2.5 m/s,
+  // without disturbing the HP/dmg/crit stat tuning. Applied here at the
+  // single effSpd chokepoint so every movement path inherits it.
+  const GO2_SPEED_CAL = 0.50;
+  let effSpd = (p.stats.spd + (p.boostMods?.spd || 0)) * 1.4 * GO2_SPEED_CAL;
 
   // === v28 Tag mode: speed asymmetry between It and prey ===
   // Without this, Tag is a stalemate — fleeing bots and the It bot have
@@ -25974,7 +26043,7 @@ function executeAIState(p, enemyAlive, m) {
   // boosts It speed further so the last 1-2 prey can't perma-loop.
   if (m.gameMode === "tag" && m.tag) {
     if (m.tag.itId === p.id) {
-      const allAlive = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(e => e.alive);
+      const allAlive = _alivePlayers(m);
       const livingPrey = allAlive.filter(e => e.id !== p.id &&
         !(m.tag.tagFreezes && m.tag.tagFreezes[e.id])).length;
       // Scale: 14 prey → 1.55×, 3 prey → 1.75×, 1 prey → 1.95×
@@ -27034,7 +27103,7 @@ function _applySteering(p, m, ang, speed, opts) {
   // (combat range, predator-prey distance), not pileup to prevent.
   // v38.01: scaled by arrivalFactor so bots can settle near their target
   // without separation shoving them around it.
-  const all = m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers);
+  const all = _allPlayers(m);
   const sepDistSq = STEER_SEP_DIST * STEER_SEP_DIST;
   const sepStrength = STEER_SEP_MAX * arrivalFactor;
   for (const o of all) {
@@ -27062,64 +27131,140 @@ function _applySteering(p, m, ang, speed, opts) {
 }
 
 function moveAlong(p, ang, speed) {
-  // === v38.26: angular smoothing — cap the bot's turn rate ===
-  // Pre-v38.26 the bot's MOVEMENT used the raw desired angle while only
-  // the cosmetic headingAng (v37.90) was eased — so a bot's path could
-  // snap instantly to a new direction even though its sprite turned
-  // smoothly. This caps how far the actual movement heading may rotate
-  // per tick. p._heading persists the real heading; it eases toward the
-  // requested ang by at most botMaxTurnPerTick, shortest-arc. The rest
-  // of moveAlong (speed mult, velocity smoothing, steering) then runs
-  // on the eased heading. On first call _heading == ang (no spawn snap).
-  if (isFinite(ang)) {
-    const _maxTurn = (typeof LEAGUE_CONFIG !== "undefined" &&
-                      typeof LEAGUE_CONFIG.botMaxTurnPerTick === "number")
-      ? LEAGUE_CONFIG.botMaxTurnPerTick : Math.PI;
-    if (typeof p._heading !== "number") p._heading = ang;
-    let _dAng = ang - p._heading;
-    while (_dAng >  Math.PI) _dAng -= Math.PI * 2;
-    while (_dAng < -Math.PI) _dAng += Math.PI * 2;
-    _dAng = Math.max(-_maxTurn, Math.min(_maxTurn, _dAng));
-    p._heading += _dAng;
-    while (p._heading >  Math.PI) p._heading -= Math.PI * 2;
-    while (p._heading < -Math.PI) p._heading += Math.PI * 2;
-    ang = p._heading;  // everything below moves along the eased heading
-  }
-  // === v38.11: stadium grid-scale speed multiplier ===
-  // Per user feedback: "Increase the game's default speed to match" the
-  // 3× stadium. This is applied at the canonical move-step so every
-  // knight-AI path (chase, retreat, patrol, capture-flag, etc.) sees
-  // the same speed buff. Combat hit-ranges/weapon-ranges are NOT
-  // scaled — combat happens in tighter clusters within the bigger
-  // field, which actually reads better.
-  speed = speed * (COMBAT.gridScale || 1);
-  // === v37.59: suppression speed reduction (Tier 3.D) ===
-  // While suppressed (recently took a near-miss), reduce effective speed
-  // 30% AND 50% chance to land on the original spot (movement skipped).
-  // The skip-roll uses SIM_RNG so reseeded matches reproduce. Keeps
-  // facing updates intact (downstream code may depend on them).
+  // === v38.40.2: Reynolds steering model (force truncation) ===
+  // Research pass replaced the hand-rolled _turnFactor speed-coupling
+  // (which oscillated — jerky travel) with Craig Reynolds' canonical
+  // steering model, the industry standard since the 1990s (OpenSteer,
+  // gdx-ai, Buckland "Programming Game AI by Example", red3d.com GDC99):
+  //
+  //   desired_velocity = heading_unit * speed
+  //   steering_force   = truncate(desired_velocity - velocity, MAX_FORCE)
+  //   velocity         = truncate(velocity + steering_force, speed)
+  //   position        += velocity
+  //
+  // velocity (p._smoothVx/Vy) is a PERSISTENT vector. Each tick it is
+  // nudged toward the desired velocity by a force whose magnitude is
+  // capped at MAX_FORCE. A bounded force cannot snap the velocity
+  // sideways — it CURVES it — so turning emerges as a smooth arc with
+  // no separate "turn factor" to compute or oscillate. The force cap
+  // IS the vehicle's minimum turn radius: r ≈ speed² / MAX_FORCE. Speed
+  // stays steady through a turn because the velocity magnitude is
+  // *truncated*, never multiplied by a noisy factor.
+  //
+  // PIVOT-IN-PLACE remains as an explicit exception: when the target is
+  // far behind AND terrain blocks the arc, the bot bleeds velocity and
+  // rotates on the spot (a quadruped can; a car can't).
+  const startX = p.x, startY = p.y;
+  if (typeof p._smoothVx !== "number") p._smoothVx = 0;
+  if (typeof p._smoothVy !== "number") p._smoothVy = 0;
+  // suppression speed reduction (v37.59) — applied to the speed target
   if (p.suppressedFrames > 0) {
     speed = speed * 0.70;
     if (SIM_RNG.next() < 0.50) speed = 0;
   }
-  const startX = p.x, startY = p.y;
-  // === v37.90: velocity smoothing (accel + coast) ===
-  // Target velocity = the intended cos*speed, sin*speed.
-  // Actual (smoothed) velocity lerps toward target with a fast rate so
-  // the bot has visible accel/decel without losing combat responsiveness.
-  // At rate 0.40, the bot reaches ~95% of intended speed in 7 frames
-  // (~350ms at 20Hz) and coasts to a stop over similar time when
-  // speed=0. p._smoothVx/Vy persist across frames; p.vx/p.vy below are
-  // the actual frame delta (used downstream for facing, projectile lead).
-  const tgtVx = Math.cos(ang) * speed;
-  const tgtVy = Math.sin(ang) * speed;
-  if (typeof p._smoothVx !== "number") p._smoothVx = 0;
-  if (typeof p._smoothVy !== "number") p._smoothVy = 0;
-  const LERP = 0.40;
-  p._smoothVx += (tgtVx - p._smoothVx) * LERP;
-  p._smoothVy += (tgtVy - p._smoothVy) * LERP;
-  let nx = p.x + p._smoothVx;
-  let ny = p.y + p._smoothVy;
+  // === v38.11 stadium scale: the canonical 3× speed buff ===
+  speed = speed * (COMBAT.gridScale || 1);
+  let nx, ny;
+  if (isFinite(ang) && speed > 0.001) {
+    const _cfg = (typeof LEAGUE_CONFIG !== "undefined") ? LEAGUE_CONFIG : {};
+    // MAX_FORCE — the per-tick steering-force cap. Derived from the turn
+    // model: to keep the Go2's ~2 rad/s yaw (botMaxTurnPerTick rad/tick)
+    // a vehicle at `speed` needs a lateral force of about
+    // speed * sin(maxTurn). Using that as the cap makes the emergent
+    // turn rate match the Go2 spec, and a bounded force gives the
+    // minimum turn radius for free.
+    const _maxTurn = (typeof _cfg.botMaxTurnPerTick === "number")
+      ? _cfg.botMaxTurnPerTick : 0.35;
+    const MAX_FORCE = Math.max(0.6, speed * Math.sin(Math.min(_maxTurn, Math.PI / 2)));
+    // current heading derives from the velocity vector (Reynolds: the
+    // vehicle's facing IS its velocity direction). Fall back to `ang`
+    // on the first moving frame.
+    const _curSpeed = Math.hypot(p._smoothVx, p._smoothVy);
+    const _curHeading = _curSpeed > 0.05
+      ? Math.atan2(p._smoothVy, p._smoothVx) : ang;
+    p._heading = _curHeading;   // keep _heading exposed for FOV / facing
+    // --- pivot-in-place arbitration (the cornered exception) ---
+    let _dAng = ang - _curHeading;
+    while (_dAng >  Math.PI) _dAng -= Math.PI * 2;
+    while (_dAng < -Math.PI) _dAng += Math.PI * 2;
+    const _turnNeeded = Math.abs(_dAng);
+    const _pivotThresh = (typeof _cfg.botPivotThreshold === "number")
+      ? _cfg.botPivotThreshold : Math.PI;
+    const _minTurnR = ((typeof _cfg.botMinTurnRadius === "number")
+      ? _cfg.botMinTurnRadius : 90) * (COMBAT.gridScale || 1);
+    if (p._pivoting) {
+      if (_turnNeeded < 0.35) p._pivoting = false;     // aligned — resume
+    } else if (_turnNeeded > _pivotThresh && _curSpeed > 0.05) {
+      // no room to arc? probe the arc-exit ray (45° off heading).
+      const _arcDir = _dAng >= 0 ? 1 : -1;
+      const _exitAng = _curHeading + _arcDir * (Math.PI / 4);
+      const _px = p.x + Math.cos(_exitAng) * _minTurnR;
+      const _py = p.y + Math.sin(_exitAng) * _minTurnR;
+      const _m = LEAGUE && LEAGUE.match;
+      const _edgeBlocked = _px < 12 || _py < 12 ||
+        _px > COMBAT.arenaW - 12 || _py > COMBAT.arenaH - 12;
+      let _terrBlocked = false;
+      if (_m && _m.terrain) {
+        const _mx = p.x + Math.cos(_exitAng) * _minTurnR * 0.5;
+        const _my = p.y + Math.sin(_exitAng) * _minTurnR * 0.5;
+        _terrBlocked = collidesTerrain(_px, _py, _m.terrain) ||
+                       collidesTerrain(_mx, _my, _m.terrain);
+      }
+      if (_edgeBlocked || _terrBlocked) p._pivoting = true;
+    }
+    if (p._pivoting) {
+      // Rotate on the spot: bleed velocity to a near-stop and turn the
+      // heading directly at the full yaw cap. No forward travel.
+      p._smoothVx *= 0.55;
+      p._smoothVy *= 0.55;
+      const _step = Math.max(-_maxTurn, Math.min(_maxTurn, _dAng));
+      const _ph = _curHeading + _step;
+      // nudge the (tiny) velocity vector onto the new heading so the
+      // next frame's derived heading reflects the pivot.
+      const _resid = Math.hypot(p._smoothVx, p._smoothVy);
+      p._smoothVx = Math.cos(_ph) * _resid;
+      p._smoothVy = Math.sin(_ph) * _resid;
+      p._heading = _ph;
+    } else {
+      // --- Reynolds force-truncated steering ---
+      const _desVx = Math.cos(ang) * speed;
+      const _desVy = Math.sin(ang) * speed;
+      let _fx = _desVx - p._smoothVx;
+      let _fy = _desVy - p._smoothVy;
+      // v38.40.2: break the 180° symmetry. When the desired heading is
+      // almost exactly opposite the current velocity, the steering force
+      // is purely anti-parallel — the bot would decelerate straight,
+      // stop, and reverse down its own path with no arc (an unstable
+      // equilibrium). A real vehicle always has slight asymmetry. Inject
+      // a small perpendicular bias so the bot picks a side and banks.
+      if (_curSpeed > 0.05 && _turnNeeded > Math.PI - 0.20) {
+        const _perpX = -Math.sin(_curHeading);
+        const _perpY =  Math.cos(_curHeading);
+        const _bias = MAX_FORCE * 0.8;
+        _fx += _perpX * _bias;
+        _fy += _perpY * _bias;
+      }
+      const _fMag = Math.hypot(_fx, _fy);
+      if (_fMag > MAX_FORCE) {
+        const _s = MAX_FORCE / _fMag;
+        _fx *= _s; _fy *= _s;
+      }
+      p._smoothVx += _fx;
+      p._smoothVy += _fy;
+      // truncate velocity magnitude to the speed target
+      const _vMag = Math.hypot(p._smoothVx, p._smoothVy);
+      if (_vMag > speed) {
+        const _s = speed / _vMag;
+        p._smoothVx *= _s; p._smoothVy *= _s;
+      }
+    }
+  } else {
+    // No drive this tick — coast to a stop (friction).
+    p._smoothVx *= 0.80;
+    p._smoothVy *= 0.80;
+  }
+  nx = p.x + p._smoothVx;
+  ny = p.y + p._smoothVy;
 
   // === v28.5 grenade knockback ===
   // If a grenade pushed us this round, apply the residual velocity on
@@ -27160,7 +27305,7 @@ function moveAlong(p, ang, speed) {
   //      overshoot it, so oscillation is impossible.
   const m = LEAGUE.match;
   if (m) {
-    const all = m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers);
+    const all = _allPlayers(m);
     const myEngaged = _ACTIVE_ENGAGE_STATES.has(p.aiState);
     const _sepG = (COMBAT.gridScale || 1);
     let pushX = 0, pushY = 0;
@@ -27297,6 +27442,65 @@ function moveAlong(p, ang, speed) {
 //                `moving` keeps tracking speed constant (v38.38).
 function moveToward(p, tx, ty, speed, opts) {
   opts = opts || {};
+  // === v38.42: A* path-following ===
+  // If the straight line to (tx,ty) is blocked by terrain, the bot can't
+  // just steer at the goal — it would walk into the wall and slide. Here
+  // moveToward transparently requests a grid A* path (PathFactory) and
+  // substitutes the next waypoint as the steering target. Every existing
+  // caller gets pathfinding for free; no call site changes.
+  // Gated by opts.noPath (callers that genuinely want a straight line —
+  // e.g. short combat strafes — can opt out) and skipped when there's no
+  // terrain or the goal is already in line of sight (the common, cheap
+  // case — most frames take this branch and never touch A*).
+  if (!opts.noPath && typeof PathFactory !== "undefined") {
+    const m = LEAGUE && LEAGUE.match;
+    const hasTerrain = m && m.terrain && m.terrain.length > 0;
+    if (hasTerrain) {
+      const losClear = hasLineOfSight(p.x, p.y, tx, ty, m.terrain);
+      if (losClear) {
+        // straight shot — drop any stale path and steer direct.
+        p._navPath = null;
+      } else {
+        // blocked — (re)plan if we have no path, the goal moved, or we've
+        // consumed the path. Throttle replans: at most one per bot per
+        // NAV_REPLAN frames (A* is cheap on the coarse grid but not free).
+        const NAV_REPLAN = 20;
+        const goalMoved = !p._navGoal ||
+          Math.hypot(p._navGoal.x - tx, p._navGoal.y - ty) > 64 * _GS();
+        const needPath = !p._navPath || p._navPath.length === 0 || goalMoved;
+        const canReplan = (p._navReplanTtl || 0) <= 0;
+        if (needPath && canReplan) {
+          const wps = PathFactory.findPath(m, p.x, p.y, tx, ty);
+          p._navPath = (wps && wps.length > 1) ? wps : null;
+          p._navGoal = { x: tx, y: ty };
+          p._navReplanTtl = NAV_REPLAN;
+          // drop the first waypoint if we're already on top of it
+          if (p._navPath && p._navPath.length > 1) {
+            const w0 = p._navPath[0];
+            if (Math.hypot(w0.x - p.x, w0.y - p.y) < 48 * _GS()) {
+              p._navPath.shift();
+            }
+          }
+        }
+        if (p._navReplanTtl > 0) p._navReplanTtl--;
+        // follow the path: steer toward the next waypoint. Advance to the
+        // next once we're within one cell of the current one.
+        if (p._navPath && p._navPath.length > 0) {
+          let wp = p._navPath[0];
+          while (p._navPath.length > 1 &&
+                 Math.hypot(wp.x - p.x, wp.y - p.y) < 48 * _GS()) {
+            p._navPath.shift();
+            wp = p._navPath[0];
+          }
+          // steer to the waypoint instead of the (occluded) final goal.
+          // The last waypoint IS the real goal, so arrival still works.
+          tx = wp.x; ty = wp.y;
+        }
+      }
+    } else {
+      p._navPath = null;
+    }
+  }
   const dx = tx - p.x, dy = ty - p.y;
   const dist = Math.hypot(dx, dy);
   // The REAL per-frame step moveAlong will take at this speed. moveAlong
@@ -27361,7 +27565,11 @@ function collidesTerrain(x, y, terrain) {
   // working without migration. All shapes (block / wall / pillar) collide
   // as their bounding AABB — for pillars this is a slight forgiveness on
   // diagonal approaches, acceptable for a first cut.
-  const PAD = 10;
+  // v38.42 (bug 1): PAD is the bot's collision half-extent. Was a bare
+  // gridScale-1 literal (10) — on the 3× field the bot collided using a
+  // 20px box while its sprite is ~60px, so bots visibly overlapped walls.
+  // Scaled to match the field + sprite.
+  const PAD = 10 * (COMBAT.gridScale || 1);
   for (const t of terrain) {
     const tw = t.w != null ? t.w : t.size;
     const th = t.h != null ? t.h : t.size;
@@ -27390,8 +27598,367 @@ function collidesTerrain(x, y, terrain) {
 // "Legal" = inside the arena AND not colliding terrain. Nearest legal
 // point is found by an expanding-ring search; arena center is the
 // last-resort fallback.
+// ════════════════════════════════════════════════════════════════════
+// v38.42 — PathFactory: grid A* pathfinding (vendored)
+// ════════════════════════════════════════════════════════════════════
+// Bots previously navigated by reactive steering only (line-of-sight +
+// wall-avoidance forces + the _BotUnstick recovery hack) — they could
+// not route AROUND a large obstacle or out of a concave pocket. This
+// module adds real grid A* pathfinding.
+//
+// The A* core (binary Heap, Grid, AStarFinder, path smoothing) is
+// vendored from PathFinding.js by Xueqiao Xu — github.com/qiao/
+// PathFinding.js — used here under its MIT licence:
+//
+//   Copyright (c) 2011-2012 Xueqiao Xu
+//   Permission is hereby granted, free of charge, to any person
+//   obtaining a copy of this software and associated documentation
+//   files (the "Software"), to deal in the Software without
+//   restriction... (full MIT text: see PathFinding.js LICENSE).
+//
+// The vendored core is trimmed to what the game uses: a 4/8-direction
+// AStarFinder with the diagonal-movement + dontCrossCorners options,
+// the binary Heap it needs, and Util.smoothenPath / compressPath.
+// On top of the core, buildNavGrid() rasterizes the arena terrain and
+// findPath() is the game-facing entry point.
+const PathFactory = (function() {
+  "use strict";
+
+  // ---- binary Heap (PathFinding.js dep — heap.js, simplified) ----
+  function Heap(cmp) {
+    this.cmp = cmp || function(a, b){ return a - b; };
+    this.nodes = [];
+  }
+  Heap.prototype.push = function(node) {
+    const n = this.nodes;
+    n.push(node);
+    let i = n.length - 1;
+    while (i > 0) {
+      const parent = (i - 1) >> 1;
+      if (this.cmp(n[i], n[parent]) < 0) {
+        const t = n[i]; n[i] = n[parent]; n[parent] = t;
+        i = parent;
+      } else break;
+    }
+  };
+  Heap.prototype.pop = function() {
+    const n = this.nodes;
+    const top = n[0];
+    const last = n.pop();
+    if (n.length > 0) {
+      n[0] = last;
+      let i = 0;
+      const len = n.length;
+      while (true) {
+        const l = 2 * i + 1, r = 2 * i + 2;
+        let smallest = i;
+        if (l < len && this.cmp(n[l], n[smallest]) < 0) smallest = l;
+        if (r < len && this.cmp(n[r], n[smallest]) < 0) smallest = r;
+        if (smallest === i) break;
+        const t = n[i]; n[i] = n[smallest]; n[smallest] = t;
+        i = smallest;
+      }
+    }
+    return top;
+  };
+  Heap.prototype.empty = function() { return this.nodes.length === 0; };
+  Heap.prototype.updateItem = function(node) {
+    // node's f changed — re-heapify from its index (linear find; grids
+    // here are small enough that this is fine).
+    const n = this.nodes;
+    const i = n.indexOf(node);
+    if (i < 0) return;
+    // sift up
+    let j = i;
+    while (j > 0) {
+      const parent = (j - 1) >> 1;
+      if (this.cmp(n[j], n[parent]) < 0) {
+        const t = n[j]; n[j] = n[parent]; n[parent] = t;
+        j = parent;
+      } else break;
+    }
+  };
+
+  // ---- Grid (PathFinding.js — grid.js, simplified) ----
+  function Node(x, y, walkable) {
+    this.x = x; this.y = y;
+    this.walkable = walkable;
+  }
+  function Grid(w, h) {
+    this.width = w;
+    this.height = h;
+    this.nodes = [];
+    for (let y = 0; y < h; y++) {
+      const row = [];
+      for (let x = 0; x < w; x++) row.push(new Node(x, y, true));
+      this.nodes.push(row);
+    }
+  }
+  Grid.prototype.getNodeAt = function(x, y) { return this.nodes[y][x]; };
+  Grid.prototype.isWalkableAt = function(x, y) {
+    return this.isInside(x, y) && this.nodes[y][x].walkable;
+  };
+  Grid.prototype.isInside = function(x, y) {
+    return x >= 0 && x < this.width && y >= 0 && y < this.height;
+  };
+  Grid.prototype.setWalkableAt = function(x, y, walkable) {
+    this.nodes[y][x].walkable = walkable;
+  };
+  Grid.prototype.getNeighbors = function(node, allowDiagonal, dontCrossCorners) {
+    const x = node.x, y = node.y, nb = [];
+    const s0 = this.isWalkableAt(x, y - 1);  // up
+    const s1 = this.isWalkableAt(x + 1, y);  // right
+    const s2 = this.isWalkableAt(x, y + 1);  // down
+    const s3 = this.isWalkableAt(x - 1, y);  // left
+    if (s0) nb.push(this.nodes[y - 1][x]);
+    if (s1) nb.push(this.nodes[y][x + 1]);
+    if (s2) nb.push(this.nodes[y + 1][x]);
+    if (s3) nb.push(this.nodes[y][x - 1]);
+    if (!allowDiagonal) return nb;
+    let d0, d1, d2, d3;
+    if (dontCrossCorners) {
+      d0 = s3 && s0; d1 = s0 && s1; d2 = s1 && s2; d3 = s2 && s3;
+    } else {
+      d0 = s3 || s0; d1 = s0 || s1; d2 = s1 || s2; d3 = s2 || s3;
+    }
+    if (d0 && this.isWalkableAt(x - 1, y - 1)) nb.push(this.nodes[y - 1][x - 1]);
+    if (d1 && this.isWalkableAt(x + 1, y - 1)) nb.push(this.nodes[y - 1][x + 1]);
+    if (d2 && this.isWalkableAt(x + 1, y + 1)) nb.push(this.nodes[y + 1][x + 1]);
+    if (d3 && this.isWalkableAt(x - 1, y + 1)) nb.push(this.nodes[y + 1][x - 1]);
+    return nb;
+  };
+  Grid.prototype.clone = function() {
+    const g = new Grid(this.width, this.height);
+    for (let y = 0; y < this.height; y++)
+      for (let x = 0; x < this.width; x++)
+        g.nodes[y][x].walkable = this.nodes[y][x].walkable;
+    return g;
+  };
+
+  // ---- heuristics (PathFinding.js — heuristic.js) ----
+  const Heuristic = {
+    manhattan: function(dx, dy) { return dx + dy; },
+    octile: function(dx, dy) {
+      const F = Math.SQRT2 - 1;
+      return (dx < dy) ? F * dx + dy : F * dy + dx;
+    },
+  };
+
+  // ---- AStarFinder (PathFinding.js — AStarFinder.js, simplified) ----
+  function AStarFinder(opts) {
+    opts = opts || {};
+    this.allowDiagonal = opts.allowDiagonal !== false;       // default true
+    this.dontCrossCorners = opts.dontCrossCorners !== false; // default true
+    this.heuristic = opts.heuristic ||
+      (this.allowDiagonal ? Heuristic.octile : Heuristic.manhattan);
+    this.weight = opts.weight || 1;
+  }
+  AStarFinder.prototype.findPath = function(sx, sy, ex, ey, grid) {
+    // per-search node bookkeeping kept on a parallel map so the grid is
+    // reusable without cloning.
+    const openList = new Heap(function(a, b) { return a.f - b.f; });
+    const SQRT2 = Math.SQRT2;
+    const startNode = grid.getNodeAt(sx, sy);
+    const endNode = grid.getNodeAt(ex, ey);
+    const meta = new Map();
+    function m(node) {
+      let d = meta.get(node);
+      if (!d) { d = { g: 0, f: 0, h: 0, opened: false, closed: false, parent: null }; meta.set(node, d); }
+      return d;
+    }
+    const sMeta = m(startNode);
+    sMeta.g = 0; sMeta.f = 0; sMeta.opened = true;
+    startNode._f = 0;
+    openList.push({ node: startNode, get f() { return m(this.node).f; } });
+    while (!openList.empty()) {
+      const top = openList.pop();
+      const node = top.node;
+      const nMeta = m(node);
+      nMeta.closed = true;
+      if (node === endNode) {
+        // reconstruct
+        const path = [];
+        let cur = endNode;
+        while (cur) { path.push([cur.x, cur.y]); cur = m(cur).parent; }
+        return path.reverse();
+      }
+      const neighbors = grid.getNeighbors(node, this.allowDiagonal, this.dontCrossCorners);
+      for (let i = 0; i < neighbors.length; i++) {
+        const nb = neighbors[i];
+        const nbMeta = m(nb);
+        if (nbMeta.closed) continue;
+        const x = nb.x, y = nb.y;
+        const ng = nMeta.g + ((x - node.x === 0 || y - node.y === 0) ? 1 : SQRT2);
+        if (!nbMeta.opened || ng < nbMeta.g) {
+          nbMeta.g = ng;
+          nbMeta.h = nbMeta.h || this.weight *
+            this.heuristic(Math.abs(x - ex), Math.abs(y - ey));
+          nbMeta.f = nbMeta.g + nbMeta.h;
+          nbMeta.parent = node;
+          if (!nbMeta.opened) {
+            nbMeta.opened = true;
+            openList.push({ node: nb, get f() { return m(this.node).f; } });
+          }
+        }
+      }
+    }
+    return [];  // no path
+  };
+
+  // ---- Util: path compression + smoothing (PathFinding.js — util.js) ----
+  // Bresenham interpolation + collinear-point compression so the raw
+  // grid path becomes a short list of corner waypoints.
+  function interpolate(x0, y0, x1, y1) {
+    const line = [];
+    let dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+    const sx = (x0 < x1) ? 1 : -1, sy = (y0 < y1) ? 1 : -1;
+    let err = dx - dy;
+    while (true) {
+      line.push([x0, y0]);
+      if (x0 === x1 && y0 === y1) break;
+      const e2 = 2 * err;
+      if (e2 > -dy) { err -= dy; x0 += sx; }
+      if (e2 <  dx) { err += dx; y0 += sy; }
+    }
+    return line;
+  }
+  function compressPath(path) {
+    if (path.length < 3) return path.slice();
+    const out = [path[0]];
+    let lastDx = path[1][0] - path[0][0];
+    let lastDy = path[1][1] - path[0][1];
+    for (let i = 1; i < path.length - 1; i++) {
+      const dx = path[i + 1][0] - path[i][0];
+      const dy = path[i + 1][1] - path[i][1];
+      if (dx !== lastDx || dy !== lastDy) {
+        out.push(path[i]);
+        lastDx = dx; lastDy = dy;
+      }
+    }
+    out.push(path[path.length - 1]);
+    return out;
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // Game-facing layer
+  // ════════════════════════════════════════════════════════════════
+  const finder = new AStarFinder({ allowDiagonal: true, dontCrossCorners: true });
+
+  // Navigation-grid cell size in WORLD px. ~one bot diameter so the
+  // path keeps clearance; scaled with gridScale.
+  function _cellSize() {
+    return 64 * (COMBAT.gridScale || 1);
+  }
+
+  // Build (and cache) the navigation grid from match terrain. A cell is
+  // unwalkable if any terrain AABB — inflated by the bot half-extent —
+  // overlaps it. Cached on the match; rebuilt only when terrain changes.
+  function buildNavGrid(m) {
+    if (!m) return null;
+    const cell = _cellSize();
+    const cols = Math.max(1, Math.ceil(COMBAT.arenaW / cell));
+    const rows = Math.max(1, Math.ceil(COMBAT.arenaH / cell));
+    // cache key: terrain identity + dimensions
+    const sig = (m.terrain ? m.terrain.length : 0) + "x" + cols + "x" + rows;
+    if (m._navGrid && m._navGridSig === sig) return m._navGrid;
+    const grid = new Grid(cols, rows);
+    const pad = (COMBAT.hitRadius || 13) * (COMBAT.gridScale || 1);
+    if (m.terrain) {
+      for (const t of m.terrain) {
+        const tw = t.w != null ? t.w : t.size;
+        const th = t.h != null ? t.h : t.size;
+        // inflate the AABB by pad so paths keep clearance from walls
+        const x0 = Math.floor((t.x - pad) / cell);
+        const y0 = Math.floor((t.y - pad) / cell);
+        const x1 = Math.floor((t.x + tw + pad) / cell);
+        const y1 = Math.floor((t.y + th + pad) / cell);
+        for (let gy = y0; gy <= y1; gy++)
+          for (let gx = x0; gx <= x1; gx++)
+            if (grid.isInside(gx, gy)) grid.setWalkableAt(gx, gy, false);
+      }
+    }
+    m._navGrid = grid;
+    m._navGridSig = sig;
+    m._navCell = cell;
+    return grid;
+  }
+
+  // world (x,y) -> grid cell, clamped to bounds.
+  function _toCell(grid, cell, wx, wy) {
+    return {
+      x: Math.max(0, Math.min(grid.width - 1, Math.floor(wx / cell))),
+      y: Math.max(0, Math.min(grid.height - 1, Math.floor(wy / cell))),
+    };
+  }
+  // grid cell -> world center.
+  function _toWorld(cell, cx, cy) {
+    return { x: (cx + 0.5) * cell, y: (cy + 0.5) * cell };
+  }
+  // nearest walkable cell to (cx,cy) — expanding-ring search, so a
+  // start/end that lands inside an inflated wall still resolves.
+  function _nearestWalkable(grid, cx, cy) {
+    if (grid.isWalkableAt(cx, cy)) return { x: cx, y: cy };
+    for (let r = 1; r < Math.max(grid.width, grid.height); r++) {
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
+          const nx = cx + dx, ny = cy + dy;
+          if (grid.isWalkableAt(nx, ny)) return { x: nx, y: ny };
+        }
+      }
+    }
+    return null;
+  }
+
+  // findPath(m, sx, sy, ex, ey) -> array of world-space waypoints
+  // [{x,y}, ...] from start to goal, or [] if no path. The raw grid
+  // path is compressed to corner waypoints; callers feed those into the
+  // existing steering one at a time.
+  function findPath(m, sx, sy, ex, ey) {
+    const grid = buildNavGrid(m);
+    if (!grid) return [];
+    const cell = m._navCell;
+    const s = _toCell(grid, cell, sx, sy);
+    const e = _toCell(grid, cell, ex, ey);
+    const sw = _nearestWalkable(grid, s.x, s.y);
+    const ew = _nearestWalkable(grid, e.x, e.y);
+    if (!sw || !ew) return [];
+    const raw = finder.findPath(sw.x, sw.y, ew.x, ew.y, grid);
+    if (!raw || raw.length === 0) return [];
+    const compressed = compressPath(raw);
+    const waypoints = [];
+    for (let i = 0; i < compressed.length; i++) {
+      const w = _toWorld(cell, compressed[i][0], compressed[i][1]);
+      waypoints.push(w);
+    }
+    // replace the final waypoint with the true goal (cell-center would
+    // otherwise leave the bot up to half a cell short).
+    if (waypoints.length > 0) {
+      waypoints[waypoints.length - 1] = { x: ex, y: ey };
+    }
+    return waypoints;
+  }
+
+  return {
+    buildNavGrid: buildNavGrid,
+    findPath: findPath,
+    _Grid: Grid,
+    _AStarFinder: AStarFinder,
+    _Heap: Heap,
+    _compressPath: compressPath,
+    _interpolate: interpolate,
+  };
+})();
+if (typeof window !== "undefined") window.PathFactory = PathFactory;
+
 const _BotUnstick = (function() {
-  const STUCK_EPS = 6;          // px — displacement below this = "not moving"
+  // v38.42 (bugs 4-5): STUCK_EPS is the per-tick displacement below
+  // which a bot counts as "not moving". Was a bare gridScale-1 literal
+  // (6). Scaled by gridScale; the use-site additionally floors it
+  // against a fraction of the bot's OWN expected step so a legitimately
+  // slow traveler (Go2 speed calibration can put a bot at ~3px/tick)
+  // isn't mis-flagged as stuck.
+  const STUCK_EPS = 6 * (COMBAT.gridScale || 1) * 0.34;  // ≈6px @gridScale 3
   const STUCK_FRAMES = 24;      // ~1.2s @20Hz before the smooth nudge begins
   // v38.33: HARD_STUCK_FRAMES removed — case-3 recovery no longer
   // teleports (see check()), so the escalate-to-teleport threshold is
@@ -27467,7 +28034,14 @@ const _BotUnstick = (function() {
       })();
     const wantsToMove = p.aiState && p.aiState !== "IDLE" &&
                         p.aiState !== "SNIPER_HOLD" && !_holdingTarget;
-    if (wantsToMove && moved < STUCK_EPS) {
+    // v38.42 (bug 4): a bot is "stuck" only if it moved far LESS than it
+    // intended to. Compare displacement against the bot's own expected
+    // step (its smoothed velocity magnitude), not a flat literal — a
+    // legitimately slow traveler must not be mis-flagged. STUCK_EPS is
+    // the floor for near-stationary bots.
+    const _expectStep = Math.hypot(p._smoothVx || 0, p._smoothVy || 0);
+    const _stuckThresh = Math.max(STUCK_EPS, _expectStep * 0.30);
+    if (wantsToMove && moved < _stuckThresh) {
       p._stuckFrames = (p._stuckFrames || 0) + 1;
     } else {
       p._stuckFrames = 0;
@@ -27481,14 +28055,29 @@ const _BotUnstick = (function() {
     // rather than jumping. A genuinely wedged bot will, on a later
     // frame, satisfy case 2 (inside terrain) and be corrected there.
     if (p._stuckFrames >= STUCK_FRAMES) {
-      // Nudge toward arena center to break a wall-hug grind. The step
-      // grows the longer the bot stays stuck, but it is always a small
-      // per-frame slide — never a snap.
+      // v38.44: THE "surging bot" bug. The nudge toward arena center is
+      // meant to be a small, smooth per-frame slide that frees a bot
+      // grinding against a wall or pinned in a crowd. The old formula
+      //   stepMag = (14 + ...) * gridScale
+      // multiplied the 14px base by gridScale (×3) → a 42-108px JUMP
+      // every frame the bot stayed stuck. The comment said "base 14px …
+      // always a small per-frame slide — never a snap", but the
+      // ×gridScale made it exactly the snap it claimed to avoid: a
+      // synchronized ~42px lurch across every separation-pinned bot in a
+      // spawn cluster, ~25 frames apart. (14 was ALREADY the intended
+      // final px value — the ×gridScale was an erroneous "scale fix" of
+      // a literal that did not need scaling.)
+      //
+      // Fix: the nudge is a genuine small slide — a fraction of one
+      // real movement step — so the velocity smoother absorbs it and
+      // the render interpolation has only a few px to cover. A stuck
+      // bot now eases free over many frames instead of teleporting.
       const cx = COMBAT.arenaW / 2, cy = COMBAT.arenaH / 2;
       const a = Math.atan2(cy - p.y, cx - p.x);
       const over = p._stuckFrames - STUCK_FRAMES;
-      // base 14px, ramping up to ~36px at deep stuck — still smooth
-      const stepMag = (14 + Math.min(22, over * 0.6)) * (COMBAT.gridScale || 1);
+      // ~3px base, ramping to ~8px for a deep, genuine wedge. Small
+      // enough to read as a slide at any gridScale.
+      const stepMag = 3 + Math.min(5, over * 0.15);
       const nx = p.x + Math.cos(a) * stepMag;
       const ny = p.y + Math.sin(a) * stepMag;
       if (_legal(nx, ny, m)) {
@@ -27553,6 +28142,54 @@ function hasLineOfSight(ax, ay, bx, by, terrain) {
   }
   return true;
 }
+
+// ════════════════════════════════════════════════════════════════════
+// v38.40 — canPerceive: Unitree Go2 forward-vision model
+// ════════════════════════════════════════════════════════════════════
+// A bot perceives the world the way the Go2 quadruped does: through a
+// forward camera with a finite field of view. It cannot see behind
+// itself, cannot see past its vision range, and cannot see through
+// terrain. canPerceive(viewer, tx, ty, m, opts) returns true only when
+// the point (tx,ty) passes all three gates:
+//   1. RANGE  — within botVisionRange (gridScale-scaled), opts.range
+//               overrides.
+//   2. CONE   — the angle between the viewer's heading (p._heading) and
+//               the bearing to (tx,ty) is within botFovHalfAngle
+//               (≈60° → the Go2's ~120° camera).
+//   3. LOS    — hasLineOfSight: terrain blocks vision.
+// This gates ACQUISITION (picking a new enemy / patient / pickup), not
+// retention — a held target is kept via target-memory so a bot rounding
+// cover doesn't drop its lock. opts.ignoreCone / opts.ignoreLOS allow
+// callers to relax a gate when appropriate.
+function canPerceive(viewer, tx, ty, m, opts) {
+  opts = opts || {};
+  const dx = tx - viewer.x, dy = ty - viewer.y;
+  const dist = Math.hypot(dx, dy);
+  // 1. range
+  const _cfg = (typeof LEAGUE_CONFIG !== "undefined") ? LEAGUE_CONFIG : {};
+  const _g = (typeof COMBAT !== "undefined" && COMBAT.gridScale)
+    ? COMBAT.gridScale : 1;
+  const range = (typeof opts.range === "number")
+    ? opts.range
+    : ((typeof _cfg.botVisionRange === "number" ? _cfg.botVisionRange : 520) * _g);
+  if (dist > range) return false;
+  if (dist < 1) return true;   // coincident — trivially perceived
+  // 2. forward cone
+  if (!opts.ignoreCone && typeof viewer._heading === "number") {
+    const halfFov = (typeof _cfg.botFovHalfAngle === "number")
+      ? _cfg.botFovHalfAngle : 1.047;
+    let bearing = Math.atan2(dy, dx) - viewer._heading;
+    while (bearing >  Math.PI) bearing -= Math.PI * 2;
+    while (bearing < -Math.PI) bearing += Math.PI * 2;
+    if (Math.abs(bearing) > halfFov) return false;
+  }
+  // 3. terrain occlusion
+  if (!opts.ignoreLOS && m && m.terrain) {
+    if (!hasLineOfSight(viewer.x, viewer.y, tx, ty, m.terrain)) return false;
+  }
+  return true;
+}
+if (typeof window !== "undefined") window.canPerceive = canPerceive;
 
 /* === v37.89: cover-aware retreat ===
    Given a bot at (px, py), a desired flee angle (idealAng), and a
@@ -27761,16 +28398,26 @@ function fireAttack(attacker, target, m) {
 function _hitProfile(p) {
   // v38.20: base literals are gridScale-1 values; multiply by
   // COMBAT.gridScale so hitboxes match the 3x-expanded field and the
-  // 3x sprite scale (beginSpriteScale). Pre-v38.20 the hitboxes were
-  // 1/3 the sprite size — visually-connecting shots missed.
+  // 3x sprite scale (beginSpriteScale).
+  // v38.40: hitboxes are SQUARE — the bots model the Unitree Go2
+  // quadruped, whose body reads as a square footprint, and a square
+  // (rx === ry) keeps the hit envelope axis-aligned and stable. Per-
+  // position size variation is kept (tank/brawl bigger, speed smaller)
+  // but every profile is now square rather than the old squashed
+  // ellipse (rx != ry).
   const g = (typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1;
+  let s;
   if (!p || !p.position) {
-    const r = (COMBAT.hitRadius || 13) * g;
-    return { rx: r, ry: r };
+    s = (COMBAT.hitRadius || 13);
+  } else if (p.position === "tank" || p.position === "brawl") {
+    s = 14;            // larger chassis
+  } else if (p.position === "speed") {
+    s = 11;            // compact
+  } else {
+    s = 12;            // standard
   }
-  if (p.position === "tank" || p.position === "brawl") return { rx: 15 * g, ry: 11 * g };
-  if (p.position === "speed") return { rx: 11 * g, ry: 12 * g };
-  return { rx: 13 * g, ry: 11 * g };
+  s *= g;
+  return { rx: s, ry: s };
 }
 
 /* === v37.59: per-weapon melee-switch range (Tier 3.F) ===
@@ -27932,6 +28579,35 @@ function applyDamage(attacker, defender, dmg, isCrit, m, opts) {
   if (defender && defender.isReferee) return;
   const hpFracBefore = defender.hp / defender.stats.hp;
   defender.hp -= dmg;
+  // === v38.40: back-attack reaction ===
+  // The Go2 FOV cone means a bot genuinely can't see an attacker behind
+  // it. To keep that realistic but not oblivious, a bot hit from OUTSIDE
+  // its vision cone snaps its heading toward the attacker — it "hears"
+  // the hit and turns to face the threat. Within ~one heading-rotation's
+  // recovery it can then perceive and engage. Without this the FOV cone
+  // would let bots be farmed indefinitely from behind.
+  if (attacker && defender && !defender.isReferee &&
+      typeof defender._heading === "number" &&
+      typeof attacker.x === "number") {
+    const _adx = attacker.x - defender.x, _ady = attacker.y - defender.y;
+    if (_adx * _adx + _ady * _ady > 1) {
+      const _bearing = Math.atan2(_ady, _adx);
+      let _rel = _bearing - defender._heading;
+      while (_rel >  Math.PI) _rel -= Math.PI * 2;
+      while (_rel < -Math.PI) _rel += Math.PI * 2;
+      const _halfFov = (typeof LEAGUE_CONFIG !== "undefined" &&
+        typeof LEAGUE_CONFIG.botFovHalfAngle === "number")
+        ? LEAGUE_CONFIG.botFovHalfAngle : 1.047;
+      // attacker outside the cone → turn to face it (the heading-rotation
+      // cap still applies in moveAlong; this just sets the desired facing
+      // by nudging _heading partway, so the turn reads as a reaction).
+      if (Math.abs(_rel) > _halfFov) {
+        defender._heading += _rel * 0.5;   // halfway toward the attacker
+        while (defender._heading >  Math.PI) defender._heading -= Math.PI * 2;
+        while (defender._heading < -Math.PI) defender._heading += Math.PI * 2;
+      }
+    }
+  }
   const hpFracAfter = defender.hp / defender.stats.hp;
   // === v38.28: hit sound (throttled) ===
   // Like shots, hits land frequently across all bots — throttle to one
@@ -33618,7 +34294,7 @@ function drawModeEntities(m) {
 
   // ----- TAG "It" indicator -----
   if (mode === "tag" && m.tag && m.tag.itId) {
-    const it = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).find(p => p.id === m.tag.itId && p.alive);
+    const it = (_allPlayers(m)).find(p => p.id === m.tag.itId && p.alive);
     if (it) {
       // Halo on the It bot
       const pulse3 = 0.55 + 0.45 * Math.sin(t * 0.18);
@@ -39369,55 +40045,6 @@ window.showKnightMemorial = showKnightMemorial;
 /* ============================================================
    TEAMS DIRECTORY MODAL
    ============================================================ */
-function showTeams() {
-  let html = "";
-  for (const t of TEAMS) {
-    const r = LEAGUE.records[t.id];
-    const roster = LEAGUE.rosters[t.id];
-    const aliveCount = roster.filter(p => !p.deceased).length;
-    // === v37.91: continent badge for the teams directory ===
-    // Always show (regardless of LEAGUE.continent) so users can browse
-    // the full league roster and see at a glance which continent each
-    // team is from. Color matches the bracket badges.
-    const cont = t.continent || "na";
-    const contBadge = `<span class="cont-badge cont-${cont}" title="${cont === "sa" ? "South America" : "North America"}">${cont === "sa" ? "S" : "N"}</span>`;
-    html += `
-      <div style="margin-bottom:14px;">
-        <div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:6px;">
-          <span style="font-size:24px;">${t.emoji}</span>
-          ${contBadge}
-          <div style="flex:1;">
-            <div style="font-weight:700;">${escapeHTML(t.name)}</div>
-            <div style="font-size:11px;color:var(--dim);">${r.wins}–${r.losses} · ${r.championships}🏆 · ${aliveCount}/5 alive</div>
-          </div>
-        </div>
-        <table class="dt">
-          <tr><th>Pos</th><th>Name</th><th>HP</th><th>DMG</th><th>DEF</th><th>SPD</th><th>K</th></tr>
-          ${roster.map(p => {
-            // v38.05: display CAREER position in roster table — a tank
-            // currently swapped to striker for Tag should show as Tank
-            // in the Ladder, not Striker. (`p.position` is mid-match
-            // match-position; careerPosOf returns canonical career id.)
-            const careerId = (typeof LineupFactory !== "undefined")
-              ? LineupFactory.careerPosOf(p) : p.position;
-            const pos = POS_BY_ID[careerId];
-            const cls = p.deceased ? `style="color:var(--mute);text-decoration:line-through;"` : "";
-            return `<tr ${cls}>
-              <td>${pos.icon}</td>
-              <td>${escapeHTML(p.name)}</td>
-              <td class="num">${p.stats.hp}</td>
-              <td class="num">${p.stats.dmg}</td>
-              <td class="num">${p.stats.def}</td>
-              <td class="num">${p.stats.spd.toFixed(1)}</td>
-              <td class="num">${p.career.kills}</td>
-            </tr>`;
-          }).join("")}
-        </table>
-      </div>
-    `;
-  }
-  openModal("Teams", html, `<button onclick="closeModal()" class="secondary">Close</button>`);
-}
 
 /* ============================================================
    HISTORY MODAL
@@ -39507,61 +40134,6 @@ function showHistory() {
 /* ============================================================
    GRAVEYARD MODAL
    ============================================================ */
-function showGraveyard() {
-  if (!LEAGUE.graveyard.length) {
-    openModal("Graveyard", `<div style="color:var(--dim);text-align:center;padding:20px;">No casualties yet. The carnage begins soon.</div>`,
-      `<button onclick="closeModal()" class="secondary">Close</button>`);
-    return;
-  }
-  let html = `<div style="font-size:10px;color:var(--dim);margin-bottom:6px;">Click a name to view their memorial.</div>`;
-  html += `<table class="dt">
-    <tr><th>S</th><th>R</th><th>Name</th><th>Team</th><th>Slain by</th></tr>`;
-  for (const g of LEAGUE.graveyard.slice().reverse()) {
-    const t = TEAM_BY_ID[g.teamId];
-    // Find the actual roster entry (deceased players are still in roster, just .deceased=true)
-    const rosterEntry = (LEAGUE.rosters[g.teamId] || []).find(p => p.name === g.name);
-    // v38.20 bugfix (defensive): the onclick was single-quoted while
-    // JSON.stringify emits double-quoted strings — safe for the common
-    // case, but a knight name containing an apostrophe would break the
-    // single-quoted attribute (the same bug class as the lore-bookmark
-    // Remove button). Build the JS payload then HTML-escape the whole
-    // attribute value so embedded quotes of either kind survive.
-    let clickAttr = "";
-    if (rosterEntry) {
-      const teamArg = g.teamId ? "'" + String(g.teamId).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'" : "null";
-      const nameArg = "'" + String(g.name || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'";
-      const memJs = `openMemorialFor(${teamArg}, ${nameArg})`;
-      clickAttr = `onclick="${escapeHTML(memJs)}" style="cursor:pointer;"`;
-    }
-    html += `<tr ${clickAttr}>
-      <td>S${g.season}</td>
-      <td>${g.round || "—"}</td>
-      <td><span style="color:var(--gold);text-decoration:underline;">${escapeHTML(g.name)}</span></td>
-      <td>${t.emoji} ${escapeHTML(t.short)}</td>
-      <td>${escapeHTML(g.killer)}</td>
-    </tr>`;
-  }
-  html += `</table>`;
-
-  // Lost-items section
-  if (LEAGUE.lostItems && LEAGUE.lostItems.length) {
-    html += `<h3 style="margin:14px 0 6px;color:var(--gold);font-size:12px;letter-spacing:1px;">📉 LOST LEGENDARY ITEMS</h3>`;
-    html += `<div style="font-size:10px;color:var(--dim);margin-bottom:6px;">Items left on the field at match end after 2+ scavenges. Forever lost.</div>`;
-    html += `<table class="dt" style="font-size:11px;">
-      <tr><th>S</th><th>Item</th><th>Scavenged</th><th>Last carrier</th></tr>`;
-    for (const li of LEAGUE.lostItems.slice().reverse().slice(0, 20)) {
-      html += `<tr>
-        <td>S${li.season}</td>
-        <td>${li.ico || "·"} ${escapeHTML(li.name)}</td>
-        <td class="num">${li.scavengedCount}×</td>
-        <td>${escapeHTML(li.lostBy)}</td>
-      </tr>`;
-    }
-    html += `</table>`;
-  }
-
-  openModal("Graveyard (" + LEAGUE.graveyard.length + ")", html, `<button onclick="closeModal()" class="secondary">Close</button>`);
-}
 
 // Helper used by inline graveyard onclick handlers
 function openMemorialFor(teamId, name) {
@@ -39869,42 +40441,6 @@ window.showMatchDetail = showMatchDetail;
 /* ============================================================
    BRACKET MODAL (full-size view)
    ============================================================ */
-function showBracket() {
-  const b = LEAGUE.bracket;
-  const matchHTML = (slot, label) => {
-    const m = b[slot];
-    const aT = m.teamA ? TEAM_BY_ID[m.teamA] : null;
-    const bT = m.teamB ? TEAM_BY_ID[m.teamB] : null;
-    const aCls = m.winner === m.teamA ? "winner" : (m.winner ? "loser" : "");
-    const bCls = m.winner === m.teamB ? "winner" : (m.winner ? "loser" : "");
-    const isCurrent = LEAGUE.currentSlot === slot;
-    return `
-      <div class="bracket-match ${isCurrent ? 'current' : ''} ${m.winner ? 'done' : ''}" style="margin:0;">
-        <div class="label">${label}${isCurrent ? ' · LIVE' : ''}</div>
-        <div class="team-row ${aCls}">
-          <span class="em">${aT?.emoji || "❓"}</span>
-          <span class="nm">${aT?.name || "TBD"}</span>
-        </div>
-        <div class="vs-divider">VS</div>
-        <div class="team-row ${bCls}">
-          <span class="em">${bT?.emoji || "❓"}</span>
-          <span class="nm">${bT?.name || "TBD"}</span>
-        </div>
-      </div>
-    `;
-  };
-  const body = `
-    <div style="display:grid;grid-template-columns:1fr;gap:12px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        ${matchHTML("semi1", "Semifinal 1")}
-        ${matchHTML("semi2", "Semifinal 2")}
-      </div>
-      <div style="text-align:center;color:var(--dim);font-size:11px;letter-spacing:1px;">↓</div>
-      ${matchHTML("final", "Final")}
-    </div>
-  `;
-  openModal(`Season ${LEAGUE.season} Bracket`, body, `<button onclick="closeModal()" class="secondary">Close</button>`);
-}
 
 /* ============================================================
    CLOUD SYNC (Perchance uploadPlugin)
@@ -39931,7 +40467,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // === v37.92: single source of truth for the build label ===
 // Used by the console boot log AND by the save's gameVersion stamp.
 // Bump in ONE place per release.
-const BUILD_LABEL = "v38.39";
+const BUILD_LABEL = "v38.44";
 
 // === v37.34: build-identification stamp ===
 // Prints once on script load. If the user reports crashes and this line is
@@ -40370,7 +40906,6 @@ function setSyncStatus(msg, kind) {
    Format documented at the top of integrate_v37_51_cloudsave_crypto.py.
    Magic bytes "FK48" let pullSave detect encrypted vs legacy plain JSON.
    ============================================================ */
-const _FK_CRYPTO_MAGIC = "FK48";  // 4 ASCII bytes: 0x46, 0x4B, 0x34, 0x38
 const _FK_CRYPTO_VERSION = 0x01;
 const _FK_PBKDF2_ITERATIONS = 100000;
 const _FK_SALT_LEN = 16;
@@ -45332,25 +45867,6 @@ function _dropdownHtml(id, label, options, activeValue) {
 }
 function $sv(id) { const el = document.getElementById(id); return el ? el.value : null; }
 
-function _stadiumCardHtml(b) {
-  const ambient = b.ambient ? `${b.ambient} ambient` : "no ambient";
-  const court   = b.courtType ? `${b.courtType} markings` : "open field";
-  const meta    = `${b.cityCode || "neutral"} · ${court} · ${ambient}`;
-  const sportLore  = b.sportLore  || "";
-  const cityLore   = b.cityLore   || "";
-  const effectLore = b.effectLore || "";
-  return `
-    <div class="lore-stadium-card">
-      <canvas class="lore-stadium-preview" data-biome-id="${_escHtml(b.id)}" width="220" height="124"></canvas>
-      <div>
-        <h3>${b.emoji || "🏟️"} ${_escHtml(b.name)}</h3>
-        <div class="meta">${_escHtml(meta)}</div>
-        ${sportLore ? `<p>${_escHtml(sportLore)}</p>` : ""}
-        ${effectLore && b.effectKey !== "default" ? `<p>${_escHtml(effectLore)}</p>` : ""}
-        ${cityLore  ? `<p class="city-lore">${_escHtml(cityLore)}</p>` : ""}
-      </div>
-    </div>`;
-}
 
 function _escHtml(s) {
   if (s == null) return "";
