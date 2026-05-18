@@ -25,9 +25,14 @@
        and any future role-tinted UI. */
     --pos-tank:      #88c0d0;
     --pos-striker:   #ef6e6e;
-    --pos-speed:     #f7c948;
+    /* v38.30: --pos-speed and --pos-sniper were byte-identical copies of
+       --gold and --pur. The ThemeFactory editor sets --gold/--pur, but
+       these copies didn't follow, so role colors ignored the theme.
+       Repointed to var() refs — they now inherit the active theme.
+       The other 5 --pos-* are genuinely distinct colors, left as-is. */
+    --pos-speed:     var(--gold);
     --pos-brawl:     #d8b070;
-    --pos-sniper:    #b46df0;
+    --pos-sniper:    var(--pur);
     --pos-healer:    #7fd989;
     --pos-grenadier: #f49056;
     --t-fox: #f08a3c;     /* Phoenix Furious Foxes */
@@ -15504,6 +15509,54 @@ function pickMeleeFallback(p) {
   return MELEE_FALLBACKS[h % MELEE_FALLBACKS.length];
 }
 
+/* === v38.32: weapon range + projectile-speed grid-scale pass ===
+   Every weapon `range` (melee 18-30, ranged 90-460) and `projSpeed`
+   (6-22) was authored at gridScale-1. v38.11 expanded the field 3x but
+   these were never scaled — so on the 3840-wide arena a railgun reached
+   only 12% across the field and melee weapons needed knights almost
+   overlapping to connect. Combat logic reads wpn.range / wpn.projSpeed
+   RAW at ~20 sites (d > wpn.range, td <= wpn.range, distance checks) —
+   there is no point-of-use scaling — so the correct single-point fix is
+   to scale the source arrays once, here, right after they're defined.
+   Idempotent via a guard flag so a re-parse can't double-scale.
+   range = field distance -> scales with gridScale.
+   projSpeed = px/tick velocity -> scales too, so a shot still crosses
+   the (now 3x larger) field in comparable time. */
+(function _scaleWeaponRanges() {
+  const g = (typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1;
+  if (g === 1) return;
+  for (const w of WEAPONS) {
+    if (w._gridScaled) continue;
+    if (typeof w.range === "number") w.range *= g;
+    if (typeof w.projSpeed === "number") w.projSpeed *= g;
+    w._gridScaled = true;
+  }
+  for (const w of MELEE_FALLBACKS) {
+    if (w._gridScaled) continue;
+    if (typeof w.range === "number") w.range *= g;
+    if (typeof w.projSpeed === "number") w.projSpeed *= g;
+    w._gridScaled = true;
+  }
+  // v38.34: COMBAT.hitRange (melee strike distance, 18px) is the same
+  // bug class — a gridScale-1 literal used RAW at 6 combat sites
+  // (td <= COMBAT.hitRange). On the 3x field melee bots had to nearly
+  // overlap to land a hit. Scaled here, in the one idempotent pass,
+  // guarded so a re-parse can't double-apply.
+  if (typeof COMBAT !== "undefined" && !COMBAT._gridScaled) {
+    if (typeof COMBAT.hitRange === "number") COMBAT.hitRange *= g;
+    COMBAT._gridScaled = true;
+  }
+})();
+
+/* v38.32: gridScale accessor — combat logic uses bare distance literals
+   (the 30 melee/ranged threshold, 220/90 range fallbacks) that must
+   scale alongside the now-scaled weapon ranges. _GS() is the single
+   source for that multiplier. */
+function _GS() {
+  return (typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1;
+}
+if (typeof window !== "undefined") window._GS = _GS;
+
 const ARMORS = [
   { id: "plate",   ico: "🪖", name: "Plate Cuirass",   defMod: +10, spdMod:  0,    critMod:  0,    flavorPos: "tank" },
   { id: "brig",    ico: "🎽", name: "Brigandine",      defMod:  +5, spdMod:  0,    critMod:  0,    flavorPos: "striker" },
@@ -18757,8 +18810,13 @@ function tickKOTH(m) {
 function tickCTF(m) {
   if (!m.flagsByTeam || !m.basesById) return;
   const all = (m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers)).filter(p => p.alive);
-  const PICKUP_R2 = 16 * 16;          // pickup/touch radius squared
-  const CAPTURE_R2 = 24 * 24;         // capture radius (matches base ring visual)
+  // v38.32: flag pickup/capture radii are world distances — scaled by
+  // gridScale so the touch + capture zones keep their intended footprint
+  // on the 3x field (squared, so the gridScale factor is squared too).
+  const _ctfG2 = (typeof COMBAT !== "undefined" && COMBAT.gridScale ? COMBAT.gridScale : 1);
+  const _ctfG2sq = _ctfG2 * _ctfG2;
+  const PICKUP_R2 = 16 * 16 * _ctfG2sq;   // pickup/touch radius squared
+  const CAPTURE_R2 = 24 * 24 * _ctfG2sq;  // capture radius (matches base ring visual)
 
   // First pass: refresh carrier-following positions for each flag, and
   // detect dead/missing carriers (shouldn't normally happen since applyKO
@@ -19190,20 +19248,38 @@ function tickRespawns(m) {
     for (let i = 0; i < wave.length; i++) {
       const p = wave[i];
       const slotIdx = positionOrder.indexOf(p.position);
-      const yOffset = ((slotIdx >= 0 ? slotIdx : i) - 3) * 60;  // -180..+180
+      // v38.35: slot spacing was a bare 60px (gridScale-1). On the 3x
+      // field that packed all 7 knights into a 420px column — tight
+      // enough that the boids separation fired immediately at spawn.
+      // Scaled so the formation spans the field proportionally.
+      const yOffset = ((slotIdx >= 0 ? slotIdx : i) - 3) * 60 * (COMBAT.gridScale || 1);
 
       // Reset combat state, place at spawn
       // v37.78 determinism fix: was using Math.random() which breaks replay
       // reproducibility. Spawn position affects combat (engagement order,
       // LOS, race-to-center) so this MUST be on the seeded SIM_RNG stream.
-      p.x = baseX + R(-6, 6);
-      p.y = cy + yOffset + R(-4, 4);
-      p.x = Math.max(40, Math.min(COMBAT.arenaW - 40, p.x));
-      p.y = Math.max(40, Math.min(COMBAT.arenaH - 40, p.y));
+      // v38.35: spawn jitter + edge clamp scaled by gridScale so the
+      // formation scatter and the playable-area margin match the field.
+      const _spG = (COMBAT.gridScale || 1);
+      p.x = baseX + R(-6 * _spG, 6 * _spG);
+      p.y = cy + yOffset + R(-4 * _spG, 4 * _spG);
+      p.x = Math.max(40 * _spG, Math.min(COMBAT.arenaW - 40 * _spG, p.x));
+      p.y = Math.max(40 * _spG, Math.min(COMBAT.arenaH - 40 * _spG, p.y));
       p.hp = p.stats.hp;
       p.alive = true;
       p.balloonsPopped = 0;
       p.vx = 0; p.vy = 0;
+      // v38.35: also clear the movement-smoothing state. _smoothVx/Vy
+      // (velocity smoother) and _heading (angular smoother) persist on
+      // the player object across deaths; a respawned bot inheriting a
+      // stale velocity or heading lurches on its first post-respawn
+      // frame. Reset them so the bot starts cleanly from rest.
+      p._smoothVx = 0; p._smoothVy = 0;
+      p._heading = undefined;
+      p._knockbackVx = 0; p._knockbackVy = 0; p._knockbackTtl = 0;
+      // v38.39: snap the render-interp snapshot to the spawn point so
+      // the bot does not interpolate (smear) across the respawn jump.
+      p._prevX = p.x; p._prevY = p.y;
       p.target = null;
       p.attackCooldown = 0;
       p.facing = isLeftTeam ? 1 : -1;
@@ -20163,11 +20239,15 @@ function generateCloudShadows() {
   const clouds = [];
   const count = 2 + Math.floor(BIOME_RNG.next() * 2);
   for (let i = 0; i < count; i++) {
+    // v38.31: cloud w/h were bare gridScale-1 literals — positions used
+    // COMBAT.arenaW/H (scaled) but the shadows themselves drew at ~1/3
+    // size on the 3x field. Scale the dimensions to match.
+    const _cg = COMBAT.gridScale || 1;
     clouds.push({
       x: BIOME_RNG.next() * COMBAT.arenaW * 1.5 - COMBAT.arenaW * 0.25,
       y: BIOME_RNG.next() * COMBAT.arenaH * 1.2 - COMBAT.arenaH * 0.1,
-      w: 280 + BIOME_RNG.next() * 220,
-      h: 140 + BIOME_RNG.next() * 120,
+      w: (280 + BIOME_RNG.next() * 220) * _cg,
+      h: (140 + BIOME_RNG.next() * 120) * _cg,
       vx: 0.18 + BIOME_RNG.next() * 0.18,
       vy: -0.04 + BIOME_RNG.next() * 0.08,
       alpha: 0.07 + BIOME_RNG.next() * 0.05,
@@ -20596,6 +20676,7 @@ function layoutTeam(players, side) {
     p.x = Math.max(40, Math.min(COMBAT.arenaW - 40, p.x));
     p.y = Math.max(40, Math.min(COMBAT.arenaH - 40, p.y));
     p.vx = 0; p.vy = 0;
+    p._prevX = p.x; p._prevY = p.y;  // v38.39: no interp across spawn
     p.target = null;
     p.attackCooldown = 0;
     p.facing = side === "left" ? 1 : -1;
@@ -20703,6 +20784,27 @@ function tickMatch() {
   // so this cache is invalidated naturally only when teamAplayers /
   // teamBplayers itself is replaced — which doesn't happen mid-match.
   m._allPlayersFlat = m.teamAplayers.concat(m.teamBplayers);
+
+  // === v38.39: render-interpolation position snapshot ===
+  // THE actual cause of the "jumping" — and why six versions of
+  // sim-side movement patches never fixed it. The sim runs at 20Hz
+  // (frameMs 50); the renderer runs at 30-60fps and draws each entity
+  // at its RAW p.x/p.y. Between sim ticks the position does not change,
+  // so a travelling bot is frozen for 2-3 render frames, then SNAPS the
+  // whole tick's distance at once. At gridScale 3 a full-speed travel
+  // step is ~15px — so the bot visibly jumps 15px, 20×/second, instead
+  // of gliding. (In combat, per-tick motion is small, so the snap is
+  // invisible — which is why it only shows "until within enemy range".)
+  // The fix is the standard fixed-timestep pattern: snapshot every
+  // entity's position at the START of each tick into _prevX/_prevY; the
+  // renderer then draws at the interpolated point between _prevX/_prevY
+  // and the live x/y using the sim accumulator's fractional progress.
+  // One foundational change — every entity, every state, glides.
+  for (const _e of m._allPlayersFlat) {
+    _e._prevX = _e.x;
+    _e._prevY = _e.y;
+  }
+  if (m.referees) for (const _r of m.referees) { _r._prevX = _r.x; _r._prevY = _r.y; }
 
   // Slow-mo countdown — if we've triggered it, count it down per tick so
   // the loop's effective speed multiplier knows when to release back to
@@ -21413,6 +21515,16 @@ const TEAM_AI = (function() {
       const teamCenter = allies.length > 0
         ? { x: cx / allies.length, y: cy / allies.length }
         : { x: COMBAT.arenaW / 2, y: COMBAT.arenaH / 2 };
+      // v38.38: tag the centroid with its per-frame velocity,
+      // derived from the previous frame's centroid (cached per
+      // team) so movement trackers can match the team's drift.
+      if (!m._teamCenterPrev) m._teamCenterPrev = {};
+      const _prevTC = m._teamCenterPrev[teamId];
+      if (_prevTC) {
+        teamCenter.vx = teamCenter.x - _prevTC.x;
+        teamCenter.vy = teamCenter.y - _prevTC.y;
+      } else { teamCenter.vx = 0; teamCenter.vy = 0; }
+      m._teamCenterPrev[teamId] = { x: teamCenter.x, y: teamCenter.y };
       let ecx = 0, ecy = 0;
       for (const e of enemies) { ecx += e.x; ecy += e.y; }
       const enemyCenter = enemies.length > 0
@@ -21569,8 +21681,8 @@ const TEAM_AI = (function() {
     }
 
     const wpn = p.weapon || {};
-    const ranged = (wpn.range || 0) > 30;
-    const myWpnRange = wpn.range || 220;
+    const ranged = (wpn.range || 0) > 30 * _GS();
+    const myWpnRange = wpn.range || 220 * _GS();
 
     // === v37.18: KILL-CONFIRM PRIORITY ===
     // If any enemy within our weapon range is below 25% HP, prefer them
@@ -23816,7 +23928,10 @@ const MODE_AI = (function() {
       // OR when IT has moved >GUARD_IT_DELTA from its position at the
       // last refresh. The teammate has time to actually arrive somewhere.
       const GUARD_REFRESH = 30;           // recompute at most every 1.5s
-      const GUARD_IT_DELTA = 250;         // OR when IT has moved this far
+      // v38.32: GUARD_IT_DELTA is a world-space distance (how far IT
+      // must move to trigger a guard-position recompute) — scaled with
+      // gridScale. GUARD_REFRESH above is a frame count, left as-is.
+      const GUARD_IT_DELTA = 250 * (typeof COMBAT !== "undefined" && COMBAT.gridScale ? COMBAT.gridScale : 1);
       const itMoved = (p._guardItPos && it)
         ? Math.hypot(it.x - p._guardItPos.x, it.y - p._guardItPos.y) > GUARD_IT_DELTA
         : true;
@@ -24427,7 +24542,7 @@ function decideAIState(p, enemyAlive, m) {
      ============================================================ */
   const hpFrac = p.hp / p.stats.hp;
   const myWpn = p.weapon || {};
-  const ranged = (myWpn.range || 0) > 30;
+  const ranged = (myWpn.range || 0) > 30 * _GS();
 
   // Healer/Grenadier specialized behaviors live in executeAIState
   if (p.position === "healer" || p.position === "grenadier") {
@@ -24474,7 +24589,7 @@ function decideAIState(p, enemyAlive, m) {
   // v37.78: != null guards against falsy-zero (consistent with L18364)
   if (p.attackedBy != null) {
     const attacker = enemyAlive.find(e => e.id === p.attackedBy);
-    if (attacker && distance(p, attacker) < (ranged ? myWpn.range : 220)) {
+    if (attacker && distance(p, attacker) < (ranged ? myWpn.range : 220 * _GS())) {
       p.aiState = "FINISH_OFF";
       p.target = attacker;
       return;
@@ -24635,7 +24750,7 @@ function decideAIState(p, enemyAlive, m) {
       const eD = distance(p, e);
       // Strong opportunity: target at <30% HP, closer than current,
       // in weapon range, and current isn't already in critical state
-      if (eHp < 0.30 && eD < curD && eD < (myWpn.range || 220) && curHp > 0.40) {
+      if (eHp < 0.30 && eD < curD && eD < (myWpn.range || 220 * _GS()) && curHp > 0.40) {
         opportunityBreak = true;
         opportunityTarget = e;
         break;
@@ -24704,7 +24819,7 @@ const _dmTreeImpl = (function() {
   function computeContext(p, m, bb) {
     bb.hpFrac = p.hp / p.stats.hp;
     bb.myWpn = p.weapon || {};
-    bb.ranged = (bb.myWpn.range || 0) > 30;
+    bb.ranged = (bb.myWpn.range || 0) > 30 * _GS();
     bb.enemyAlive = (p.teamId === m.teamAId ? m.teamBplayers : m.teamAplayers).filter(e => e.alive);
     bb.focusedTarget = TEAM_AI.pickTarget(p, bb.enemyAlive, m);
     bb.nearest = null;
@@ -24740,7 +24855,7 @@ const _dmTreeImpl = (function() {
     if (p.attackedBy == null) return BT.FAILURE;
     const attacker = bb.enemyAlive.find(e => e.id === p.attackedBy);
     if (!attacker) return BT.FAILURE;
-    const limit = bb.ranged ? bb.myWpn.range : 220;
+    const limit = bb.ranged ? bb.myWpn.range : 220 * _GS();
     if (distance(p, attacker) >= limit) return BT.FAILURE;
     p.aiState = "FINISH_OFF";
     p.target = attacker;
@@ -24866,7 +24981,7 @@ const _dmTreeImpl = (function() {
         if (e === p.target) continue;
         const eHp = e.hp / e.stats.hp;
         const eD = distance(p, e);
-        if (eHp < 0.30 && eD < curD && eD < (bb.myWpn.range || 220) && curHp > 0.40) {
+        if (eHp < 0.30 && eD < curD && eD < (bb.myWpn.range || 220 * _GS()) && curHp > 0.40) {
           opportunityBreak = true;
           opportunityTarget = e;
           break;
@@ -25128,7 +25243,7 @@ function tryDisengageDodge(p, m, effSpd, nearestEnemy, nearestD) {
   if (!nearestEnemy || nearestD > 30) return false; // not in melee range
 
   const wpn = p.weapon || {};
-  const isRanged = (wpn.range || 0) > 30;
+  const isRanged = (wpn.range || 0) > 30 * _GS();
   const hpFrac = p.hp / p.stats.hp;
 
   // Trigger conditions:
@@ -25197,7 +25312,7 @@ function tickHealerBehavior(p, m, effSpd) {
   //
   // The function still respects p._dodgeNudge from the dodge layer.
   const wpn = p.weapon || {};
-  const HEAL_RANGE = wpn.range || 90;
+  const HEAL_RANGE = wpn.range || 90 * _GS();
   const team = p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers;
   const enemies = p.teamId === m.teamAId ? m.teamBplayers : m.teamAplayers;
 
@@ -25280,15 +25395,36 @@ function tickHealerBehavior(p, m, effSpd) {
   // No patient → opportunistic positioning toward team center, with a
   // light passive attack on closest enemy if one is in weapon range.
   if (!patient) {
-    // Drift toward team centroid so the team isn't fragmented
+    // Drift toward team centroid so the team isn't fragmented.
     const teamState = m._teamAI && m._teamAI[p.teamId];
     if (teamState && teamState.teamCenter) {
       const tcx = teamState.teamCenter.x;
       const tcy = teamState.teamCenter.y;
-      const tdx = tcx - p.x, tdy = tcy - p.y;
-      const td = Math.hypot(tdx, tdy);
-      if (td > 80) {
-        moveAlong(p, Math.atan2(tdy, tdx), effSpd * 0.55);
+      // v38.38: team centroid is a MOVING point. moveToward — even with
+      // the arrival ramp off — still overshoots it when the healer is
+      // faster than the centroid drift (moveAlong's velocity smoother
+      // carries momentum past the point, then reverses: jitter). The
+      // correct primitive for settling near a moving point is the same
+      // continuous proportional controller used for the grenadier and
+      // ranged-ENGAGE holds: re-centre gently toward a comfort radius
+      // and match the centroid's drift velocity. No overshoot, no
+      // stop-start — the healer glides and holds station near the team.
+      const comfortR = 80 * _GS();          // preferred stand-off from centroid
+      const cdx = tcx - p.x, cdy = tcy - p.y;
+      const cd = Math.hypot(cdx, cdy) || 1;
+      const cErr = cd - comfortR;           // +ve = too far from team
+      const cux = cdx / cd, cuy = cdy / cd;
+      // centroid drift (teamCenter carries vx/vy when TEAM_AI computes it;
+      // fall back to 0 if absent — then this is a pure re-centre).
+      const cvx = teamState.teamCenter.vx || 0;
+      const cvy = teamState.teamCenter.vy || 0;
+      // gentle proportional re-centre (12% of range error) + drift match
+      let hvx = cux * cErr * 0.12 + cvx;
+      let hvy = cuy * cErr * 0.12 + cvy;
+      const hsp = Math.hypot(hvx, hvy);
+      if (hsp > 0.25) {
+        moveAlong(p, Math.atan2(hvy, hvx),
+                  Math.min(hsp, effSpd * 0.55));
       }
     }
     // v37.78: removed dead-code block here that computed the closest enemy
@@ -25301,23 +25437,31 @@ function tickHealerBehavior(p, m, effSpd) {
   }
 
   const d = distance(p, patient);
-  // === v37.18: hysteresis on healer positioning ===
-  // Was: hard MIN_RANGE=25 always pushed back. Caused healers to
-  // ping-pong between min/max range. New: target band is 0.5×–0.9×
-  // heal range. Inside the band, hold; outside, gently re-enter.
+  // === v38.37: continuous healer positioning (no deadband stutter) ===
+  // Was a deadband: close in if d > maxBand, back off if d < minBand,
+  // otherwise FREEZE. Against a moving patient that produced the same
+  // stop / stop / lurch stutter fixed for the grenadier (v38.36) and
+  // ranged-ENGAGE (v38.37). The healer now continuously tracks: it
+  // glides to keep the patient at mid-band range, matching the
+  // patient's drift, so it stays in heal range smoothly.
   const minBand = HEAL_RANGE * 0.35;
   const maxBand = HEAL_RANGE * 0.90;
-  if (d > maxBand) {
-    // Too far — close in
-    const ang = Math.atan2(patient.y - p.y, patient.x - p.x);
-    moveAlong(p, ang, effSpd);
-  } else if (d < minBand) {
-    // Too close — back off mildly (slower than advancing — being a
-    // little close is less bad than being a little far for a healer).
-    const ang = Math.atan2(p.y - patient.y, p.x - patient.x);
-    moveAlong(p, ang, effSpd * 0.6);
+  const idealHeal = (minBand + maxBand) * 0.5;   // mid-band hold range
+  const _hpx = patient.x - p.x, _hpy = patient.y - p.y;
+  const _hpd = Math.hypot(_hpx, _hpy) || 1;
+  const _healErr = _hpd - idealHeal;             // +ve = too far
+  const _hux = _hpx / _hpd, _huy = _hpy / _hpd;
+  // Proportional re-centre toward mid-band + match patient drift.
+  // Asymmetric gain: closing in (too far) is more urgent than backing
+  // off (a little close still heals fine) — mirrors the old 1.0 / 0.6.
+  const _healGain = (_healErr > 0) ? 0.15 : 0.09;
+  let _hvx = _hux * _healErr * _healGain + (patient.vx || 0);
+  let _hvy = _huy * _healErr * _healGain + (patient.vy || 0);
+  const _hsp = Math.hypot(_hvx, _hvy);
+  if (_hsp > 0.25) {
+    moveAlong(p, Math.atan2(_hvy, _hvx), Math.min(_hsp, effSpd));
   }
-  // Otherwise hold position — within optimal band.
+  // (minBand / maxBand retained above for the beam-fire range check.)
 
   // === Step 4: Beam fire ===
   // Beam if in range, LOS clear, patient alive AND below max HP, not
@@ -25375,15 +25519,18 @@ function tickGrenadierBehavior(p, m, effSpd, nearestEnemy, nearestD) {
   if (!nearestEnemy) return;
 
   const wpn = p.weapon || {};
-  const GRENADE_RANGE = wpn.range || 220;
+  const GRENADE_RANGE = wpn.range || 220 * _GS();
   const isLauncher = (wpn.id === "launcher");
   const enemies = p.teamId === m.teamAId ? m.teamBplayers : m.teamAplayers;
   const teammates = p.teamId === m.teamAId ? m.teamAplayers : m.teamBplayers;
-  // Match the blast radius used in fireGrenade / detonateGrenade
-  const BLAST_RADIUS = 60;
+  // Match the blast radius used in fireGrenade / detonateGrenade.
+  // v38.32: fireGrenade scales blastRadius by gridScale (v38.30) — this
+  // AI grenade-target scoring must use the SAME scaled value or the bot
+  // plans throws assuming a 1/3-size blast and under-rates its grenades.
+  const BLAST_RADIUS = 60 * _GS();
   // Buffer added to friendly-fire check so grenadier doesn't shave
   // teammates by 1px (avoid edge-case kills).
-  const FF_GUARD = 12;
+  const FF_GUARD = 12 * _GS();
 
   // === Step 1: Score grenade targets ===
   // For each visible-in-range enemy, compute their cluster value AND
@@ -25439,46 +25586,115 @@ function tickGrenadierBehavior(p, m, effSpd, nearestEnemy, nearestD) {
   const fireDist = bestTarget ? distance(p, bestTarget) : nearestD;
 
   // === Step 3: Movement ===
-  // For the launcher: hold ~120-180px from grenade target; for melee
+  // For the launcher: hold at grenade stand-off range; for melee
   // grenadier (rare; fallback weapon), close to combat range.
-  const idealDist = isLauncher ? 150 : 30;
-  if (isLauncher && bestTarget) {
-    // We have a clean grenade lane — maintain optimal range
-    if (fireDist > idealDist + 30) {
-      const ang = Math.atan2(bestTarget.y - p.y, bestTarget.x - p.x);
-      moveAlong(p, ang, effSpd);
-    } else if (fireDist < idealDist - 30) {
-      // Too close to safely throw — back off
-      const ang = Math.atan2(p.y - bestTarget.y, p.x - bestTarget.x);
-      moveAlong(p, ang, effSpd * 0.7);
+  const idealDist = isLauncher ? 150 * _GS() : 30 * _GS();
+  // === v38.34: grenadier movement — mode hysteresis + moveToward ===
+  // Two coupled fixes for the rubberbanding:
+  //  (1) DECISION hysteresis. bestTarget toggles set/null frame-to-frame
+  //      when a grenade target hovers near the eligibility boundary
+  //      (range edge, intermittent LOS, transient friendly-fire). The
+  //      "hold" and "reposition" branches pull opposite ways; latching
+  //      the movement MODE for GREN_MOVE_COMMIT frames stops a momentary
+  //      flicker from whipping the bot around.
+  //  (2) ARRIVAL via moveToward. The hold band is sized off the real
+  //      step, so the bot decelerates into its stand-off range and
+  //      rests — it cannot overshoot the band and oscillate.
+  const GREN_MOVE_COMMIT = 20;  // ~1s @20Hz minimum dwell per movement mode
+  const _wantMode = bestTarget ? "hold" : "reposition";
+  if (p._grenMoveMode !== _wantMode) {
+    if ((p._grenMoveModeTtl || 0) <= 0) {
+      p._grenMoveMode = _wantMode;
+      p._grenMoveModeTtl = GREN_MOVE_COMMIT;
     }
-    // Otherwise hold position and throw
-  } else if (isLauncher && !bestTarget) {
-    // No grenade-eligible target visible (all blocked, friendly-fire,
-    // or out of range). Reposition toward team center to find a new
-    // firing lane rather than committing to melee.
+  } else {
+    p._grenMoveModeTtl = GREN_MOVE_COMMIT;
+  }
+  if (p._grenMoveModeTtl > 0) p._grenMoveModeTtl--;
+  const _moveMode = p._grenMoveMode || _wantMode;
+  if (bestTarget) p._grenLastTarget = bestTarget;
+  const _holdTarget = bestTarget || p._grenLastTarget;
+
+  if (isLauncher && _moveMode === "hold" && _holdTarget) {
+    // === v38.36: continuous range-tracking hold (no deadband lurch) ===
+    // The previous hold was a deadband: the grenadier sat completely
+    // still inside the [idealDist±band] ring and only moved when the
+    // target drifted PAST the band — then lurched to catch up. Against a
+    // moving target that produced a stop / stop / stop / lurch / stop
+    // stutter (~one lurch every 5-7 frames) — the visible "jumping".
+    //
+    // Fix: hold is now a CONTINUOUS proportional controller. Every frame
+    // the grenadier corrects toward its ideal stand-off range by an
+    // amount proportional to the range error, and ALSO matches the
+    // target's drift velocity. Small error → small smooth correction;
+    // it glides alongside a moving target instead of lurching. moveAlong
+    // still smooths the result, so the motion is continuous at all
+    // times. No deadband, so no accumulate-then-snap.
+    const _hdx = _holdTarget.x - p.x, _hdy = _holdTarget.y - p.y;
+    const _hd = Math.hypot(_hdx, _hdy) || 1;
+    const rangeErr = _hd - idealDist;          // +ve = too far, -ve = too close
+    // Direction unit vector toward the target.
+    const ux = _hdx / _hd, uy = _hdy / _hd;
+    // Proportional range-correction velocity. Gain 0.18 → gentle; the
+    // grenadier closes ~18% of the range error per frame, well under one
+    // step, so it eases rather than snaps.
+    const corrVx = ux * rangeErr * 0.18;
+    const corrVy = uy * rangeErr * 0.18;
+    // Match the target's drift so a moving target doesn't pull the
+    // grenadier out of range in the first place.
+    const tvx = _holdTarget.vx || 0, tvy = _holdTarget.vy || 0;
+    let desVx = corrVx + tvx;
+    let desVy = corrVy + tvy;
+    const desSpeed = Math.hypot(desVx, desVy);
+    // Only actually move if the correction is meaningful — a sub-pixel
+    // desired velocity means we're holding station; skip the move so a
+    // perfectly-placed grenadier rests cleanly.
+    if (desSpeed > 0.25) {
+      const moveSpeed = Math.min(desSpeed, effSpd);
+      moveAlong(p, Math.atan2(desVy, desVx), moveSpeed);
+    }
+  } else if (isLauncher && _moveMode === "reposition") {
+    // No grenade-eligible target (blocked / friendly-fire / out of
+    // range). Reposition toward team center to find a new firing lane.
     const teamState = m._teamAI && m._teamAI[p.teamId];
     if (teamState && teamState.teamCenter) {
-      const tcx = teamState.teamCenter.x;
-      const tcy = teamState.teamCenter.y;
-      // Move 60% toward team center, 40% away from nearest enemy
-      // (so we don't walk into the threat we can't grenade).
+      const tcx = teamState.teamCenter.x, tcy = teamState.teamCenter.y;
+      // Direction toward team center.
       const tdx = tcx - p.x, tdy = tcy - p.y;
       const tlen = Math.hypot(tdx, tdy) || 1;
-      const tx = tdx / tlen, ty = tdy / tlen;
-      let ax = tx, ay = ty;
-      if (nearestEnemy && nearestD < 200) {
-        const adx = p.x - nearestEnemy.x, ady = p.y - nearestEnemy.y;
-        const alen = Math.hypot(adx, ady) || 1;
-        ax = tx * 0.6 + (adx / alen) * 0.4;
-        ay = ty * 0.6 + (ady / alen) * 0.4;
+      let ax = tdx / tlen, ay = tdy / tlen;
+      // Blend in an "away from nearest threat" component. v38.38: this
+      // was a HARD toggle at nearestD < 200*_GS() — the instant the
+      // grenadier crossed that ring the blend snapped on/off and the
+      // destination DIRECTION jumped, lurching the bot. Now the blend
+      // weight ramps smoothly with distance (full avoidance up close,
+      // fading to zero by 2x the threat radius), so the heading never
+      // snaps.
+      if (nearestEnemy) {
+        const threatR = 200 * _GS();
+        const aw = clamp(1 - (nearestD - threatR) / threatR, 0, 1);
+        if (aw > 0) {
+          const adx = p.x - nearestEnemy.x, ady = p.y - nearestEnemy.y;
+          const alen = Math.hypot(adx, ady) || 1;
+          // blend: aw scales how much of the 0.4 avoidance weight applies
+          const avoid = 0.4 * aw;
+          ax = ax * (1 - avoid) + (adx / alen) * avoid;
+          ay = ay * (1 - avoid) + (ady / alen) * avoid;
+          const blen = Math.hypot(ax, ay) || 1;
+          ax /= blen; ay /= blen;
+        }
       }
-      moveAlong(p, Math.atan2(ay, ax), effSpd * 0.85);
+      // Destination is a projected point that moves with the grenadier
+      // every frame — mark it `moving` so moveToward tracks at constant
+      // speed instead of ramping down on the (illusory) approach.
+      const dest = 200 * _GS();
+      moveToward(p, p.x + ax * dest, p.y + ay * dest, effSpd,
+                 { speedMul: 0.85, moving: true });
     }
-  } else if (!isLauncher && nearestD > idealDist + 30) {
-    // Non-launcher grenadier (degenerate fallback weapon) — close to melee
-    const ang = Math.atan2(nearestEnemy.y - p.y, nearestEnemy.x - p.x);
-    moveAlong(p, ang, effSpd);
+  } else if (!isLauncher && nearestEnemy) {
+    // Non-launcher grenadier (degenerate fallback weapon) — close to melee.
+    moveToward(p, nearestEnemy.x, nearestEnemy.y, effSpd,
+               { stopR: idealDist, arriveR: idealDist + 30 * _GS() * 3 });
   }
 
   // === Step 4: Fire ===
@@ -25547,7 +25763,14 @@ function fireGrenade(attacker, target, m) {
     wpn: wpn,
     isGrenade: true,
     explodeAtX: aimX, explodeAtY: aimY,
-    blastRadius: 60,
+    // v38.30: blastRadius was a bare gridScale-1 literal (60) — on the
+    // 3x-expanded field the blast covered only 1/3 of its intended
+    // footprint, so grenades felt weak and the explosion drew small
+    // relative to the field. The v38.20 scaling pass flagged this as
+    // unverified; it is now scaled like every other world-space
+    // distance. drawExplosions already derives its visual from
+    // pr.blastRadius, so the graphic follows automatically.
+    blastRadius: 60 * (COMBAT.gridScale || 1),
     blastDamage: clamp((attacker.stats.dmg || 10) + 6, 12, 35),
   });
   m.floats.push({ x: attacker.x, y: attacker.y - 14, text: "💣", life: 18, color: "#f7c948" });
@@ -25586,10 +25809,19 @@ function detonateGrenade(pr, m) {
     if (e.alive) {
       const dl = Math.max(1, d);
       const ux = ddx / dl, uy = ddy / dl;
-      const power = 6 + 8 * falloff;  // 6..14 px/frame initial push
+      // === v38.33: knockback is applied RAW (unsmoothed) to position in
+      // moveAlong — nx += _knockbackVx. v38.32 tripled `power` by
+      // gridScale, which made the FIRST frame of knockback a 18-42px
+      // instantaneous position SNAP (the visible "forward jump"). Total
+      // knockback displacement should scale with the bigger field, but
+      // the PER-FRAME velocity must stay gentle. So: keep `power` at its
+      // original gridScale-1 magnitude, and instead extend the TTL by
+      // gridScale. displacement = velocity × frames — scaling frames
+      // gives the same total distance with no per-frame lurch.
+      const power = 6 + 8 * falloff;  // 6..14 px/frame — original, unscaled
       e._knockbackVx = (e._knockbackVx || 0) + ux * power;
       e._knockbackVy = (e._knockbackVy || 0) + uy * power;
-      e._knockbackTtl = Math.max(e._knockbackTtl || 0, 12);  // ~0.2s
+      e._knockbackTtl = Math.max(e._knockbackTtl || 0, 12 * (COMBAT.gridScale || 1));
     }
   }
   // === v28.5 lasting explosion visual ===
@@ -25611,7 +25843,7 @@ function detonateGrenade(pr, m) {
   triggerCrowdCheer(m, {
     x: pr.x, y: pr.y,
     teamId: pr.teamId,
-    radius: 240,
+    radius: 240 * (COMBAT.gridScale || 1),  // v38.32: world distance — scaled
     intensity: COMBAT.cheerIntensityGrenade,
   });
 }
@@ -25637,10 +25869,21 @@ function triggerCrowdCheer(m, opts) {
     y: opts.y != null ? opts.y : (COMBAT.arenaH || 720) / 2,
     teamId: opts.teamId || null,
     intensity: opts.intensity != null ? opts.intensity : 1.0,
-    radius: opts.radius != null ? opts.radius : 240,
+    // v38.32: cheer radius is a world distance (drawCrowd tests fans
+    // against cheer.radius²) — the default scales with gridScale so the
+    // cheer footprint covers the same fraction of the 3x field.
+    radius: opts.radius != null ? opts.radius
+            : 240 * (COMBAT.gridScale || 1),
     duration: opts.duration != null ? opts.duration : (COMBAT.cheerDurationDefault || 30),
     frame: m.frame || 0,
   };
+  // v38.29: crowd-swell sound. Cheers fire on every kill — throttle to
+  // ~one swell per 400ms so rapid multi-kills don't stack into noise.
+  // No-op when sound is off or the ambient category is muted.
+  if (typeof SoundFactory !== "undefined" &&
+      typeof _SfxThrottle !== "undefined" && _SfxThrottle("crowdSwell", 400)) {
+    SoundFactory.play("crowdSwell");
+  }
 }
 
 /* ============================================================
@@ -25745,7 +25988,7 @@ function executeAIState(p, enemyAlive, m) {
   }
 
   const wpn = p.weapon || {};
-  const ranged = (wpn.range || 0) > 30;
+  const ranged = (wpn.range || 0) > 30 * _GS();
 
   // Find nearest enemy for dodge + state purposes.
   // v37.78: enemyAlive is a snapshot taken at the top of the per-team
@@ -25826,12 +26069,9 @@ function executeAIState(p, enemyAlive, m) {
       // pushed into walls when the carrier-threat midpoint is near an
       // edge; mid-range separation keeps escorts from stacking.
       if (typeof p._escort_x === "number") {
-        const dx = p._escort_x - p.x, dy = p._escort_y - p.y;
-        const d = Math.hypot(dx, dy);
-        if (d > 18) {
-          const steered = _applySteering(p, m, Math.atan2(dy, dx), effSpd);
-          moveAlong(p, steered.ang, steered.speed);
-        }
+        // v38.34: was `if (d > 18) moveAlong(...)` — moveToward sizes
+        // the arrival band off the real step so the escort settles.
+        moveToward(p, p._escort_x, p._escort_y, effSpd, { steer: true });
       }
       // Fire opportunistically at the escort target if in range
       if (p.target && p.target.alive && p.attackCooldown <= 0 && p.stunned <= 0) {
@@ -25853,12 +26093,13 @@ function executeAIState(p, enemyAlive, m) {
       // separate from teammates). Once close to flank point, the close-
       // on-target leg is unsteered — combat closing should not deflect.
       if (typeof p._escort_x === "number") {
-        const dx = p._escort_x - p.x, dy = p._escort_y - p.y;
-        const d = Math.hypot(dx, dy);
-        if (d > 30) {
-          const steered = _applySteering(p, m, Math.atan2(dy, dx), effSpd);
-          moveAlong(p, steered.ang, steered.speed);
-        } else if (p.target && p.target.alive) {
+        // v38.34: was `if (d > 30) ... else ...` — the 30px gate decided
+        // "arrived at flank point yet?". moveToward's arrival band sizes
+        // off the real step and reports `arrived`, so the flank→close
+        // handoff is clean instead of flip-flopping at the boundary.
+        const mv = moveToward(p, p._escort_x, p._escort_y, effSpd,
+                              { steer: true });
+        if (mv.arrived && p.target && p.target.alive) {
           // Reached flank; close on target (no steering — combat closing)
           const tang = Math.atan2(p.target.y - p.y, p.target.x - p.x);
           moveAlong(p, tang, effSpd);
@@ -25981,7 +26222,9 @@ function executeAIState(p, enemyAlive, m) {
         // (not the aim-ahead point — distance to TARGET, the prey itself,
         // because the prey is what we want to be at melee range with).
         const targetD = distance(p, p.target);
-        const ARRIVAL_RADIUS = 50, ARRIVAL_DEAD = 20;
+        // v38.32: arrival thresholds are world distances — scaled.
+        const _arrG = (typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1;
+        const ARRIVAL_RADIUS = 50 * _arrG, ARRIVAL_DEAD = 20 * _arrG;
         if (d > 1 && targetD > ARRIVAL_DEAD) {
           const ang = Math.atan2(dy, dx);
           const speedScale = (targetD > ARRIVAL_RADIUS)
@@ -25997,7 +26240,7 @@ function executeAIState(p, enemyAlive, m) {
         }
         // If we're within tag-strike range, fire melee
         const td = distance(p, p.target);
-        if (td <= COMBAT.hitRange + 12 && p.attackCooldown <= 0 && p.stunned <= 0) {
+        if (td <= COMBAT.hitRange + 12 * _GS() && p.attackCooldown <= 0 && p.stunned <= 0) {
           const realWpn = p.weapon;
           const fb = p.meleeFallback || pickMeleeFallback(p);
           p.weapon = fb;
@@ -26036,8 +26279,10 @@ function executeAIState(p, enemyAlive, m) {
         // 327 flips. it_team is PATROLLING, not racing — it doesn't need
         // a pixel-precise rest. Widening the dead-zone to 35px lets the
         // bot settle anywhere within a comfortable rest band.
-        const ARRIVAL_RADIUS = 50;
-        const ARRIVAL_DEAD = (p.aiState === "TAG_GUARD") ? 35 : 15;
+        // v38.32: arrival thresholds are world distances — scaled.
+        const _arrG2 = (typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1;
+        const ARRIVAL_RADIUS = 50 * _arrG2;
+        const ARRIVAL_DEAD = ((p.aiState === "TAG_GUARD") ? 35 : 15) * _arrG2;
         if (d > ARRIVAL_DEAD) {
           const ang = Math.atan2(dy, dx);
           const speedScale = (d > ARRIVAL_RADIUS)
@@ -26098,11 +26343,11 @@ function executeAIState(p, enemyAlive, m) {
       if (driftToFight) {
         // Don't run all the way to the dogpile — stop ~80px short so we
         // arrive as a flanker, not a body in the scrum.
-        const dx = fightX - p.x, dy = fightY - p.y;
-        const d = Math.hypot(dx, dy);
-        if (d > 80) {
-          moveAlong(p, Math.atan2(dy, dx), effSpd * 0.70);
-        }
+        // v38.34: was `if (d > 80) moveAlong(...)` — moveToward's stopR
+        // is that 80px stand-off, with an arrival ramp so the bot eases
+        // in instead of overshooting and oscillating around the scrum.
+        moveToward(p, fightX, fightY, effSpd, { speedMul: 0.70,
+                                                stopR: 80 * _GS() });
         // Clear stale guard so next idle re-evaluates fresh
         p._guardCommitTtl = 0;
         break;
@@ -26115,7 +26360,7 @@ function executeAIState(p, enemyAlive, m) {
       const recompute =
         (p._guardCommitTtl || 0) <= 0 ||
         typeof p._guardX !== "number" ||
-        Math.hypot(p.x - p._guardX, p.y - p._guardY) > 240;
+        Math.hypot(p.x - p._guardX, p.y - p._guardY) > 240 * _GS();
       if (recompute) {
         // Pick a guard point: 60% toward team centroid, 40% toward arena center
         const teamState = m._teamAI && m._teamAI[p.teamId];
@@ -26127,27 +26372,36 @@ function executeAIState(p, enemyAlive, m) {
           gx = cxw; gy = cyw;
         }
         // Add small per-bot offset so 7 bots don't all stand on one point
-        // (use bot id for stable per-bot spacing — not random per frame)
+        // (use bot id for stable per-bot spacing — not random per frame).
+        // === v38.35: ROOT RUBBERBAND FIX ===
+        // offR was 60-90px (gridScale-1). The boids separation radius is
+        // 22*gridScale = 66px. So guard points landed INSIDE each other's
+        // separation zones: a bot drove to its guard point, separation
+        // shoved it off a neighbour, it drove back — permanent fight
+        // between two controllers with no shared equilibrium. That is the
+        // idle/spawn rubberbanding. The guard-point ring must be wider
+        // than the separation radius so each bot's rest spot sits OUTSIDE
+        // every neighbour's push zone. Ring scaled by gridScale AND
+        // floored at 1.6× the separation radius.
+        const _sepRadius = 22 * _GS();
         const offset = (p.id * 0.61803) % 1;        // golden-ratio scrambled
         const offAng = offset * Math.PI * 2;
-        const offR = 60 + (offset * 30);
+        const offR = Math.max(_sepRadius * 1.6, (60 + offset * 30) * _GS());
         gx += Math.cos(offAng) * offR;
         gy += Math.sin(offAng) * offR;
         // Clamp to playable area
-        p._guardX = clamp(gx, 60, COMBAT.arenaW - 60);
-        p._guardY = clamp(gy, 60, COMBAT.arenaH - 60);
+        p._guardX = clamp(gx, 60 * _GS(), COMBAT.arenaW - 60 * _GS());
+        p._guardY = clamp(gy, 60 * _GS(), COMBAT.arenaH - 60 * _GS());
         p._guardCommitTtl = 60;
       }
       p._guardCommitTtl--;
-      // Move to the guard point only if significantly displaced (>40px).
-      // Below 40px, hold in place to avoid jiggle.
-      const dx = p._guardX - p.x;
-      const dy = p._guardY - p.y;
-      const distToGuard = Math.hypot(dx, dy);
-      if (distToGuard > 40) {
-        const ang = Math.atan2(dy, dx);
-        moveAlong(p, ang, effSpd * 0.55);
-      }
+      // v38.34: was `if (distToGuard > 40) moveAlong(...)`. The 40px
+      // deadzone was the original anti-jiggle guard, but the 3x-speed
+      // step overshoots it, so the bot oscillated around the guard
+      // point — a rubberband. moveToward's arrival band is sized off
+      // the real step, guaranteeing a clean dead-stop at the guard spot.
+      moveToward(p, p._guardX, p._guardY, effSpd, { speedMul: 0.55,
+                                                    stopR: 40 * _GS() });
       break;
     }
     case "RALLY": {
@@ -26159,11 +26413,9 @@ function executeAIState(p, enemyAlive, m) {
       const rx = p._rally_x;
       const ry = p._rally_y;
       if (typeof rx === "number" && typeof ry === "number") {
-        const dx = rx - p.x, dy = ry - p.y;
-        const d = Math.hypot(dx, dy);
-        if (d > 30) {
-          moveAlong(p, Math.atan2(dy, dx), effSpd * 1.10);  // 10% sprint bonus
-        }
+        // v38.34: was `if (d > 30) moveAlong(...)` — moveToward eases
+        // the bot into the rally point and rests it there cleanly.
+        moveToward(p, rx, ry, effSpd, { speedMul: 1.10 });  // 10% sprint
       }
       // === v28.4: Fire desperate covering shots while retreating ===
       // Previously gated on `td <= wpn.range`, which prevented firing
@@ -26231,11 +26483,15 @@ function executeAIState(p, enemyAlive, m) {
       // running. v38.27: power drops count too (was health-only) — a
       // fleeing bot grabbing a power-up flips a losing fight.
       let bestDrop = null, bestDropD = Infinity;
+      // v38.32: drop-seek radius is a world distance — scaled (squared,
+      // so the gridScale factor squares too).
+      const _fleeG = (typeof COMBAT !== "undefined" && COMBAT.gridScale ? COMBAT.gridScale : 1);
+      const _fleeSeekR2 = (320 * _fleeG) * (320 * _fleeG);
       for (const d of m.drops) {
         if (d.slot !== "health" && d.slot !== "power") continue;
         const dx = p.x - d.x, dy = p.y - d.y;
         const dist2 = dx*dx + dy*dy;
-        if (dist2 >= 320*320 || dist2 >= bestDropD) continue;
+        if (dist2 >= _fleeSeekR2 || dist2 >= bestDropD) continue;
         // Only flee toward the drop if it's not back toward the threat —
         // a pickup in the enemy's lap is a trap, not a refuge.
         if (p.target && p.target.alive) {
@@ -26379,7 +26635,7 @@ function executeAIState(p, enemyAlive, m) {
       // make contact, not strictly land a melee weapon.
       const isTagIt = (m.gameMode === "tag" && m.tag && p.id === m.tag.itId);
       const chaseSpeed = effSpd * (isTagIt ? 1.40 : 1.05);
-      const tagRange = isTagIt ? COMBAT.hitRange + 12 : COMBAT.hitRange + 6;
+      const tagRange = isTagIt ? COMBAT.hitRange + 12 * _GS() : COMBAT.hitRange + 6 * _GS();
       // Close to melee distance
       if (d > tagRange) {
         const ang = Math.atan2(p.target.y - p.y, p.target.x - p.x);
@@ -26459,11 +26715,16 @@ function executeAIState(p, enemyAlive, m) {
       const d = distance(p, p.target);
       const losClear = !ranged || hasLineOfSight(p.x, p.y, p.target.x, p.target.y, m.terrain);
       const isSniper = p.position === "sniper";
+      // v38.37: idealDist caps were gridScale-1 literals (200/220). On
+      // the 3x field a ranged bot's ideal stand-off should scale too.
       const idealDist = ranged
-        ? (isSniper ? Math.min(wpn.range * 0.5, 200) : Math.min(wpn.range * 0.6, 220))
-        : 18;
+        ? (isSniper ? Math.min(wpn.range * 0.5, 200 * _GS()) : Math.min(wpn.range * 0.6, 220 * _GS()))
+        : 18 * _GS();
       const myHalf = p.x < COMBAT.arenaW / 2 ? "left" : "right";
-      const onBackEdge = (myHalf === "left" && p.x < 80) || (myHalf === "right" && p.x > COMBAT.arenaW - 80);
+      // v38.37: back-edge margin scaled by gridScale.
+      const _backEdge = 80 * _GS();
+      const onBackEdge = (myHalf === "left" && p.x < _backEdge) ||
+                         (myHalf === "right" && p.x > COMBAT.arenaW - _backEdge);
       // === v28.13: HYSTERESIS on tooClose to prevent threshold ping-pong ===
       // Enter tooClose mode at d < 0.5*idealDist; exit only when d > 0.65*idealDist.
       // The state is held in p._tooCloseMode (boolean).
@@ -26488,13 +26749,15 @@ function executeAIState(p, enemyAlive, m) {
           let backAng = Math.atan2(p.y - p.target.y, p.x - p.target.x);
           const centerX = COMBAT.arenaW / 2, centerY = COMBAT.arenaH / 2;
           const distFromCenter = Math.hypot(p.x - centerX, p.y - centerY);
-          if (distFromCenter > 220) {
+          // v38.37: center-bias trigger + wall-proximity margins scaled.
+          if (distFromCenter > 220 * _GS()) {
             const angToCenter = Math.atan2(centerY - p.y, centerX - p.x);
+            const _wpX = 80 * _GS(), _wpY = 60 * _GS();
             const wallProximity = Math.max(
-              (80 - p.x) / 80,
-              (p.x - (COMBAT.arenaW - 80)) / 80,
-              (60 - p.y) / 60,
-              (p.y - (COMBAT.arenaH - 60)) / 60
+              (_wpX - p.x) / _wpX,
+              (p.x - (COMBAT.arenaW - _wpX)) / _wpX,
+              (_wpY - p.y) / _wpY,
+              (p.y - (COMBAT.arenaH - _wpY)) / _wpY
             );
             if (wallProximity > 0) {
               const blend = clamp(wallProximity * 0.7, 0, 0.8);
@@ -26507,7 +26770,15 @@ function executeAIState(p, enemyAlive, m) {
           p._headingAng = Math.atan2(p.target.y - p.y, p.target.x - p.x);
           p._headingSpdMult = 1.0;
         } else { // "hold"
-          p._headingAng = null;  // no movement; just shoot
+          // v38.37: the "hold" bracket used to FREEZE the bot
+          // (_headingAng = null). A ranged bot at good range against a
+          // MOVING target then sat still until the target drifted out of
+          // idealDist — bracket flipped to "close" — and it lurched to
+          // catch up. Stop / stop / lurch / stop: the same deadband
+          // stutter fixed for the grenadier in v38.36, but in the main
+          // ENGAGE state used by every ranged bot. The hold heading is
+          // now resolved per-frame below (drift-match), not frozen here.
+          p._headingAng = null;  // resolved per-frame in the hold-track block
           p._headingSpdMult = 0;
         }
         p._headingBracket = distBracket;
@@ -26515,6 +26786,33 @@ function executeAIState(p, enemyAlive, m) {
         p._headingCommitTtl = HEADING_COMMIT_FRAMES;
       } else {
         p._headingCommitTtl--;
+      }
+
+      // === v38.37: continuous hold-tracking ===
+      // When in the "hold" bracket, instead of freezing, glide to keep
+      // pace with the target so we stay at our ideal stand-off range.
+      // This runs EVERY frame (not gated by HEADING_COMMIT_FRAMES) so a
+      // drifting target produces continuous matching motion, never an
+      // accumulate-then-snap. A small range-error term re-centres us
+      // gently if we've drifted off idealDist; the target-velocity term
+      // matches its drift. moveAlong still smooths the result.
+      if (distBracket === "hold") {
+        const _hx = p.target.x - p.x, _hy = p.target.y - p.y;
+        const _hdist = Math.hypot(_hx, _hy) || 1;
+        const _rangeErr = _hdist - idealDist;   // +ve = drifting too far
+        const _ux = _hx / _hdist, _uy = _hy / _hdist;
+        // gentle proportional re-centre (12% of error/frame) ...
+        let _hvx = _ux * _rangeErr * 0.12;
+        let _hvy = _uy * _rangeErr * 0.12;
+        // ... plus match the target's own drift velocity.
+        _hvx += (p.target.vx || 0);
+        _hvy += (p.target.vy || 0);
+        const _hspeed = Math.hypot(_hvx, _hvy);
+        // Only move if the correction is meaningful — a near-stationary
+        // target leaves the bot resting cleanly (no idle jitter).
+        if (_hspeed > 0.25) {
+          moveAlong(p, Math.atan2(_hvy, _hvx), Math.min(_hspeed, effSpd));
+        }
       }
 
       // Apply committed heading
@@ -26670,9 +26968,15 @@ const _ACTIVE_ENGAGE_STATES = new Set([
                    TAG_HUNT (IT bot chasing prey into corners),
                    IDLE drift-to-fight (dogpile destination).
 */
-const STEER_WALL_DIST = 150;   // ramp begins this many px from edge
+// v38.32: STEER_WALL_DIST and STEER_SEP_DIST are world-space distances —
+// the wall-avoidance ramp and the teammate-spread radius. On the 3x
+// field they were 1/3 their intended reach, so bots hugged walls before
+// veering and clumped tighter than designed. Scaled by gridScale. The
+// _MAX / _SPEED_CAP values are force FRACTIONS (of speed), not
+// distances — those stay unscaled.
+const STEER_WALL_DIST = 150 * (typeof COMBAT !== "undefined" && COMBAT.gridScale ? COMBAT.gridScale : 1);
 const STEER_WALL_MAX  = 1.20;  // peak wall force as fraction of speed
-const STEER_SEP_DIST  = 60;    // mid-range teammate spread radius
+const STEER_SEP_DIST  = 60 * (typeof COMBAT !== "undefined" && COMBAT.gridScale ? COMBAT.gridScale : 1);
 const STEER_SEP_MAX   = 0.70;  // peak separation force as fraction of speed
 const STEER_SPEED_CAP = 1.50;  // cap on resultant speed (forces can't overpower)
 
@@ -26840,27 +27144,61 @@ function moveAlong(p, ang, speed) {
   // separation when the nearby ally is also in an engage-style state.
   // === v37.21: use cached _allPlayersFlat instead of allocating a new
   // array on every call — was concat()ing per-knight per-frame. ===
+  // === v38.35: LEGACY RUBBERBAND FIX ===
+  // The separation radii (22 / 18 px) were gridScale-1 literals, but the
+  // push MAGNITUDE is `f * speed * 0.6` and `speed` is already scaled by
+  // gridScale inside this function (×3). Result: two bots just inside a
+  // 22px radius received a ~9px shove — far enough to fling them OUTSIDE
+  // the 22px radius. Next frame, no push; they drift back in (guard
+  // points / formation pull them together); push again. That overshoot-
+  // and-return is the rubberbanding the user sees, and it fires even on
+  // idle bots near their spawn formation. Two coupled fixes:
+  //  (1) scale the radii by gridScale so the separation zone matches the
+  //      3x sprite size.
+  //  (2) CLAMP the per-bot push so it can never exceed the remaining gap
+  //      to the radius edge — a push can close the overlap but never
+  //      overshoot it, so oscillation is impossible.
   const m = LEAGUE.match;
   if (m) {
     const all = m._allPlayersFlat || m.teamAplayers.concat(m.teamBplayers);
     const myEngaged = _ACTIVE_ENGAGE_STATES.has(p.aiState);
+    const _sepG = (COMBAT.gridScale || 1);
     let pushX = 0, pushY = 0;
     for (const o of all) {
       if (o === p || !o.alive) continue;
       // Same-team and both engaged → use a reduced radius (less weaving).
-      let sepRadius = 22;
+      let sepRadius = 22 * _sepG;
       let force = 1.0;
       if (o.teamId === p.teamId && myEngaged && _ACTIVE_ENGAGE_STATES.has(o.aiState)) {
-        sepRadius = 18;
+        sepRadius = 18 * _sepG;
         force = 0.5;
       }
       const dx = nx - o.x, dy = ny - o.y;
       const d2 = dx*dx + dy*dy;
       if (d2 < sepRadius * sepRadius && d2 > 0.01) {
         const d = Math.sqrt(d2);
-        const f = (sepRadius - d) / sepRadius * force;
-        pushX += (dx / d) * f * speed * 0.6;
-        pushY += (dy / d) * f * speed * 0.6;
+        // === v38.35: separation is a CRITICALLY-DAMPED settle ===
+        // The legacy push was `f * speed * 0.6`. Tying the push to
+        // `speed` (which moveAlong scales by gridScale) made it a ~9px
+        // shove — bigger than the gap to the radius edge — so the bot
+        // was flung clear out of the zone, drifted back, and got flung
+        // again: a rubberband. The correct model: separation resolves an
+        // OVERLAP and must converge, not oscillate. The push is a
+        // fraction of the overlap depth itself (a spring), capped at
+        // half the overlap (the neighbour resolves the other half), and
+        // a sub-1 damping coefficient guarantees monotonic convergence
+        // to the rest spacing instead of overshoot. It no longer depends
+        // on `speed` at all — separation is a position constraint, not a
+        // locomotion force.
+        const overlap = sepRadius - d;        // how deep inside the zone
+        const SEP_DAMP = 0.45;                // <1 ⇒ critically-damped settle
+        let mag = overlap * 0.5 * force * SEP_DAMP;
+        // hard ceiling at half the overlap — can close the gap, never
+        // cross it (belt-and-braces with the damping coefficient).
+        const maxPush = overlap * 0.5;
+        if (mag > maxPush) mag = maxPush;
+        pushX += (dx / d) * mag;
+        pushY += (dy / d) * mag;
       }
     }
     nx += pushX;
@@ -26911,6 +27249,110 @@ function moveAlong(p, ang, speed) {
   return Math.abs(p.x - startX) > 0.1 || Math.abs(p.y - startY) > 0.1;
 }
 
+// ════════════════════════════════════════════════════════════════════
+// v38.34 — moveToward: canonical arrival-aware movement primitive
+// ════════════════════════════════════════════════════════════════════
+// THE RUBBERBAND BUG CLASS, FIXED AT THE SOURCE.
+//
+// moveAlong() takes a heading + speed and ALWAYS multiplies that speed
+// by gridScale internally (the v38.11 stadium speed buff). Callers
+// across the codebase wrote `if (dist > 30) moveAlong(p, ang, effSpd)`
+// — but `effSpd` becomes `effSpd * gridScale` inside moveAlong, so the
+// real per-frame step is ~3x what the literal `30` was sized against.
+// When a hold/arrival deadzone is smaller than one real step, the bot
+// steps PAST the deadzone every frame, the next frame it's on the far
+// side and steps back — permanent oscillation. That is the grenadier
+// rubberbanding, and the same latent defect sat behind every bare
+// `if (d > LITERAL) moveAlong(...)` site (guard-hold 40, sniper-kite
+// bands, prey-arrival 18/30, rally 30, drift 80, ...).
+//
+// moveToward replaces that idiom. It moves p toward (tx,ty) but sizes
+// its OWN arrival band from the actual step size, so overshoot-into-
+// oscillation is mathematically impossible:
+//   - beyond `arriveR`     → full speed
+//   - within `arriveR`     → speed ramps down linearly (smooth arrival)
+//   - within `stopR`       → no move at all (dead rest, no jitter)
+// `arriveR`/`stopR` default to multiples of the real per-frame travel,
+// so they always exceed one step. Callers may override for behaviours
+// that genuinely want a wider band (e.g. flanking stand-off range).
+//
+// Returns: { moved:boolean, dist:number, arrived:boolean }.
+//
+// opts:
+//   speedMul   - multiplier on `speed` before moveAlong (default 1)
+//   arriveR    - explicit arrival-ramp radius (default: 6 real steps)
+//   stopR      - explicit dead-stop radius   (default: 2.2 real steps)
+//   minSpeed   - floor on ramped speed so the bot doesn't crawl to a
+//                near-stop and trip stuck-detection (default 0.35)
+//   steer      - if true, route the move through _applySteering
+//   away       - if true, move directly AWAY from (tx,ty) instead
+//   moving     - if true, the destination itself is in motion (a team
+//                centroid, a projected lead point, an escorted ally).
+//                A moving destination is TRACKED at steady speed: the
+//                arrival ramp is disabled (stopR is still honored so a
+//                bot on top of the point rests). Without this, a bot
+//                approaching a moving point hits the ramp, slows, the
+//                point drifts away, the bot re-accelerates to catch up,
+//                slows again: a slow-fast-slow-fast forward LURCH.
+//                `moving` keeps tracking speed constant (v38.38).
+function moveToward(p, tx, ty, speed, opts) {
+  opts = opts || {};
+  const dx = tx - p.x, dy = ty - p.y;
+  const dist = Math.hypot(dx, dy);
+  // The REAL per-frame step moveAlong will take at this speed. moveAlong
+  // multiplies by gridScale, and the velocity smoother (LERP 0.40)
+  // approaches it; one full-speed step ≈ speed * gridScale. We size the
+  // bands off that so they always exceed a step regardless of gridScale.
+  const realStep = Math.max(1, speed * (opts.speedMul || 1) * _GS());
+  const stopR   = (typeof opts.stopR   === "number") ? opts.stopR   : realStep * 2.2;
+  const arriveR = (typeof opts.arriveR === "number") ? opts.arriveR : realStep * 6.0;
+  // v38.38: a moving destination is never "reached". BOTH the arrival
+  // ramp AND the dead-stop (stopR) are disabled — stopR against a
+  // moving point is itself a deadband: the bot reaches it, rests, the
+  // point drifts past stopR, the bot lurches to catch up, rests again
+  // (stop-start stutter). With `moving` the bot tracks continuously and
+  // only skips the move when literally coincident with the point.
+  const trackMoving = !!opts.moving;
+  if (trackMoving) {
+    if (dist < 1.0) {
+      return { moved: false, dist, arrived: false };
+    }
+  } else if (dist <= stopR) {
+    // Dead rest — inside stopR the bot holds position exactly. No move,
+    // no jitter, no stuck-detection false-positive (it WANTS to be here).
+    return { moved: false, dist, arrived: true };
+  }
+  const ang = opts.away
+    ? Math.atan2(p.y - ty, p.x - tx)
+    : Math.atan2(dy, dx);
+  // Arrival ramp — linear from minSpeed at stopR to full speed at
+  // arriveR. DISABLED for a moving destination (constant tracking
+  // speed; the ramp is what causes the slow-fast-slow travel lurch).
+  let spd = speed * (opts.speedMul || 1);
+  if (!trackMoving && dist < arriveR) {
+    const minS = (typeof opts.minSpeed === "number") ? opts.minSpeed : 0.35;
+    const t = (dist - stopR) / Math.max(1, arriveR - stopR); // 0..1
+    spd = spd * (minS + (1 - minS) * t);
+  }
+  // For a moving destination, never travel faster than the remaining
+  // gap — prevents a one-frame overshoot past the point.
+  if (trackMoving) {
+    const realStepNow = spd * _GS();
+    if (realStepNow > dist) spd = dist / Math.max(1, _GS());
+  }
+  if (opts.steer && typeof _applySteering === "function") {
+    const m = LEAGUE && LEAGUE.match;
+    const arrivalFactor = trackMoving ? 1 : Math.max(0, Math.min(1,
+      (dist - stopR) / Math.max(1, arriveR - stopR)));
+    const st = _applySteering(p, m, ang, spd, { arrivalFactor });
+    moveAlong(p, st.ang, st.speed);
+  } else {
+    moveAlong(p, ang, spd);
+  }
+  return { moved: true, dist, arrived: false };
+}
+if (typeof window !== "undefined") window.moveToward = moveToward;
+
 // Test whether a point (with player half-size ~10px) collides with any
 // terrain block. Terrain blocks are squares with x,y as top-left + size.
 function collidesTerrain(x, y, terrain) {
@@ -26950,8 +27392,10 @@ function collidesTerrain(x, y, terrain) {
 // last-resort fallback.
 const _BotUnstick = (function() {
   const STUCK_EPS = 6;          // px — displacement below this = "not moving"
-  const STUCK_FRAMES = 24;      // ~1.2s @20Hz before a soft nudge
-  const HARD_STUCK_FRAMES = 60; // escalate to teleport
+  const STUCK_FRAMES = 24;      // ~1.2s @20Hz before the smooth nudge begins
+  // v38.33: HARD_STUCK_FRAMES removed — case-3 recovery no longer
+  // teleports (see check()), so the escalate-to-teleport threshold is
+  // gone. Cases 1 & 2 (off-field / in-terrain) still correct instantly.
 
   function _legal(x, y, m) {
     if (x < 0 || y < 0 || x > COMBAT.arenaW || y > COMBAT.arenaH) return false;
@@ -26979,6 +27423,7 @@ const _BotUnstick = (function() {
       const clampedY = Math.max(0, Math.min(COMBAT.arenaH, p.y));
       const safe = _nearestLegal(clampedX, clampedY, m);
       p.x = safe.x; p.y = safe.y;
+      p._prevX = p.x; p._prevY = p.y;  // v38.39: no interp across teleport
       p._stuckFrames = 0;
       p._lastStuckX = p.x; p._lastStuckY = p.y;
       return;
@@ -26988,6 +27433,7 @@ const _BotUnstick = (function() {
     if (collidesTerrain(p.x, p.y, m.terrain || [])) {
       const safe = _nearestLegal(p.x, p.y, m);
       p.x = safe.x; p.y = safe.y;
+      p._prevX = p.x; p._prevY = p.y;  // v38.39: no interp across teleport
       p._stuckFrames = 0;
       p._lastStuckX = p.x; p._lastStuckY = p.y;
       return;
@@ -26998,25 +27444,60 @@ const _BotUnstick = (function() {
     const dy = p.y - (typeof p._lastStuckY === "number" ? p._lastStuckY : p.y);
     const moved = Math.hypot(dx, dy);
     p._lastStuckX = p.x; p._lastStuckY = p.y;
+    // === v38.33: do NOT treat a deliberately-stationary attacker as
+    // stuck. v38.32 scaled weapon ranges 3x, so a ranged bot now holds
+    // position far from its target while firing — that is correct
+    // behaviour, not a stuck bot. The old predicate flagged any non-
+    // IDLE/SNIPER_HOLD bot that wasn't moving, so these healthy
+    // long-range attackers hit the 60-frame timer and got TELEPORTED,
+    // producing the visible position jumps. A bot is only "stuck" if it
+    // wants to move AND is not also holding a valid in-range target.
+    // ENGAGE/MELEE/FINISH_OFF with a live target in weapon range are
+    // legitimately stationary; exclude them.
+    const _holdingTarget = p.target && p.target.alive &&
+      (p.aiState === "ENGAGE" || p.aiState === "MELEE" ||
+       p.aiState === "FINISH_OFF" || p.aiState === "SNIPER_HOLD") &&
+      (function() {
+        const wpn = p.weapon || {};
+        const r = wpn.range || 0;
+        if (r <= 0) return false;
+        const tdx = p.target.x - p.x, tdy = p.target.y - p.y;
+        // in range (with a small margin) → standing still is intentional
+        return (tdx * tdx + tdy * tdy) <= (r * 1.15) * (r * 1.15);
+      })();
     const wantsToMove = p.aiState && p.aiState !== "IDLE" &&
-                        p.aiState !== "SNIPER_HOLD";
+                        p.aiState !== "SNIPER_HOLD" && !_holdingTarget;
     if (wantsToMove && moved < STUCK_EPS) {
       p._stuckFrames = (p._stuckFrames || 0) + 1;
     } else {
       p._stuckFrames = 0;
     }
-    if (p._stuckFrames >= HARD_STUCK_FRAMES) {
-      const safe = _nearestLegal(p.x, p.y, m);
-      p.x = safe.x; p.y = safe.y;
-      p._stuckFrames = 0;
-    } else if (p._stuckFrames >= STUCK_FRAMES) {
-      // Soft nudge toward arena center to break a wall-hug grind.
+    // === v38.33: case-3 recovery never TELEPORTS ===
+    // A teleport is a visible position jump. Cases 1 & 2 (off-field /
+    // inside terrain) must teleport — there is no continuous fix for a
+    // bot that is already in an illegal spot. But case 3 (a bot that is
+    // simply not making progress) should resolve SMOOTHLY: escalate the
+    // nudge instead of snapping. The bot slides free over a few frames
+    // rather than jumping. A genuinely wedged bot will, on a later
+    // frame, satisfy case 2 (inside terrain) and be corrected there.
+    if (p._stuckFrames >= STUCK_FRAMES) {
+      // Nudge toward arena center to break a wall-hug grind. The step
+      // grows the longer the bot stays stuck, but it is always a small
+      // per-frame slide — never a snap.
       const cx = COMBAT.arenaW / 2, cy = COMBAT.arenaH / 2;
       const a = Math.atan2(cy - p.y, cx - p.x);
-      const step = 14 * (COMBAT.gridScale || 1);
-      const nx = p.x + Math.cos(a) * step;
-      const ny = p.y + Math.sin(a) * step;
-      if (_legal(nx, ny, m)) { p.x = nx; p.y = ny; }
+      const over = p._stuckFrames - STUCK_FRAMES;
+      // base 14px, ramping up to ~36px at deep stuck — still smooth
+      const stepMag = (14 + Math.min(22, over * 0.6)) * (COMBAT.gridScale || 1);
+      const nx = p.x + Math.cos(a) * stepMag;
+      const ny = p.y + Math.sin(a) * stepMag;
+      if (_legal(nx, ny, m)) {
+        p.x = nx; p.y = ny;
+        // keep the smoothed velocity pointed the way we nudged so the
+        // motion reads as continuous, not a stutter
+        p._smoothVx = Math.cos(a) * Math.abs(p._smoothVx || 0);
+        p._smoothVy = Math.sin(a) * Math.abs(p._smoothVy || 0);
+      }
     }
   }
 
@@ -28119,10 +28600,14 @@ function resolveAttack(attacker, defender, m) {
     const ddx = defender.x - attacker.x, ddy = defender.y - attacker.y;
     const dl = Math.max(1, Math.hypot(ddx, ddy));
     const ux = ddx / dl, uy = ddy / dl;
-    const power = isCrit ? 8 : 5;
+    // v38.33: see grenade knockback — keep per-frame `power` at the
+    // original gridScale-1 magnitude (a raw, unsmoothed position add;
+    // scaling it caused a first-frame snap) and scale TTL instead so
+    // total knockback distance still grows with the field.
+    const power = isCrit ? 8 : 5;  // px/frame — original, unscaled
     defender._knockbackVx = (defender._knockbackVx || 0) + ux * power;
     defender._knockbackVy = (defender._knockbackVy || 0) + uy * power;
-    defender._knockbackTtl = Math.max(defender._knockbackTtl || 0, 8);
+    defender._knockbackTtl = Math.max(defender._knockbackTtl || 0, 8 * (COMBAT.gridScale || 1));
   }
 
   applyDamage(attacker, defender, dmg, isCrit, m);
@@ -31080,6 +31565,12 @@ function drawPitchLights(W, H) {
    ============================================================ */
 function drawAmbientParticles(particles) {
   for (const p of particles) {
+    // v38.31: particle radii (p.r) were bare gridScale-1 literals from
+    // _spawnAmbientParticle (0.6-3.0) — invisible specks on the 3x
+    // field even though positions span the scaled arena. Wrapping each
+    // particle's draw in the shared sprite-scale transform scales the
+    // whole render (radius, halo, ellipse, rotation offsets) at once.
+    beginSpriteScale(p.x, p.y);
     if (p.type === "snow") {
       ctx.fillStyle = "rgba(255,255,255,0.18)";
       ctx.beginPath();
@@ -31207,6 +31698,7 @@ function drawAmbientParticles(particles) {
       ctx.arc(p.x, p.y - 0.3, 0.4, 0, Math.PI * 2);
       ctx.fill();
     }
+    endSpriteScale();
   }
 }
 
@@ -31607,6 +32099,12 @@ function drawJanitors(m) {
     const y = Math.floor(j.y);
     const bob = Math.floor(Math.sin(j.bobPhase) * 1.2);
 
+    // v38.31: janitor sprites were drawn with raw gridScale-1 literals
+    // (~6px torso) — tiny specks on the 3x field. Wrap each janitor in
+    // the shared sprite-scale transform, like the knight/sweetie/drop
+    // sprites, so the cleanup crew reads at the intended size.
+    beginSpriteScale(j.x, j.y);
+
     // Shadow
     ctx.fillStyle = "rgba(0,0,0,0.25)";
     ctx.beginPath();
@@ -31678,6 +32176,7 @@ function drawJanitors(m) {
       ctx.fillStyle = JANITOR.COLOR_BROOM_B;
       ctx.fillRect(bx2 - 1, by2 - 1, 3, 3);
     }
+    endSpriteScale();
   }
 }
 window.drawJanitors = drawJanitors;
@@ -33253,15 +33752,21 @@ function drawArena() {
   if (biome && biome.courtType) {
     drawCourtMarkings(W, H, biome.courtType, lineColor);
     // Brand mark + team mottos still go on top
+    // v38.31: this painted field text was fixed-size + raw 110px inset
+    // — scale it like the generic-court branch so it matches the 3x
+    // field. drawCourtMarkings itself is already W/H-proportional.
+    const _ctG = (typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1;
+    const _ctTxt = Math.round(18 * _ctG);
+    const _ctInset = Math.round(110 * _ctG);
     if (m && m.teamAId && m.teamBId) {
       const ta = TEAM_BY_ID[m.teamAId], tb = TEAM_BY_ID[m.teamBId];
       if (ta) {
         ctx.save();
         ctx.fillStyle = _hexA(ta.color, 0.22);
-        ctx.font = "bold 18px ui-sans-serif, system-ui";
+        ctx.font = `bold ${_ctTxt}px ui-sans-serif, system-ui`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.translate(110, H/2);
+        ctx.translate(_ctInset, H/2);
         ctx.rotate(-Math.PI/2);
         ctx.fillText((ta.short || "").toUpperCase(), 0, 0);
         ctx.restore();
@@ -33269,17 +33774,17 @@ function drawArena() {
       if (tb) {
         ctx.save();
         ctx.fillStyle = _hexA(tb.color, 0.22);
-        ctx.font = "bold 18px ui-sans-serif, system-ui";
+        ctx.font = `bold ${_ctTxt}px ui-sans-serif, system-ui`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.translate(W - 110, H/2);
+        ctx.translate(W - _ctInset, H/2);
         ctx.rotate(Math.PI/2);
         ctx.fillText((tb.short || "").toUpperCase(), 0, 0);
         ctx.restore();
       }
     }
     ctx.fillStyle = brandColor;
-    ctx.font = "bold 38px ui-sans-serif, system-ui";
+    ctx.font = `bold ${Math.round(38 * _ctG)}px ui-sans-serif, system-ui`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("FK", W/2, H/2);
@@ -33288,12 +33793,16 @@ function drawArena() {
   } else {
     // Standard arena field markings (the v21 layout)
     // Subtle grid (much fainter when biome has decorations)
+    // v38.31: grid cell spacing was a fixed 60px — on the 3x field that
+    // packed ~3x as many lines, making the texture denser than intended.
+    // Scale the stride so cell density matches the original look.
     ctx.strokeStyle = biome ? "rgba(255,255,255,0.04)" : "rgba(247,201,72,0.06)";
     ctx.lineWidth = 1;
-    for (let i = 0; i < W; i += 60) {
+    const _gridStep = 60 * ((typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1);
+    for (let i = 0; i < W; i += _gridStep) {
       ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke();
     }
-    for (let i = 0; i < H; i += 60) {
+    for (let i = 0; i < H; i += _gridStep) {
       ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
     }
 
@@ -33323,13 +33832,18 @@ function drawArena() {
 
     if (m && m.teamAId && m.teamBId) {
       const ta = TEAM_BY_ID[m.teamAId], tb = TEAM_BY_ID[m.teamBId];
+      // v38.31: endzone team-code text was fixed 18px at a raw 110px
+      // inset — painted field text that didn't scale with the 3x field
+      // while the circle markings around it did. Scale font + inset.
+      const _txtY = Math.round(18 * _cmG);
+      const _inset = Math.round(110 * _cmG);
       if (ta) {
         ctx.save();
         ctx.fillStyle = _hexA(ta.color, 0.22);
-        ctx.font = "bold 18px ui-sans-serif, system-ui";
+        ctx.font = `bold ${_txtY}px ui-sans-serif, system-ui`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.translate(110, H/2);
+        ctx.translate(_inset, H/2);
         ctx.rotate(-Math.PI/2);
         ctx.fillText((ta.short || "").toUpperCase(), 0, 0);
         ctx.restore();
@@ -33337,10 +33851,10 @@ function drawArena() {
       if (tb) {
         ctx.save();
         ctx.fillStyle = _hexA(tb.color, 0.22);
-        ctx.font = "bold 18px ui-sans-serif, system-ui";
+        ctx.font = `bold ${_txtY}px ui-sans-serif, system-ui`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.translate(W - 110, H/2);
+        ctx.translate(W - _inset, H/2);
         ctx.rotate(Math.PI/2);
         ctx.fillText((tb.short || "").toUpperCase(), 0, 0);
         ctx.restore();
@@ -33348,7 +33862,7 @@ function drawArena() {
     }
 
     ctx.fillStyle = brandColor;
-    ctx.font = "bold 38px ui-sans-serif, system-ui";
+    ctx.font = `bold ${Math.round(38 * _cmG)}px ui-sans-serif, system-ui`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("FK", W/2, H/2);
@@ -33528,9 +34042,13 @@ function drawArena() {
   }
 
   // Floating damage numbers / status pings
+  // v38.31: float text was a fixed 11px font — world-space combat text
+  // that drew tiny on the 3x field. Scale the font size by gridScale
+  // so damage numbers read at the intended size relative to knights.
+  const _floatG = (typeof COMBAT !== "undefined" && COMBAT.gridScale) ? COMBAT.gridScale : 1;
   for (const f of m.floats) {
     ctx.fillStyle = f.color;
-    ctx.font = "bold 11px 'Courier New', monospace";
+    ctx.font = `bold ${Math.round(11 * _floatG)}px 'Courier New', monospace`;
     ctx.textAlign = "center";
     ctx.globalAlpha = clamp(f.life / 22, 0, 1);
     ctx.fillText(f.text, f.x, f.y);
@@ -33744,8 +34262,9 @@ function drawReferee(ref) {
   // Hover bob — slightly slower than knights so she reads as distinct.
   const t = (LEAGUE.match?.frame || 0);
   const bob = Math.sin(t * 0.06 + ref.bobPhase) * ref.bobAmp;
-  const x = Math.floor(ref.x);
-  const y = Math.floor(ref.y + bob);
+  // v38.39: interpolated draw position (smooth over the 20Hz sim).
+  const x = Math.floor(_lerpDrawX(ref));
+  const y = Math.floor(_lerpDrawY(ref) + bob);
   const facing = ref.facing >= 0 ? 1 : -1;
 
   // v38.12: sprite-scale wrap so the referee renders at the same on-
@@ -33754,7 +34273,7 @@ function drawReferee(ref) {
 
   // ----- Drop shadow -----
   if (!LEAGUE_CONFIG.disableDropShadows) {
-    const shadowY = Math.floor(ref.y) + 14;
+    const shadowY = Math.floor(_lerpDrawY(ref)) + 14;  // v38.39: interpolated
     ctx.fillStyle = "rgba(0,0,0,0.20)";
     ctx.beginPath();
     ctx.ellipse(x + 1, shadowY, 16, 5, 0, 0, Math.PI*2);
@@ -33884,8 +34403,13 @@ function drawMascot(p) {
   // Float bob — gentle vertical motion to sell the balloons-on-back fiction
   const t = (LEAGUE.match?.frame || 0);
   const bob = Math.sin((t + p.id * 7) * 0.08) * 1.5;
-  const x = Math.floor(p.x);
-  const y = Math.floor(p.y + bob);
+  // v38.39: draw at the render-interpolated position (between the last
+  // two sim ticks) instead of the raw sim position. This is what makes
+  // travel motion smooth — without it the bot snaps a full sim step
+  // (~15px at gridScale 3) every 20Hz tick while the screen refreshes
+  // at 60Hz, which reads as forward "jumping".
+  const x = Math.floor(_lerpDrawX(p));
+  const y = Math.floor(_lerpDrawY(p) + bob);
 
   // Determine sprite state — driven by the player's current condition.
   // We cache a separate avatar variant per state so transitions look
@@ -33908,7 +34432,7 @@ function drawMascot(p) {
   // v37.10: now respects the granular disableDropShadows toggle (was the
   // umbrella disableLighting; the umbrella has been removed).
   if (!LEAGUE_CONFIG.disableDropShadows) {
-    const shadowY = Math.floor(p.y) + 22;
+    const shadowY = Math.floor(_lerpDrawY(p)) + 22;  // v38.39: interpolated
     ctx.fillStyle = "rgba(0,0,0,0.18)";
     ctx.beginPath();
     ctx.ellipse(x + 1, shadowY, 22, 7, 0, 0, Math.PI*2);
@@ -37829,7 +38353,10 @@ function _biomeIdHash(id) {
 function _generatePreviewScatter(biome, W, H) {
   const out = [];
   const rng = _previewRng(_biomeIdHash(biome.id));
-  const KEEP = 75; // power-core keep-out radius
+  // v38.30: keep-out scaled to match the live sim. The live power-core
+  // keepout is 70*gridScale (v38.18); a bare 75 here let preview scatter
+  // spawn decorations inside the zone the live field keeps clear.
+  const KEEP = 70 * (typeof COMBAT !== "undefined" && COMBAT.gridScale ? COMBAT.gridScale : 1);
   const cx = W / 2, cy = H / 2;
   for (const type in biome.scatter) {
     const cfg = biome.scatter[type];
@@ -38102,6 +38629,22 @@ function requestAiCommentaryEnhancement(entry, ctx) {
 let SPEED = 1;
 let lastTick = 0;
 let pendingTickAcc = 0;
+// v38.39: render-interpolation alpha — fraction [0,1) of the way
+// into the next un-run sim tick. Set each rAF frame from the sim
+// accumulator remainder; consumed by drawMascot/drawReferee to
+// interpolate drawn positions between _prevX/_prevY and x/y so
+// 60fps rendering is smooth over the 20Hz sim. 1 = show final.
+let RENDER_ALPHA = 1;
+// Interpolated draw coordinate for an entity with _prevX/_prevY.
+// Falls back to the live coordinate if no snapshot exists yet.
+function _lerpDrawX(e) {
+  return (typeof e._prevX === "number")
+    ? e._prevX + (e.x - e._prevX) * RENDER_ALPHA : e.x;
+}
+function _lerpDrawY(e) {
+  return (typeof e._prevY === "number")
+    ? e._prevY + (e.y - e._prevY) * RENDER_ALPHA : e.y;
+}
 // === v37.23.5: parallel accumulator for pause-phase cosmetic animation ===
 let pendingPauseTickAcc = 0;
 
@@ -38136,6 +38679,8 @@ function openModal(title, bodyHTML, footerHTML, onCloseCallback, opts) {
   MODAL_AFTER_CLOSE = onCloseCallback || null;
 }
 function closeModal() {
+  // v38.29: modal-dismiss sound. No-op when sound is off.
+  if (typeof SoundFactory !== "undefined") SoundFactory.play("uiBack");
   $("#modalBack").classList.remove("show");
   const cb = MODAL_AFTER_CLOSE;
   MODAL_AFTER_CLOSE = null;
@@ -39386,7 +39931,7 @@ const SAVE_SCHEMA_VERSION = 14; // v37.23 — rivalries, achievements, injuries,
 // === v37.92: single source of truth for the build label ===
 // Used by the console boot log AND by the save's gameVersion stamp.
 // Bump in ONE place per release.
-const BUILD_LABEL = "v38.28";
+const BUILD_LABEL = "v38.39";
 
 // === v37.34: build-identification stamp ===
 // Prints once on script load. If the user reports crashes and this line is
@@ -40890,9 +41435,11 @@ function bindSettings() {
         const wrap = document.querySelector(".arena-wrap");
         if (wrap) wrap.style.transform = "";
       }
-      // === v28.5: reset frame-rate accumulator on toggle ===
+      // === v28.5 / v38.39: reset the draw-frame counter on toggle ===
+      // The 30/60fps Settings toggle changes drawEveryNFrames in loop();
+      // reset the rAF-frame counter so the new cadence starts cleanly.
       if (tog.key === "highFrameRate" && typeof loop !== "undefined") {
-        loop._drawAcc = 0;
+        loop._frameCount = 0;
       }
       // === v37.48: live-apply CRT scanline body class on toggle ===
       // disableScanlines drives a body-class that hides both the standard
@@ -44291,6 +44838,9 @@ if (typeof window !== "undefined") {
    savedAt, and a short snippet (first ~140 chars of the article body)
    so the Bookmarks list can preview without re-walking the DOM. */
 function toggleLoreBookmark(loreId, sectionId, title) {
+  // v38.29: toggle sound — fires on bookmark add/remove. No-op when
+  // sound is off or the ui category is muted.
+  if (typeof SoundFactory !== "undefined") SoundFactory.play("uiToggle");
   if (!LEAGUE.loreBookmarks) LEAGUE.loreBookmarks = {};
   if (LEAGUE.loreBookmarks[loreId]) {
     delete LEAGUE.loreBookmarks[loreId];
@@ -45467,15 +46017,29 @@ function loop(ts) {
   const cappedDt = Math.min(dt, 250);
   lastTick = ts;
 
-  // === v28.5 FPS cap ===
-  // Default: cap render at 30fps. Cuts draw work in half on devices that
-  // run rAF at 60fps (most). The sim tick rate (20fps via tick
-  // accumulator below) is independent — gameplay speed is identical
-  // either way. Toggle via Settings → highFrameRate (60fps).
-  // Sim ticks happen BEFORE the early-return so dropped frames don't
-  // drop sim updates.
+  // === v28.5 FPS cap — v38.39: rAF-frame-counted, not time-accumulated ===
+  // The render draw-rate is capped to save work on weak devices. The
+  // sim runs at a fixed 20Hz and the renderer interpolates positions
+  // between sim ticks (RENDER_ALPHA).
+  //
+  // BUG (the cause of the bot "jumping"): the old cap gated draws by
+  // ACCUMULATED WALL-CLOCK TIME — "draw once 33.3ms has elapsed". But
+  // requestAnimationFrame fires at a fixed ~16.67ms cadence, and 33.3ms
+  // is not a clean multiple of 16.67ms. So the draw gate fired on
+  // uneven frame boundaries (sometimes after 2 rAF frames, sometimes
+  // after 1+remainder), sampling RENDER_ALPHA at irregular phases. The
+  // interpolated position advanced by uneven amounts between draws even
+  // though the math was continuous — a visible uneven-speed lurch,
+  // worst on fast target-less bots (grenadier / healer travelling).
+  //
+  // FIX: count rAF FRAMES instead of accumulating time. Draw every rAF
+  // frame (high) or every 2nd rAF frame (default 30fps-ish). The draw
+  // cadence is now perfectly uniform relative to rAF, so consecutive
+  // draws sample RENDER_ALPHA at even intervals and the interpolation
+  // is smooth. The sim tick rate (20Hz) is untouched — gameplay speed,
+  // balance and the movement logic are unchanged.
   const highFrameRate = (LEAGUE_CONFIG && LEAGUE_CONFIG.highFrameRate);
-  const targetFrameMs = highFrameRate ? (1000 / 60) : (1000 / 30);
+  const drawEveryNFrames = highFrameRate ? 1 : 2;
 
   // Auto-advance countdown ticks in real-time, regardless of match state
   tickAutoplay(cappedDt);
@@ -45496,6 +46060,22 @@ function loop(ts) {
     }
   } else {
     pendingTickAcc = 0;
+  }
+
+  // === v38.39: render-interpolation alpha ===
+  // After the sim-tick loop drains, pendingTickAcc holds the leftover
+  // time (0 .. frameMs) — how far we are INTO the next, not-yet-run
+  // tick. Dividing by frameMs gives the fraction [0,1) used to
+  // interpolate every entity's drawn position between its _prevX/_prevY
+  // (start of the last tick) and its live x/y. This decouples smooth
+  // 60fps rendering from the 20Hz sim — the foundational fix for the
+  // movement "jumping". Clamped defensively; only meaningful during a
+  // live round (set to 1 = "show final positions" when paused so a
+  // frozen field shows true positions, not a stale interpolation).
+  if (SPEED > 0 && LEAGUE.match && LEAGUE.match.phase === "round") {
+    RENDER_ALPHA = Math.max(0, Math.min(1, pendingTickAcc / COMBAT.frameMs));
+  } else {
+    RENDER_ALPHA = 1;
   }
 
   // === v37.23.5: pause-phase cosmetic ticks ===
@@ -45524,12 +46104,16 @@ function loop(ts) {
   // Track wall-clock activity for catch-up on next page load
   LEAGUE.lastTickAt = Date.now();
 
-  // === FPS cap gate — drops draws but never ticks ===
-  // Accumulate elapsed time toward target frame interval; only redraw
-  // when at least targetFrameMs has passed since the last actual draw.
-  loop._drawAcc = (loop._drawAcc || 0) + cappedDt;
-  if (loop._drawAcc >= targetFrameMs) {
-    loop._drawAcc = loop._drawAcc % targetFrameMs;  // preserve remainder
+  // === FPS cap gate — v38.39: rAF-frame-counted ===
+  // Drops draws but never ticks. Driven by the 30/60fps toggle in the
+  // Settings tab (LEAGUE_CONFIG.highFrameRate) via drawEveryNFrames:
+  //   highFrameRate ON  → drawEveryNFrames = 1 → draw every rAF frame (60fps)
+  //   highFrameRate OFF → drawEveryNFrames = 2 → draw every 2nd frame (30fps)
+  // Counting frames (not accumulating wall-clock ms) keeps the draw
+  // cadence perfectly uniform relative to rAF, so the between-tick
+  // position interpolation samples evenly and motion is smooth.
+  loop._frameCount = (loop._frameCount || 0) + 1;
+  if (loop._frameCount % drawEveryNFrames === 0) {
     // === v37.33: per-frame renderers wrapped in try/catch ===
     // Same pattern as renderAll's _safeRender. A single bad renderer
     // (e.g. one that hits corrupt save data) cannot break the entire
