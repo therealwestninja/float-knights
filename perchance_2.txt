@@ -155,6 +155,7 @@
   .stat-pill b { color: var(--ink); margin-left: 4px; font-weight: 700; }
   .stat-pill.bits b { color: var(--gold); }
   .stat-pill.season b { color: var(--blu); }
+  .stat-pill.rank b { color: var(--grn); }
 
   /* Left rail: team A roster, current matchup, league standings */
   /* Right rail: team B roster, controls, betting */
@@ -1653,6 +1654,27 @@
   .store-card:disabled, .store-card[aria-disabled="true"] {
     opacity: 0.5; cursor: not-allowed; transform: none;
   }
+  /* Tier-locked items — dimmer than a plain disabled card, with the
+     unlock requirement shown in place of the cost. */
+  .store-card.store-card-locked {
+    opacity: 0.55;
+    border-style: dashed;
+  }
+  .store-card .cost.store-cost-locked {
+    color: var(--mute);
+    font-weight: 600;
+  }
+  /* Prestige cards — owned items read as collected, not disabled-grey. */
+  .store-card.prestige-owned {
+    opacity: 1;
+    border-color: var(--gold);
+    background: linear-gradient(180deg, rgba(247,201,72,0.08) 0%, var(--bg-2) 100%);
+    cursor: default;
+  }
+  .store-card .cost.prestige-cost-owned {
+    color: var(--gold);
+    font-weight: 700;
+  }
   .store-card .ico { font-size: 32px; }
   .store-card .nm { font-weight: 700; font-size: 13px; margin-top: 6px; }
   .store-card .cost {
@@ -2441,6 +2463,55 @@
     color: var(--line);
     margin: 0 8px;
   }
+  /* Economy rank panel — standing tier + progress to next tier. */
+  .rank-panel {
+    margin-top: -4px;
+    margin-bottom: 14px;
+    padding: 8px 12px;
+    background: var(--bg-2);
+    border-left: 2px solid var(--grn);
+  }
+  .rank-panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .rank-panel-tier {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--grn);
+    letter-spacing: 0.5px;
+  }
+  .rank-panel-note {
+    font-size: 10px;
+    color: var(--mute);
+    text-align: right;
+    line-height: 1.4;
+  }
+  .rank-panel-track {
+    height: 6px;
+    background: var(--bg-0);
+    border: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .rank-panel-fill {
+    height: 100%;
+    background: var(--grn);
+    transition: width 0.3s;
+  }
+  /* Live bet cost hint — shows total cost (incl. table fee) + max bet. */
+  .bet-cost-hint {
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--mute);
+    letter-spacing: 0.3px;
+    line-height: 1.4;
+    min-height: 13px;
+  }
+  .bet-cost-hint b { color: var(--gold); font-weight: 700; }
+  .bet-cost-hint .warn { color: var(--red); }
 
   /* === v37.45: live winning/losing pill on active bets === */
   .bet-status {
@@ -5670,6 +5741,7 @@
   <div class="right">
     <div class="stat-pill season">SEASON<b id="seasonNum">1</b></div>
     <div class="stat-pill bits">BITS<b id="bitsAmt">0</b></div>
+    <div class="stat-pill rank" id="rankPill" title="Your standing — rises with your Bit balance and betting record. Higher ranks unlock bigger bets and better Store gear.">RANK<b id="rankName">Trainee</b></div>
   </div>
 </header>
 
@@ -5864,6 +5936,20 @@
           </div>
           <input type="file" id="importFileInput" accept="application/json,.json,text/plain,.txt,.fkz,application/gzip" style="display:none" />
         </div>
+        <!-- Storage usage meter — shows how full this browser's save storage
+             is, so the player can export before pruning ever kicks in. -->
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--bg-2);">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+            <span style="font-size: 11px; color: var(--mute);">Save storage used</span>
+            <span style="font-size: 11px; color: var(--ink); font-family:'Courier New',monospace;" id="storageMeterLabel">—</span>
+          </div>
+          <div style="height:8px; background:var(--bg-2); border:1px solid var(--line); border-radius:0; overflow:hidden;">
+            <div id="storageMeterBar" style="height:100%; width:0%; background:var(--grn); transition:width 0.3s, background 0.3s;"></div>
+          </div>
+          <div style="font-size: 10px; color: var(--mute); margin-top: 6px; line-height: 1.4;" id="storageMeterNote">
+            If storage fills up, older history is trimmed automatically — your League, Bits, achievements and settings are always kept. Export to a file to be safe.
+          </div>
+        </div>
         <div style="font-size: 10px; color: var(--mute); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--bg-2); line-height: 1.4;">
           <b style="color: var(--gold);">Schema:</b> v13 (v28.13 Continental Expansion).
           Older sync codes are not compatible — they reference team IDs that no longer exist after the Year 36 league reorganization. Reset League if you need to start fresh.
@@ -5904,6 +5990,16 @@
     <div class="sub" id="betSubLine">Place wagers between rounds and matches. Bets resolve automatically.</div>
     <!-- v37.42: lifetime bet performance line — hidden until first bet settles -->
     <div class="bet-stats" id="betStatsLine" style="display:none;"></div>
+    <!-- Economy rank panel — current standing tier + progress to the next. -->
+    <div class="rank-panel" id="rankPanel">
+      <div class="rank-panel-head">
+        <span class="rank-panel-tier" id="rankPanelTier">Trainee</span>
+        <span class="rank-panel-note" id="rankPanelNote"></span>
+      </div>
+      <div class="rank-panel-track">
+        <div class="rank-panel-fill" id="rankPanelFill" style="width:0%;"></div>
+      </div>
+    </div>
 
     <div class="bet-markets">
       <div class="bet-market">
@@ -5967,6 +6063,7 @@
       <input id="betPageAmount" type="number" min="1" placeholder="Bits" value="10" />
       <button id="betPagePlace" disabled>Place Bet</button>
     </div>
+    <div class="bet-cost-hint" id="betCostHint"></div>
 
  <h2 style="margin-top:24px;font-size:14px;">Your Active Bets</h2>
     <table class="bet-history-table" id="betHistoryTable">
@@ -5982,6 +6079,9 @@
     <h2>🏪 Float Knights Store</h2>
     <div class="sub">Pre-match boosts and (eventually) sandbags. Items must be purchased BEFORE a round begins.</div>
     <div class="store-grid" id="storeGrid"></div>
+    <h2 style="margin-top:28px;">✨ Prestige</h2>
+    <div class="sub">Cosmetic honours bought with Bits. No gameplay effect — pure collection. Always available, whatever your rank.</div>
+    <div class="store-grid" id="prestigeGrid"></div>
   </div>
 </div>
 
@@ -14319,7 +14419,6 @@ const ObstacleFactory = (function() {
   // across a season.
   function _genForts() {
     const out = [];
-    const W = COMBAT.arenaW, H = COMBAT.arenaH;
 
     // Pool of template functions. Each takes a side string ("west" or
     // "east") and returns an array of {x,y,w,h,shape} obstacles.
@@ -14411,7 +14510,7 @@ const ObstacleFactory = (function() {
     const cx = side === "west" ? W * 0.084 : W * 0.916;
     const cy = H * 0.50;
     const x0 = cx - fw / 2, x1 = cx + fw / 2;
-    const y0 = cy - fh / 2, y1 = cy + fh / 2;
+    const y0 = cy - fh / 2;
 
     // Back wall — vertical, ONLY the top 70% (leaves a south escape)
     const backX = side === "west" ? x0 : x1 - T;
@@ -16196,6 +16295,11 @@ const LEAGUE = {
   // 20+, fifth janitor + thank-you text at 50+). Cumulative across the
   // whole league's lifetime — the crew has a long memory.
   janitorTips: 0,
+  // === Prestige collection (added post-v38) ===
+  // Owned cosmetic unlocks bought with Bits — the always-available Bit
+  // sink. Map of prestigeItemId -> true. Zero gameplay effect; purely a
+  // collection the player accrues. Persisted in serializeLeague.
+  prestige: {},
   // === v37.23: Achievements ===
   // { teams: { [teamId]: { unlocked: { [achId]: {season, ts, ctx} }, progress: { [achId]: int } } },
   //   global: { [achId]: { season, ts, byTeamId, byKnightId } } }
@@ -29275,6 +29379,7 @@ function finalizeMatch(matchDraw) {
         LEAGUE.records[loserId].losses = (LEAGUE.records[loserId].losses || 0) + 1;
       }
     }
+    if (winnerId) glickoUpdateMatch(winnerId, (winnerId === m.teamAId ? m.teamBId : m.teamAId), 1);  // Glicko-2 rating update
     if (typeof saveLocal === "function") saveLocal();
     if (typeof showIntermission === "function") showIntermission();
     return;
@@ -29301,6 +29406,7 @@ function finalizeMatch(matchDraw) {
     for (const p of [...m.teamAplayers, ...m.teamBplayers]) p.career.matchesPlayed++;
     LEAGUE.records[m.teamAId].draws = (LEAGUE.records[m.teamAId].draws || 0) + 1;
     LEAGUE.records[m.teamBId].draws = (LEAGUE.records[m.teamBId].draws || 0) + 1;
+    glickoUpdateMatch(m.teamAId, m.teamBId, 0.5);  // Glicko-2: draw
 
     // Bracket can't have a draw advance — coin flip determines who advances
     // (the league must have a champion). Tracked separately in records.
@@ -29354,6 +29460,7 @@ function finalizeMatch(matchDraw) {
 
   LEAGUE.records[winnerId].wins++;
   LEAGUE.records[loserId].losses++;
+  glickoUpdateMatch(winnerId, loserId, 1);  // Glicko-2 rating update
 
   LEAGUE.bracket[m.slot].winner = winnerId;
   // === v37.82: record final score to the bracket slot ===
@@ -29754,6 +29861,183 @@ function teamOdds(teamA, teamB) {
 }
 
 /* ============================================================
+   GLICKO-2 TEAM RATING SYSTEM (added post-v38)
+
+   A standard Glicko-2 implementation (Mark Glickman, 2012) layered
+   alongside the existing teamStrength() model. It is purely ADDITIVE:
+   teamStrength()/teamOdds() are unchanged. Glicko ratings give the
+   league an uncertainty-aware power rating — each team carries a
+   rating (r), a rating deviation (rd = how unsure we are), and a
+   volatility (vol = how erratic their results are).
+
+   Storage: ratings live on LEAGUE.records[teamId].glicko = {r,rd,vol}.
+   Because LEAGUE.records is already serialized verbatim, ratings ride
+   along in saves with no new top-level field. Old saves (no .glicko)
+   are backfilled lazily by glickoEnsure() at the 1500/350/0.06 default.
+
+   One match = one Glicko rating period (the spec permits a period of
+   a single game). glickoUpdateMatch() is called once per match from
+   each of the three mutually-exclusive match-end paths.
+
+   The math here was verified against Glickman's published worked
+   example (glicko.net/glicko/glicko2.pdf): a 1500/200/0.06 player
+   with three games resolves to r≈1464.06, RD≈151.52, vol≈0.05999.
+   ============================================================ */
+const GLICKO = {
+  DEFAULT_R: 1500,
+  DEFAULT_RD: 350,
+  DEFAULT_VOL: 0.06,
+  TAU: 0.5,            // system constant — constrains volatility change
+  SCALE: 173.7178,     // Glicko-2 ↔ Glicko scale factor
+};
+
+// g(phi) — weight of a result by the opponent's rating deviation
+function _g2g(phi) {
+  return 1 / Math.sqrt(1 + 3 * phi * phi / (Math.PI * Math.PI));
+}
+// E — expected score of player (mu) against opponent (mu_j, phi_j)
+function _g2E(mu, muJ, phiJ) {
+  return 1 / (1 + Math.exp(-_g2g(phiJ) * (mu - muJ)));
+}
+
+// Lazily ensure a team's record carries a Glicko rating. Safe to call
+// on every read — backfills old saves and never overwrites live data.
+function glickoEnsure(teamId) {
+  if (!LEAGUE.records[teamId]) {
+    LEAGUE.records[teamId] = { wins: 0, losses: 0, draws: 0, championships: 0 };
+  }
+  const rec = LEAGUE.records[teamId];
+  if (!rec.glicko ||
+      typeof rec.glicko.r !== "number" ||
+      typeof rec.glicko.rd !== "number" ||
+      typeof rec.glicko.vol !== "number") {
+    rec.glicko = { r: GLICKO.DEFAULT_R, rd: GLICKO.DEFAULT_RD, vol: GLICKO.DEFAULT_VOL };
+  }
+  return rec.glicko;
+}
+
+// Core Glicko-2 single-period update. `player` and each `results`
+// opponent are plain {r,rd,vol}/{r,rd,score} objects in Glicko (not
+// Glicko-2) units. score: 1 win / 0.5 draw / 0 loss. Returns new {r,rd,vol}.
+function _glicko2Compute(player, results) {
+  const S = GLICKO.SCALE, TAU = GLICKO.TAU;
+  const mu = (player.r - 1500) / S;
+  const phi = player.rd / S;
+  const sigma = player.vol;
+
+  // No games this period — only RD grows.
+  if (!results || results.length === 0) {
+    const phiStar = Math.sqrt(phi * phi + sigma * sigma);
+    return { r: player.r, rd: phiStar * S, vol: sigma };
+  }
+
+  // Step 3: estimated variance from game outcomes.
+  let vInv = 0;
+  for (const m of results) {
+    const muJ = (m.r - 1500) / S;
+    const phiJ = m.rd / S;
+    const E = _g2E(mu, muJ, phiJ);
+    const gg = _g2g(phiJ);
+    vInv += gg * gg * E * (1 - E);
+  }
+  const v = 1 / vInv;
+
+  // Step 4: estimated improvement (delta).
+  let dSum = 0;
+  for (const m of results) {
+    const muJ = (m.r - 1500) / S;
+    const phiJ = m.rd / S;
+    dSum += _g2g(phiJ) * (m.score - _g2E(mu, muJ, phiJ));
+  }
+  const delta = v * dSum;
+
+  // Step 5: new volatility via the Illinois-variant root finder.
+  const a = Math.log(sigma * sigma);
+  const f = (x) => {
+    const ex = Math.exp(x);
+    const num = ex * (delta * delta - phi * phi - v - ex);
+    const den = 2 * Math.pow(phi * phi + v + ex, 2);
+    return num / den - (x - a) / (TAU * TAU);
+  };
+  let A = a, B;
+  if (delta * delta > phi * phi + v) {
+    B = Math.log(delta * delta - phi * phi - v);
+  } else {
+    let k = 1;
+    while (f(a - k * TAU) < 0) k++;
+    B = a - k * TAU;
+  }
+  let fA = f(A), fB = f(B);
+  let guard = 0;
+  while (Math.abs(B - A) > 1e-6 && guard++ < 100) {
+    const C = A + (A - B) * fA / (fB - fA);
+    const fC = f(C);
+    if (fC * fB <= 0) { A = B; fA = fB; }
+    else { fA = fA / 2; }
+    B = C; fB = fC;
+  }
+  const sigmaNew = Math.exp(A / 2);
+
+  // Step 6: pre-period RD; Step 7: new RD and rating.
+  const phiStar = Math.sqrt(phi * phi + sigmaNew * sigmaNew);
+  const phiNew = 1 / Math.sqrt(1 / (phiStar * phiStar) + 1 / v);
+  let muNew = mu;
+  for (const m of results) {
+    const muJ = (m.r - 1500) / S;
+    const phiJ = m.rd / S;
+    muNew += phiNew * phiNew * _g2g(phiJ) * (m.score - _g2E(mu, muJ, phiJ));
+  }
+
+  return { r: muNew * S + 1500, rd: phiNew * S, vol: sigmaNew };
+}
+
+// Apply one match result to both teams' Glicko ratings.
+// scoreForA: 1 = teamA won, 0 = teamB won, 0.5 = draw.
+// Both teams update against the other's PRE-match rating (correct
+// Glicko semantics — simultaneous update within the rating period).
+function glickoUpdateMatch(teamAId, teamBId, scoreForA) {
+  if (!teamAId || !teamBId || teamAId === teamBId) return;
+  const ga = glickoEnsure(teamAId);
+  const gb = glickoEnsure(teamBId);
+  const preA = { r: ga.r, rd: ga.rd, vol: ga.vol };
+  const preB = { r: gb.r, rd: gb.rd, vol: gb.vol };
+  const newA = _glicko2Compute(preA, [{ r: preB.r, rd: preB.rd, score: scoreForA }]);
+  const newB = _glicko2Compute(preB, [{ r: preA.r, rd: preA.rd, score: 1 - scoreForA }]);
+  LEAGUE.records[teamAId].glicko = newA;
+  LEAGUE.records[teamBId].glicko = newB;
+}
+
+// Win probability of teamA over teamB from current Glicko ratings.
+// Combines both rating deviations into the comparison (standard Glicko
+// predictive form). Exposed for use as a betting prior; teamOdds() is
+// left untouched and continues to use teamStrength().
+function glickoWinProb(teamAId, teamBId) {
+  const ga = glickoEnsure(teamAId);
+  const gb = glickoEnsure(teamBId);
+  const S = GLICKO.SCALE;
+  const muA = (ga.r - 1500) / S;
+  const muB = (gb.r - 1500) / S;
+  const phiA = ga.rd / S;
+  const phiB = gb.rd / S;
+  const gCombined = _g2g(Math.sqrt(phiA * phiA + phiB * phiB));
+  return 1 / (1 + Math.exp(-gCombined * (muA - muB)));
+}
+
+// Human-readable rating for scouting/standings UI: rounded rating with
+// a ± confidence band of ~2 RD (≈95% interval). Returns e.g. "1532 ±140".
+function glickoDisplay(teamId) {
+  const g = glickoEnsure(teamId);
+  return Math.round(g.r) + " \u00b1" + Math.round(g.rd * 2);
+}
+
+if (typeof window !== "undefined") {
+  window.glickoUpdateMatch = glickoUpdateMatch;
+  window.glickoWinProb = glickoWinProb;
+  window.glickoDisplay = glickoDisplay;
+  window.glickoEnsure = glickoEnsure;
+}
+
+/* ============================================================
    LIVE MATCH ODDS (ROADMAP 2.5)
 
    Static teamOdds() above is computed at match start from team
@@ -29785,29 +30069,13 @@ function liveMatchOdds(m) {
   // If a team has already won enough, return certain odds
   if (remA <= 0) return { [teamA]: 1.01, [teamB]: 99 };
   if (remB <= 0) return { [teamA]: 99, [teamB]: 1.01 };
-  // Naive Markov chain for remaining rounds: assume per-round 50/50
-  // (we'll mix in strength next). Probability of winning the match
-  // given (remA, remB) rounds-needed: p = sum of negative binomial.
-  function winProb(needA, needB) {
-    // p(A wins match) given needA, needB rounds remaining each.
-    // Each round: 50% A wins (will tune below).
-    // Closed form: P = sum_{k=0..needB-1} C(needA-1+k, k) * 0.5^(needA+k)
-    let p = 0;
-    let comb = 1;  // C(needA-1, 0)
-    for (let k = 0; k < needB; k++) {
-      p += comb * Math.pow(0.5, needA + k);
-      comb = comb * (needA - 1 + k + 1) / (k + 1);  // C(needA-1+k+1, k+1)
-    }
-    return p;
-  }
-  let pAroundsOnly = winProb(remA, remB);
 
   // === Component 2: Original team strength (mix in) ===
   // If team strengths differ, shift the per-round 50/50 baseline.
   const strA = teamStrength(teamA), strB = teamStrength(teamB);
   const strFrac = strA / (strA + strB);  // 0.5 = even, > 0.5 favors A
-  // Re-run winProb with the strength-shifted per-round prob.
-  // (Approximate: for asymmetric per-round prob, we rebuild winProb.)
+  // winProbShifted: P(A wins the match) for an asymmetric per-round
+  // win probability pA — used for both the strength and lives solves.
   function winProbShifted(needA, needB, pA) {
     const pB = 1 - pA;
     let p = 0;
@@ -29818,7 +30086,6 @@ function liveMatchOdds(m) {
     }
     return p;
   }
-  pAroundsOnly = winProbShifted(remA, remB, strFrac);
 
   // === Component 3: Remaining-lives shift ===
   // If a team has fewer surviving knights, their per-round prob drops.
@@ -29989,6 +30256,204 @@ window.seasonBetMarketOpen = seasonBetMarketOpen;
      _applyBetTxn(+payout, "won")      // settled win
      _applyBetTxn(0,       "lost")     // settled loss (stake already debited)
      _applyBetTxn(+amount, "refunded") // draw refund                  */
+
+/* ============================================================
+   BIT ECONOMY — STANDING & TIERS (added post-v38)
+
+   A single 0..1 "Standing" metric drives the economy's scaling
+   systems (bet antes, Store access tiers). It blends two signals:
+
+     wealth = how many Bits the player holds right now
+     skill  = lifetime net profit from betting
+
+   Wealth is weighted heavier (0.6 vs 0.4) and responds immediately,
+   so the metric is SELF-CORRECTING: spending down lowers Standing,
+   which eases fees and lets the player rebuild. This is what keeps
+   the economy "a strategic budget, never a dead end" — a player who
+   busts to near-zero is always back at the gentle end of the curve.
+
+   Negative lifetime betting net contributes 0 (a struggling bettor is
+   never penalised by the skill term).
+
+   Standing maps to five visible tiers themed on the medieval
+   knighthood ladder: Trainee, Squire, Knight, Knight-Banneret,
+   Knight of the Realm. The tier name and progress are shown to the
+   player; the formula itself is not exposed.
+
+   All tunable constants live in ECON below.
+   ============================================================ */
+const ECON = {
+  WEALTH_REF: 800,   // Bits that counts as "rich" for the wealth signal
+  SKILL_REF:  600,   // lifetime betting net that counts as "skilled"
+  STANDING_W: 0.6,   // weight on wealth (skill gets 1 - this)
+  // Tier cut points — standing < bands[i] => tier i+1; 5 tiers total.
+  TIER_BANDS: [0.20, 0.40, 0.60, 0.80],
+  TIER_NAMES: ["Trainee", "Squire", "Knight", "Knight-Banneret", "Knight of the Realm"],
+  // --- Bet scaling (Stage 2) ---
+  ANTE_RATE:   0.10,  // max table fee as a fraction of stake (at standing 1)
+  MAXBET_BASE: 100,   // largest single bet at standing 0
+  MAXBET_SPAN: 400,   // additional max bet granted at standing 1 (→ cap 500)
+  // --- Store access tiers (Stage 3) ---
+  // Item rarity → minimum tier required to purchase. Common is always
+  // available; rare and legendary gear gate behind rank. Access is
+  // gated, NOT price — item costs stay exactly as authored, so the
+  // existing combat balance is untouched.
+  STORE_RARITY_TIER: { common: 1, rare: 3, legendary: 4 },
+};
+
+// Current economy Standing as a number in [0, 1].
+function economyStanding() {
+  const bits = (typeof LEAGUE !== "undefined" && typeof LEAGUE.bits === "number")
+    ? LEAGUE.bits : 0;
+  const net = (typeof LEAGUE !== "undefined" && LEAGUE.betStats &&
+               typeof LEAGUE.betStats.lifetimeNet === "number")
+    ? LEAGUE.betStats.lifetimeNet : 0;
+  const wealth = Math.max(0, Math.min(1, bits / ECON.WEALTH_REF));
+  const skill  = Math.max(0, Math.min(1, net  / ECON.SKILL_REF));
+  return ECON.STANDING_W * wealth + (1 - ECON.STANDING_W) * skill;
+}
+
+// Current tier as an integer 1..5.
+function economyTier() {
+  const s = economyStanding();
+  let tier = 1;
+  for (let i = 0; i < ECON.TIER_BANDS.length; i++) {
+    if (s >= ECON.TIER_BANDS[i]) tier = i + 2;
+  }
+  return tier;
+}
+
+// Rich descriptor for the UI: tier number/name, progress toward the
+// next tier (0..1), the next tier's name, and a short "what unlocks
+// next" line. At the top tier, nextName is null and progress is 1.
+function economyTierInfo() {
+  const s = economyStanding();
+  const tier = economyTier();
+  const name = ECON.TIER_NAMES[tier - 1];
+  // Lower/upper standing bound of the current tier band.
+  const lower = tier === 1 ? 0 : ECON.TIER_BANDS[tier - 2];
+  const upper = tier <= ECON.TIER_BANDS.length ? ECON.TIER_BANDS[tier - 1] : 1;
+  const span = upper - lower;
+  const progress = span > 0 ? Math.max(0, Math.min(1, (s - lower) / span)) : 1;
+  const nextName = tier < ECON.TIER_NAMES.length ? ECON.TIER_NAMES[tier] : null;
+  // "What unlocks next" — kept in sync with the bet-ante and Store-tier
+  // stages of the economy. Stage 1 ships the copy; later stages wire the
+  // mechanics it describes.
+  let unlocks = "";
+  if (nextName === "Squire") {
+    unlocks = "Next: Squire — bigger bets, with a small table fee.";
+  } else if (nextName === "Knight") {
+    unlocks = "Next: Knight — unlocks rare Store gear.";
+  } else if (nextName === "Knight-Banneret") {
+    unlocks = "Next: Knight-Banneret — unlocks legendary Store gear.";
+  } else if (nextName === "Knight of the Realm") {
+    unlocks = "Next: Knight of the Realm — the highest betting limits.";
+  } else {
+    unlocks = "Highest rank reached — every market and Store tier is open.";
+  }
+  return { tier, name, progress, nextName, unlocks, standing: s };
+}
+
+/* The table fee ("ante") charged on a bet, in Bits. Scales smoothly
+   from 0 at the lowest Standing up to ANTE_RATE of the stake at the
+   top. Folded into the single displayed bet cost (no separate line) —
+   the player sees one total leaving their balance. A Trainee always
+   pays 0; the fee only appears as Standing climbs. */
+function economyBetAnte(stake) {
+  if (!(stake > 0)) return 0;
+  return Math.round(stake * ECON.ANTE_RATE * economyStanding());
+}
+
+// Largest single bet the player may place, scaling with Standing.
+// MAXBET_BASE at Standing 0 up to MAXBET_BASE + MAXBET_SPAN at 1.
+function economyMaxBet() {
+  return ECON.MAXBET_BASE + Math.round(ECON.MAXBET_SPAN * economyStanding());
+}
+
+// Minimum tier required to buy an item of the given rarity.
+function economyStoreItemTier(rarity) {
+  return ECON.STORE_RARITY_TIER[rarity || "common"] || 1;
+}
+
+// Whether the player's current tier is high enough to buy this item.
+function economyStoreItemUnlocked(item) {
+  if (!item) return false;
+  return economyTier() >= economyStoreItemTier(item.rarity || "common");
+}
+
+if (typeof window !== "undefined") {
+  window.economyStanding = economyStanding;
+  window.economyTier = economyTier;
+  window.economyTierInfo = economyTierInfo;
+  window.economyBetAnte = economyBetAnte;
+  window.economyMaxBet = economyMaxBet;
+  window.economyStoreItemTier = economyStoreItemTier;
+  window.economyStoreItemUnlocked = economyStoreItemUnlocked;
+}
+
+/* ============================================================
+   PRESTIGE COLLECTION (added post-v38)
+
+   The economy's always-available Bit sink. Prestige items are
+   one-time cosmetic unlocks with ZERO gameplay effect — purely a
+   collection the player accrues. They are always purchasable
+   regardless of rank (a struggling player can still spend here),
+   which is what gives the economy a floor: Bits always have
+   somewhere to go.
+
+   Owned items live in LEAGUE.prestige as { id: true }. No team or
+   knight is renamed by anything here — every catalogue entry is a
+   self-contained badge/banner/card the player owns and views.
+   ============================================================ */
+const PRESTIGE_ITEMS = [
+  { id: "banner_champion", ico: "\uD83C\uDFC6", nm: "Champion's Banner",
+    cost: 150, desc: "A gilded banner commemorating your league. Hung in your trophy hall." },
+  { id: "card_arena", ico: "\uD83C\uDFDF\uFE0F", nm: "Arena Title Card",
+    cost: 200, desc: "A broadcast-style title card for your league's home arena." },
+  { id: "flair_gold", ico: "\u2728", nm: "Gold League Flair",
+    cost: 120, desc: "A gold accent on your league badge. Pure shine, no edge." },
+  { id: "crest_founder", ico: "\uD83D\uDEE1\uFE0F", nm: "Founder's Crest",
+    cost: 100, desc: "A heraldic crest marking you as the league's founding patron." },
+  { id: "plaque_dynasty", ico: "\uD83D\uDCDC", nm: "Dynasty Plaque",
+    cost: 180, desc: "An engraved plaque honouring the seasons you've overseen." },
+  { id: "seal_realm", ico: "\uD83D\uDD31", nm: "Seal of the Realm",
+    cost: 80, desc: "A wax seal stamped on official league dispatches. Decorative." },
+];
+const PRESTIGE_BY_ID = {};
+for (const _p of PRESTIGE_ITEMS) PRESTIGE_BY_ID[_p.id] = _p;
+
+// Whether a prestige item is already owned.
+function prestigeOwned(itemId) {
+  return !!(typeof LEAGUE !== "undefined" && LEAGUE.prestige && LEAGUE.prestige[itemId]);
+}
+
+// Purchase a prestige item. One-time: re-buying an owned item is a
+// no-op. Returns true on a successful purchase, false otherwise.
+function buyPrestige(itemId) {
+  const item = PRESTIGE_BY_ID[itemId];
+  if (!item) return false;
+  if (typeof LEAGUE === "undefined") return false;
+  if (!LEAGUE.prestige) LEAGUE.prestige = {};
+  if (LEAGUE.prestige[itemId]) return false;          // already owned
+  if ((LEAGUE.bits || 0) < item.cost) {
+    feed("item", `\uD83D\uDD12 Not enough bits for ${item.nm} (${item.cost} needed).`);
+    return false;
+  }
+  LEAGUE.bits -= item.cost;
+  LEAGUE.prestige[itemId] = true;
+  feed("item", `${item.ico} Prestige unlocked: ${item.nm} (-${item.cost} bits).`);
+  if (typeof window !== "undefined" && window.toast) {
+    window.toast(`Prestige unlocked: <b>${escapeHTML(item.nm)}</b>`, "info",
+      { ico: item.ico, ttl: 5000 });
+  }
+  if (typeof saveLocal === "function") saveLocal();
+  return true;
+}
+
+if (typeof window !== "undefined") {
+  window.buyPrestige = buyPrestige;
+  window.prestigeOwned = prestigeOwned;
+}
 function _applyBetTxn(netDelta, counterField) {
   if (!LEAGUE.betStats) return;
   if (LEAGUE.betStats.statsSeason !== LEAGUE.season) {
@@ -30036,13 +30501,21 @@ function placeBet(kind, target, amount) {
       return false;
     }
     if (amount <= 0 || amount > LEAGUE.bits) return false;
+    if (amount > economyMaxBet()) {
+      feed("item", `🔒 Bet exceeds your limit of ${economyMaxBet()} bits — raise your rank to bet bigger.`);
+      return false;
+    }
+    const ante = economyBetAnte(amount);
+    const total = amount + ante;
+    if (total > LEAGUE.bits) return false;
     const odds = seasonOdds();
     const payoutMult = odds[target];
     if (!payoutMult) return false;
     if (!TEAM_BY_ID[target]) return false;
-    LEAGUE.bits -= amount;
-    // v37.93: was 7-line inline; now via helper.
-    _applyBetTxn(-amount, null);
+    LEAGUE.bits -= total;
+    // Record the full outflow (stake + table fee) against bet stats so
+    // the lifetime net reflects what actually left the balance.
+    _applyBetTxn(-total, null);
     LEAGUE.bets.push({
       kind: "season",
       target,
@@ -30054,7 +30527,8 @@ function placeBet(kind, target, amount) {
     });
     if (typeof saveLocal === "function") saveLocal();
     const tn = TEAM_BY_ID[target].short;
-    feed("item", `💰 Season bet: ${amount} bits on ${tn} for Season ${LEAGUE.season} title @ ${payoutMult}×`);
+    const _anteNote = ante > 0 ? ` (incl. ${ante} table fee)` : "";
+    feed("item", `💰 Season bet: ${total} bits${_anteNote} on ${tn} for Season ${LEAGUE.season} title @ ${payoutMult}×`);
     return true;
   }
 
@@ -30065,6 +30539,10 @@ function placeBet(kind, target, amount) {
   }
 
   if (amount <= 0 || amount > LEAGUE.bits) return false;
+  if (amount > economyMaxBet()) {
+    feed("item", `🔒 Bet exceeds your limit of ${economyMaxBet()} bits — raise your rank to bet bigger.`);
+    return false;
+  }
   if (!LEAGUE.currentSlot) return false;
   const slotData = LEAGUE.bracket[LEAGUE.currentSlot];
   if (!slotData || !slotData.teamA || !slotData.teamB) return false;
@@ -30110,9 +30588,12 @@ function placeBet(kind, target, amount) {
     payoutMult = target === "over" ? 2.58 : 1.50;
   } else return false;
 
-  LEAGUE.bits -= amount;
-  // v37.93: was 7-line inline season-reset + tally; now via helper.
-  _applyBetTxn(-amount, null);
+  const ante = economyBetAnte(amount);
+  const total = amount + ante;
+  if (total > LEAGUE.bits) return false;
+  LEAGUE.bits -= total;
+  // Record the full outflow (stake + table fee) against bet stats.
+  _applyBetTxn(-total, null);
   const m = LEAGUE.match;
   const roundIndex = (kind === "round" && m) ? (m.currentRoundIndex + (m.phase === "betweenRounds" || m.phase === "preRound" ? 1 : 0)) : null;
   LEAGUE.bets.push({ kind, target, amount, payoutMult, slot: LEAGUE.currentSlot, roundIndex });
@@ -30121,7 +30602,8 @@ function placeBet(kind, target, amount) {
     team: "match winner", round: "round winner", player: "last standing",
     firstkill: "first kill", totalcas: "total casualties", rounds: "rounds played",
   };
-  feed("item", `💰 Bet placed: ${amount} bits on ${labelMap[kind] || kind} = ${target} @ ${payoutMult}×`);
+  const _anteNote = ante > 0 ? ` (incl. ${ante} table fee)` : "";
+  feed("item", `💰 Bet placed: ${total} bits${_anteNote} on ${labelMap[kind] || kind} = ${target} @ ${payoutMult}×`);
   return true;
 }
 
@@ -30247,6 +30729,15 @@ function buyItem(itemId, teamId) {
   const item = SHOP_BY_ID[itemId];
   if (!item) return false;
   if (LEAGUE.bits < item.cost) return false;
+  // Store access tier — rare/legendary gear gates behind rank. Defensive:
+  // renderStore already greys locked items, but reject here too in case
+  // buyItem is reached another way.
+  if (typeof economyStoreItemUnlocked === "function" && !economyStoreItemUnlocked(item)) {
+    const needTier = economyStoreItemTier(item.rarity || "common");
+    const tierName = (typeof ECON !== "undefined" && ECON.TIER_NAMES[needTier - 1]) || ("tier " + needTier);
+    feed("item", `🔒 ${item.nm} requires the rank of ${tierName}.`);
+    return false;
+  }
   if (LEAGUE.match && LEAGUE.match.phase === "round") return false; // can't buy during a live round
   // Specific-player targeted items must use buyTargetedItem instead.
   if (item.target === "specific_player") return false;
@@ -32258,7 +32749,6 @@ function tickJanitors(m) {
   const elapsedMs = now - spawnTs;
   const timedOut = elapsedMs > JANITOR.DURATION_MS;
 
-  let allDone = true;
   for (const j of m.janitors) {
     j.bobPhase += 0.2;
 
@@ -32279,12 +32769,10 @@ function tickJanitors(m) {
         // Arrived — start sweeping
         j.state = "sweeping";
         j.sweepLeft = JANITOR.SWEEP_FRAMES;
-        allDone = false;
       } else {
         const sp = JANITOR.WALK_SPEED;
         j.x += (dx / dist) * sp;
         j.y += (dy / dist) * sp;
-        allDone = false;
       }
     } else if (j.state === "sweeping") {
       j.sweepLeft--;
@@ -32345,7 +32833,6 @@ function tickJanitors(m) {
         j.currentTarget = null;
         j.state = "walking";
       }
-      allDone = false;
     } else if (j.state === "leaving") {
       // Walk back to off-field exit point
       const dx = j.walkOffX - j.x, dy = j.walkOffY - j.y;
@@ -32356,7 +32843,6 @@ function tickJanitors(m) {
         const sp = JANITOR.WALK_SPEED * 1.3; // exit a bit faster
         j.x += (dx / dist) * sp;
         j.y += (dy / dist) * sp;
-        allDone = false;
       }
     }
     // "gone" state — no action; janitor is invisible
@@ -34730,7 +35216,6 @@ function drawReferee(ref) {
 
 function drawMascot(p) {
   const team = TEAM_BY_ID[p.teamId];
-  const pos = POS_BY_ID[p.position];
   // Float bob — gentle vertical motion to sell the balloons-on-back fiction
   const t = (LEAGUE.match?.frame || 0);
   const bob = Math.sin((t + p.id * 7) * 0.08) * 1.5;
@@ -36836,6 +37321,11 @@ function _drawChestEmblem(cx, bx, by, posId, teamColor) {
 function renderHeader() {
   $("#bitsAmt").textContent = LEAGUE.bits;
   $("#seasonNum").textContent = LEAGUE.season;
+  // Economy rank pill — reflects current Standing (Bit balance + betting record).
+  if (typeof economyTierInfo === "function") {
+    const _rankEl = document.getElementById("rankName");
+    if (_rankEl) _rankEl.textContent = economyTierInfo().name;
+  }
   $("#leagueBadge").textContent = "S" + LEAGUE.season;
   // Ticker shows current matchup or next-up cue
   const am = activeMatchTeams();
@@ -37773,7 +38263,6 @@ function renderCommentary() {
     el.innerHTML = '<div class="cc-line" style="color:var(--mute);font-size:11px;font-style:italic;justify-content:center;"><span>Awaiting next match — sportscaster on standby.</span></div>';
     return;
   }
-  const now = Date.now();
   el.innerHTML = COMMENTARY.slice(0, 18).map((c, idx) => {
     const ico = c.kind === "chant"   ? "📣"
               : c.kind === "opener"  ? "🎙️"
@@ -38011,11 +38500,61 @@ function _renderBetStatsLine() {
   el.style.display = "";
 }
 
+/* Live cost hint under the bet confirm row. Shows the total Bits a bet
+   will cost (stake + folded-in table fee) and the player's current max
+   bet. Reads the #betPageAmount input; safe to call on every keystroke
+   and from renderBetTab. */
+function _renderBetCostHint() {
+  const el = document.getElementById("betCostHint");
+  if (!el) return;
+  if (typeof economyBetAnte !== "function" || typeof economyMaxBet !== "function") {
+    el.textContent = ""; return;
+  }
+  const input = document.getElementById("betPageAmount");
+  const stake = input ? parseInt(input.value, 10) : NaN;
+  const maxBet = economyMaxBet();
+  if (!stake || stake <= 0) {
+    el.innerHTML = `Max bet at your rank: <b>${maxBet}</b> bits.`;
+    return;
+  }
+  if (stake > maxBet) {
+    el.innerHTML = `<span class="warn">Over your ${maxBet}-bit limit.</span> ` +
+      `Raise your rank to bet bigger.`;
+    return;
+  }
+  const ante = economyBetAnte(stake);
+  const total = stake + ante;
+  if (ante > 0) {
+    el.innerHTML = `Total cost: <b>${total}</b> bits ` +
+      `(${stake} stake + ${ante} table fee) \u00b7 max ${maxBet}.`;
+  } else {
+    el.innerHTML = `Total cost: <b>${total}</b> bits \u00b7 max ${maxBet}.`;
+  }
+}
+
+/* Paint the economy rank panel in the Bet tab — current tier name,
+   progress bar toward the next tier, and the "what unlocks next" line.
+   Idempotent; reads economyTierInfo(). */
+function _renderTierPanel() {
+  if (typeof economyTierInfo !== "function") return;
+  const tierEl = document.getElementById("rankPanelTier");
+  const noteEl = document.getElementById("rankPanelNote");
+  const fillEl = document.getElementById("rankPanelFill");
+  if (!tierEl || !noteEl || !fillEl) return;
+  const info = economyTierInfo();
+  tierEl.textContent = info.name;
+  noteEl.textContent = info.unlocks;
+  // At the top tier the bar reads full; otherwise it shows band progress.
+  fillEl.style.width = Math.round(info.progress * 100) + "%";
+}
+
 function renderBetTab() {
   // === v37.42: refresh lifetime bet stats line ===
   // Runs first so the stats stay visible regardless of which downstream
   // branch this function takes (no-match, missing-team, normal-render).
   _renderBetStatsLine();
+  _renderTierPanel();
+  _renderBetCostHint();
   const am = activeMatchTeams();
   const subEl = $("#betSubLine");
   if (!am) {
@@ -38412,10 +38951,14 @@ function renderStore() {
     for (const item of byRarity[sec.key]) {
       const btn = document.createElement("button");
       btn.className = "store-card rarity-" + (item.rarity || "common");
+      // Store access tier — rare/legendary gear locks behind rank.
+      const tierLocked = (typeof economyStoreItemUnlocked === "function")
+        ? !economyStoreItemUnlocked(item) : false;
       // Tip the crew & flavor items are buyable any time except mid-round (no `am` requirement)
       const needsActiveMatch = item.target !== "janitors" && item.target !== "flavor";
-      btn.disabled = LEAGUE.bits < item.cost || roundLive || (needsActiveMatch && !am);
+      btn.disabled = tierLocked || LEAGUE.bits < item.cost || roundLive || (needsActiveMatch && !am);
       if (btn.disabled) btn.setAttribute("aria-disabled", "true");
+      if (tierLocked) btn.classList.add("store-card-locked");
       const targetTag = item.target === "opp"
         ? `<div class="store-target-tag">debuff opponent</div>`
         : item.target === "specific_player"
@@ -38427,14 +38970,23 @@ function renderStore() {
         : item.targetSplit
         ? `<div class="store-target-tag store-target-buff">team + opponent</div>`
         : `<div class="store-target-tag store-target-buff">buff your team</div>`;
+      // Locked items show an "Unlocks at <tier>" line in place of the cost.
+      let costLine = `<div class="cost">${item.cost} bits</div>`;
+      if (tierLocked) {
+        const needTier = economyStoreItemTier(item.rarity || "common");
+        const tierName = (typeof ECON !== "undefined" && ECON.TIER_NAMES[needTier - 1]) || ("tier " + needTier);
+        costLine = `<div class="cost store-cost-locked">🔒 Unlocks at ${escapeHTML(tierName)}</div>`;
+      }
       btn.innerHTML = `
         <div class="ico">${item.ico}</div>
         <div class="nm">${escapeHTML(item.nm)}</div>
         ${targetTag}
-        <div class="cost">${item.cost} bits</div>
+        ${costLine}
         <div class="desc">${escapeHTML(item.desc)}</div>
       `;
       btn.addEventListener("click", () => {
+        // A tier-locked item is inert — the rank gate explains why.
+        if (tierLocked) return;
         // === v37.23.3: tip-the-crew can be purchased without an active match ===
         if (item.target === "janitors") {
           // Pass any team id — buyItem ignores it for janitors target
@@ -38462,7 +39014,46 @@ function renderStore() {
       grid.appendChild(btn);
     }
   }
+  // Prestige collection grid sits below the gear sections.
+  if (typeof renderPrestige === "function") renderPrestige();
 }
+/* Render the Prestige collection grid in the Store tab. Owned items
+   show a check and are inert; affordable unowned items are buyable;
+   too-expensive ones are greyed. Always available regardless of rank. */
+function renderPrestige() {
+  const grid = document.getElementById("prestigeGrid");
+  if (!grid) return;
+  if (typeof PRESTIGE_ITEMS === "undefined") { grid.innerHTML = ""; return; }
+  grid.innerHTML = "";
+  for (const item of PRESTIGE_ITEMS) {
+    const owned = prestigeOwned(item.id);
+    const affordable = (LEAGUE.bits || 0) >= item.cost;
+    const btn = document.createElement("button");
+    btn.className = "store-card prestige-card" + (owned ? " prestige-owned" : "");
+    btn.disabled = owned || !affordable;
+    if (btn.disabled) btn.setAttribute("aria-disabled", "true");
+    let costLine;
+    if (owned) {
+      costLine = `<div class="cost prestige-cost-owned">\u2713 Owned</div>`;
+    } else {
+      costLine = `<div class="cost">${item.cost} bits</div>`;
+    }
+    btn.innerHTML = `
+      <div class="ico">${item.ico}</div>
+      <div class="nm">${escapeHTML(item.nm)}</div>
+      <div class="store-target-tag store-target-tip">prestige</div>
+      ${costLine}
+      <div class="desc">${escapeHTML(item.desc)}</div>
+    `;
+    btn.addEventListener("click", () => {
+      if (owned) return;
+      const ok = buyPrestige(item.id);
+      if (ok) renderAll();
+    });
+    grid.appendChild(btn);
+  }
+}
+
 
 /* === v37.91 → v38.21: theme application ===
    Pre-v38.21 this toggled body.theme-sa based on LEAGUE.continent.
@@ -40230,6 +40821,8 @@ function serializeLeague() {
     achievements: LEAGUE.achievements || { teams: {}, global: {} },
     // === v37.23.3: janitor tips counter ===
     janitorTips: LEAGUE.janitorTips || 0,
+    // Prestige collection — owned cosmetic unlocks.
+    prestige: LEAGUE.prestige || {},
     // === v37.23.4: cleanup crew lifetime tally ===
     cleanupLog: LEAGUE.cleanupLog || null,
 
@@ -40255,19 +40848,31 @@ function serializeLeague() {
 function deserializeLeague(jsonStr) {
   const data = JSON.parse(jsonStr);
 
-  // === Hard version gate ===
+  // === Version gate + migration ladder ===
   // The schema was rewritten in v28.13 (continental expansion + lore retcon).
-  // Saves from earlier versions reference team IDs and bracket structures
-  // that no longer match the current League. Rather than ship layered
-  // backfills, we refuse outright.
+  // Saves from before MIN_MIGRATABLE_VERSION reference team IDs and bracket
+  // structures that no longer match the current League — no honest migration
+  // exists, so they are refused outright. Saves in range but below the current
+  // version are upgraded forward through runSaveMigrations().
   const v = data.v || 0;
-  if (v < SAVE_SCHEMA_VERSION) {
+  if (v < MIN_MIGRATABLE_VERSION) {
     throw new Error(
       "This sync code is from an older League format (v" + v + "; current is v" +
       SAVE_SCHEMA_VERSION + "). The League schema was rewritten for the v28.13 " +
       "Continental Expansion. Please reset your League and start fresh — old " +
       "saves are not compatible with the current 20-team format."
     );
+  }
+  if (v > MIN_MIGRATABLE_VERSION && v < SAVE_SCHEMA_VERSION) {
+    // In-range but outdated — run the migration ladder forward.
+    try {
+      data = runSaveMigrations(data);
+    } catch (e) {
+      throw new Error(
+        "This sync code (v" + v + ") could not be upgraded to the current " +
+        "format (v" + SAVE_SCHEMA_VERSION + "): " + (e && e.message ? e.message : e)
+      );
+    }
   }
   if (v > SAVE_SCHEMA_VERSION) {
     // Forward-compat: a save from a future version. Try to load and let the
@@ -40437,6 +41042,8 @@ function deserializeLeague(jsonStr) {
   if (!LEAGUE.achievements.global) LEAGUE.achievements.global = {};
   // === v37.23.3: janitor tips counter ===
   LEAGUE.janitorTips = (typeof data.janitorTips === "number") ? data.janitorTips : 0;
+  // Prestige collection — backfills to {} for saves predating the feature.
+  LEAGUE.prestige = (data.prestige && typeof data.prestige === "object") ? data.prestige : {};
   // === v37.23.4: cleanup crew lifetime tally ===
   LEAGUE.cleanupLog = data.cleanupLog || null;
   LEAGUE.genesisSeed = data.genesisSeed || ((Math.random() * 0xFFFFFFFF) >>> 0);
@@ -41202,6 +41809,11 @@ function bindEvents() {
     const preservedCleanupLog = (typeof LEAGUE !== "undefined" && LEAGUE.cleanupLog)
       ? JSON.parse(JSON.stringify(LEAGUE.cleanupLog))
       : null;
+    // Prestige is a career collection — like achievements, it survives a
+    // soft reset so the player never loses cosmetics they paid Bits for.
+    const preservedPrestige = (typeof LEAGUE !== "undefined" && LEAGUE.prestige)
+      ? JSON.parse(JSON.stringify(LEAGUE.prestige))
+      : {};
 
     if (typeof clearLocal === "function") clearLocal();
     initLeague();
@@ -41214,6 +41826,7 @@ function bindEvents() {
       LEAGUE.achievements = preservedAchievements;
       LEAGUE.janitorTips = preservedJanitorTips;
       if (preservedCleanupLog) LEAGUE.cleanupLog = preservedCleanupLog;
+      LEAGUE.prestige = preservedPrestige;
       feed("season", "🚨 League reset. Achievements (" + preservedBits + " bits) preserved. New season begins.");
     } else {
       feed("season", "🚨 League reset. Everything wiped. New season begins.");
@@ -41273,6 +41886,13 @@ function bindEvents() {
         placeBtn.disabled = true;
         renderAll();
       }
+    });
+  }
+  // Live bet cost hint — refresh as the stake is typed.
+  const betAmtInput = $("#betPageAmount");
+  if (betAmtInput) {
+    betAmtInput.addEventListener("input", () => {
+      if (typeof _renderBetCostHint === "function") _renderBetCostHint();
     });
   }
 
@@ -43716,6 +44336,8 @@ function switchTab(tabId) {
   if (tabId === "lore" && typeof renderLoreTeamFactsGrid === "function") renderLoreTeamFactsGrid();
   // v37.46: reset settings filter when Settings tab opens (predictable empty state)
   if (tabId === "settings" && typeof window._resetSettingsFilter === "function") window._resetSettingsFilter();
+  // Refresh the save-storage meter each time Settings is opened.
+  if (tabId === "settings" && typeof _refreshStorageMeter === "function") _refreshStorageMeter();
 }
 
 /* Lore sub-tab navigation — switch between Histories / Bios / Diaries /
@@ -46184,7 +46806,6 @@ function loop(ts) {
   // Cap dt to avoid runaway simulation if the tab was backgrounded for a
   // long time. The proper catch-up is in boot(); the main loop just needs
   // to advance smoothly. 250ms is ~4 frames worth.
-  const realDt = ts - (lastTick - dt);
   const cappedDt = Math.min(dt, 250);
   lastTick = ts;
 
@@ -46746,6 +47367,84 @@ function _refreshSaveIndicator() {
 }
 window._refreshSaveIndicator = _refreshSaveIndicator;
 
+/* Update the save-storage meter in the Settings tab. Uses the modern
+   navigator.storage.estimate() when available; otherwise falls back to
+   measuring the actual save string lengths against the conventional
+   ~5 MiB per-origin localStorage budget. Best-effort and self-contained:
+   if the meter elements aren't present (or the APIs aren't), it no-ops.
+   Async because storage.estimate() returns a promise — callers fire and
+   forget. */
+async function _refreshStorageMeter() {
+  if (typeof document === "undefined") return;
+  const bar   = document.getElementById("storageMeterBar");
+  const label = document.getElementById("storageMeterLabel");
+  if (!bar || !label) return;
+
+  const KB = 1024, MB = 1024 * 1024;
+  const quotaBytes = 5 * MB;        // the ~5 MiB per-origin localStorage budget
+
+  // The figure that actually matters for the save system is the size of
+  // the save keys themselves. Measure them directly — this is exact and
+  // is what the meter reports. localStorage stores UTF-16 (~2 bytes/char).
+  let saveBytes = 0;
+  let measured = false;
+  try {
+    const keys = [LOCAL_SAVE_KEY, LOCAL_SAVE_KEY_BACKUP, LOCAL_SAVE_KEY_PRIOR];
+    for (const k of keys) {
+      const v = localStorage.getItem(k);
+      if (v) saveBytes += (k.length + v.length) * 2;
+    }
+    measured = true;
+  } catch (_) { /* storage locked down — measured stays false */ }
+
+  // navigator.storage.estimate() is consulted only as a sanity floor: if
+  // the whole-origin usage somehow reads smaller than our key total, the
+  // key total still wins (it's the precise number). The API's `quota` is
+  // a whole-origin figure (often hundreds of MB) and is deliberately NOT
+  // used as the bar's denominator — the save lives under the 5 MiB
+  // localStorage sub-limit, so that is the meaningful reference.
+  let usedBytes = saveBytes;
+  let approx = !measured;
+  if (typeof navigator !== "undefined" &&
+      navigator.storage && typeof navigator.storage.estimate === "function") {
+    try {
+      const est = await navigator.storage.estimate();
+      if (est && typeof est.usage === "number" && est.usage > usedBytes) {
+        // Origin usage exceeds our save keys — other site data exists too.
+        // Report the save-key figure (what the player can act on), but
+        // flag it approximate since the origin as a whole holds more.
+        approx = true;
+      }
+    } catch (_) { /* estimate unavailable — saveBytes stands */ }
+  }
+
+  const pct = Math.max(0, Math.min(100, (usedBytes / quotaBytes) * 100));
+  bar.style.width = pct.toFixed(1) + "%";
+  // Green under 60%, amber 60-85%, red above — a glanceable health signal.
+  bar.style.background = pct < 60 ? "var(--grn)" : (pct < 85 ? "#e0a92b" : "var(--red)");
+
+  const usedMb = usedBytes / MB;
+  const usedStr = usedMb < 0.1
+    ? (usedBytes / KB).toFixed(0) + " KB"
+    : usedMb.toFixed(2) + " MB";
+  label.textContent = (approx ? "~" : "") + usedStr + " / 5 MB";
+
+  // When storage is getting tight, nudge the player toward exporting.
+  const note = document.getElementById("storageMeterNote");
+  if (note) {
+    if (pct >= 85) {
+      note.innerHTML = "<b style=\"color:var(--red);\">Storage is nearly full.</b> " +
+        "Older history will be trimmed automatically to keep your League, Bits, " +
+        "achievements and settings. Export to a file now to keep a complete copy.";
+    } else {
+      note.textContent = "If storage fills up, older history is trimmed " +
+        "automatically — your League, Bits, achievements and settings are " +
+        "always kept. Export to a file to be safe.";
+    }
+  }
+}
+window._refreshStorageMeter = _refreshStorageMeter;
+
 /* Wire click-to-save on the indicator and start a 30s tick to refresh
    the relative-time string. Idempotent. */
 (function _setupSaveIndicator() {
@@ -46894,6 +47593,11 @@ window.FLOAT_KNIGHTS = {
    ============================================================ */
 const LOCAL_SAVE_KEY = "fk_save_v13";
 const LOCAL_SAVE_KEY_PRIOR = "fk_save_v1";
+// Backup slot — holds the previous last-known-good save. _writeLocalSave
+// copies the current main save here before overwriting it, so a corrupt
+// or unreadable main save can be recovered from on the next load instead
+// of the player being dropped to a fresh League.
+const LOCAL_SAVE_KEY_BACKUP = "fk_save_v13_bak";
 let _localSaveTimer = null;
 
 // One-shot cleanup of the prior schema's localStorage entry. Idempotent —
@@ -46913,8 +47617,134 @@ try {
    browsers — Chrome <80, Firefox <113, Safari <16.4). The fallback
    path is bit-identical to pre-v37.53 saveLocal output, so legacy
    loaders see no difference. */
+
+/* ============================================================
+   TIERED SAVE PRUNING (added post-v38)
+
+   When localStorage is full, rather than failing the write we shed
+   the least-important data until the save fits. A priority core is
+   never touched: schema version, season, Bit balance, achievement
+   progress, betting stats, and all user/league settings. The current
+   League (rosters, records, bracket) is also core so the save stays
+   loadable.
+
+   Pruning walks three tiers. Within a tier, large arrays are first
+   TRUNCATED to their most-recent N entries; only if the save still
+   doesn't fit is the whole field dropped. Tiers are processed in
+   order — Tier 1 (historical logs) before Tier 2 (cosmetic/derived)
+   before Tier 3 (deep dynasty past).
+
+   The save records what was shed in `_pruned` so loadLocal() can tell
+   the player their older history was trimmed to save space.
+   ============================================================ */
+
+// Prunable fields, in the order they are sacrificed. `keep` is the
+// most-recent-N count for array truncation (null = not array-truncatable,
+// drop whole). Objects keyed by team (aiStyleHistory) are drop-whole.
+const SAVE_PRUNE_PLAN = [
+  // --- Tier 1: historical logs — losing these costs history screens only
+  { field: "matchHistory",   tier: 1, keep: 40 },
+  { field: "voteHistory",    tier: 1, keep: 20 },
+  { field: "tradeHistory",   tier: 1, keep: 20 },
+  { field: "loreRecent",     tier: 1, keep: 15 },
+  { field: "aiStyleHistory", tier: 1, keep: null },
+  { field: "cleanupLog",     tier: 1, keep: null },
+  // --- Tier 2: cosmetic / derived state
+  { field: "lostItems",      tier: 2, keep: 25 },
+  { field: "promotedLegends",tier: 2, keep: 25 },
+  { field: "previousLadder", tier: 2, keep: null },
+  { field: "loreBookmarks",  tier: 2, keep: null },
+  { field: "rivalries",      tier: 2, keep: null },
+  // --- Tier 3: deep dynasty past — last resort, painful but survivable
+  { field: "history",        tier: 3, keep: 10 },
+  { field: "graveyard",      tier: 3, keep: 50 },
+  { field: "lineages",       tier: 3, keep: null },
+];
+
+// Apply one prune step to a parsed save object, mutating it in place.
+// Returns a short human label of what changed, or null if nothing did.
+function _applyPruneStep(data, step) {
+  const val = data[step.field];
+  if (val == null) return null;
+  // Array field: truncate to recent-N first, drop only if already short.
+  if (Array.isArray(val)) {
+    if (step.keep != null && val.length > step.keep) {
+      data[step.field] = val.slice(-step.keep);
+      return step.field + " trimmed to last " + step.keep;
+    }
+    if (val.length > 0) {
+      data[step.field] = [];
+      return step.field + " cleared";
+    }
+    return null;
+  }
+  // Object field: drop whole (these are not safely truncatable).
+  if (typeof val === "object") {
+    if (Object.keys(val).length === 0) return null;
+    data[step.field] = Array.isArray(val) ? [] : {};
+    return step.field + " cleared";
+  }
+  // Scalar (e.g. cleanupLog may be null already, or a value) — drop.
+  data[step.field] = null;
+  return step.field + " cleared";
+}
+
+// Given a save object that won't fit, progressively prune and re-test
+// via tryWrite(serializedString) -> boolean. Returns true if a pruned
+// form was written, false if even the fully-pruned core didn't fit.
+// `serialize` converts the (possibly compressed) object to its stored
+// string form.
+function _prunedWrite(data, serialize, tryWrite) {
+  const shed = [];
+  for (const step of SAVE_PRUNE_PLAN) {
+    const label = _applyPruneStep(data, step);
+    if (!label) continue;
+    shed.push(label);
+    // Record what was shed so the load side can notify the player.
+    data._pruned = { at: Date.now(), shed: shed.slice() };
+    let serialized;
+    try {
+      serialized = serialize(data);
+    } catch (e) {
+      // Serialization of the pruned object failed — cannot continue.
+      return false;
+    }
+    if (tryWrite(serialized)) {
+      if (typeof console !== "undefined") {
+        console.warn("[save] storage full — pruned to fit: " + shed.join(", "));
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+if (typeof window !== "undefined") {
+  window._prunedWrite = _prunedWrite;
+}
+/* Promote the previous main save into the backup slot. Best-effort:
+   a quota failure here is swallowed (the backup is a safety net and
+   must never cause the real save to fail). Skips empty/absent values
+   so the backup is never overwritten with nothing. */
+function _promoteSaveBackup(priorMainValue) {
+  if (priorMainValue == null || priorMainValue === "") return;
+  try {
+    localStorage.setItem(LOCAL_SAVE_KEY_BACKUP, priorMainValue);
+  } catch (e) {
+    // Quota or locked-down storage — backup is optional, never fatal.
+    if (!_isQuotaExceeded(e) && typeof console !== "undefined") {
+      console.warn("[save] backup slot write failed:", e && e.message ? e.message : e);
+    }
+  }
+}
+
 async function _writeLocalSave() {
   const json = serializeLeague();
+  // Snapshot the current (about-to-be-replaced) main save. If the new
+  // write succeeds, this last-known-good value is promoted to the backup
+  // slot — so a future corrupt main save has something to recover from.
+  let _priorMain = null;
+  try { _priorMain = localStorage.getItem(LOCAL_SAVE_KEY); } catch (_) {}
   let stored;
   if (typeof CompressionStream === "function" && typeof _fkGzip === "function" && typeof _fkBuildGzipContainer === "function" && typeof _fkBytesToBase64 === "function") {
     try {
@@ -46931,9 +47761,114 @@ async function _writeLocalSave() {
     // Older browser without CompressionStream — write plain JSON
     stored = json;
   }
-  localStorage.setItem(LOCAL_SAVE_KEY, stored);
-  if (LEAGUE) LEAGUE._lastSavedAt = Date.now();
-  if (typeof _refreshSaveIndicator === "function") _refreshSaveIndicator();
+  if (_quotaAwareSetItem(LOCAL_SAVE_KEY, stored)) {
+    _promoteSaveBackup(_priorMain);
+    if (LEAGUE) LEAGUE._lastSavedAt = Date.now();
+    if (typeof _refreshSaveIndicator === "function") _refreshSaveIndicator();
+    return;
+  }
+  // Storage is full and freeing the stale prior-version key did not help.
+  // Rather than lose the save, shed the least-important data tier by tier
+  // until it fits. The pruned form is written as plain JSON (a pruned save
+  // is smaller by definition and still loads correctly); compression is a
+  // size optimisation we can forgo on the rare full-storage path.
+  let saveObj;
+  try {
+    saveObj = JSON.parse(json);
+  } catch (e) {
+    saveObj = null;
+  }
+  let prunedOk = false;
+  if (saveObj) {
+    prunedOk = _prunedWrite(
+      saveObj,
+      (obj) => JSON.stringify(obj),
+      (str) => {
+        try {
+          localStorage.setItem(LOCAL_SAVE_KEY, str);
+          return true;
+        } catch (e) {
+          if (_isQuotaExceeded(e)) return false;
+          throw e;
+        }
+      }
+    );
+  }
+  if (prunedOk) {
+    _promoteSaveBackup(_priorMain);
+    if (LEAGUE) LEAGUE._lastSavedAt = Date.now();
+    if (typeof _refreshSaveIndicator === "function") _refreshSaveIndicator();
+    if (typeof window !== "undefined" && window.toast) {
+      window.toast(
+        "<b>Storage was full.</b> Older history was trimmed so your League, " +
+        "Bits, achievements and settings could be saved.",
+        "warn", { ico: "\uD83D\uDCBE", ttl: 8000 }
+      );
+    }
+  } else {
+    // Even the fully-pruned core would not fit — nothing more we can do.
+    if (typeof console !== "undefined") {
+      console.warn("[save] storage full — even pruned save did not fit.");
+    }
+    if (typeof window !== "undefined" && window.toast) {
+      window.toast(
+        "<b>Save storage is full.</b> Your latest progress could not be " +
+        "saved. Export your League to a file from Settings to keep it safe.",
+        "warn", { ico: "\uD83D\uDCBE", ttl: 9000 }
+      );
+    }
+  }
+}
+
+/* Detect a localStorage quota-exceeded error across browsers. Chrome/
+   Safari throw a DOMException with code 22 (name "QuotaExceededError");
+   Firefox throws code 1014 with name "NS_ERROR_DOM_QUOTA_REACHED". A
+   plain object check guards against non-DOMException throws. */
+function _isQuotaExceeded(e) {
+  if (!e) return false;
+  return (
+    e.code === 22 ||
+    e.code === 1014 ||
+    e.name === "QuotaExceededError" ||
+    e.name === "NS_ERROR_DOM_QUOTA_REACHED"
+  );
+}
+
+/* setItem wrapper that survives a full localStorage. A long-running
+   League can approach the ~5 MiB per-origin cap; before this, a
+   quota error was swallowed by saveLocal()'s catch and the save was
+   silently lost. Now: on quota failure we free the stale prior-version
+   save key and retry once; if it still fails the user is told plainly
+   (their progress is only as safe as their last successful save, and
+   they can Export to file from Settings). */
+function _quotaAwareSetItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    if (!_isQuotaExceeded(e)) throw e;
+    // Recovery attempt: drop the obsolete prior-schema save if present.
+    let freed = false;
+    try {
+      if (typeof LOCAL_SAVE_KEY_PRIOR === "string" &&
+          localStorage.getItem(LOCAL_SAVE_KEY_PRIOR) !== null) {
+        localStorage.removeItem(LOCAL_SAVE_KEY_PRIOR);
+        freed = true;
+      }
+    } catch (_) { /* removeItem can itself throw in locked-down modes */ }
+    if (freed) {
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch (e2) {
+        if (!_isQuotaExceeded(e2)) throw e2;
+      }
+    }
+    // Still full after evicting the stale key. Return false silently —
+    // the caller (_writeLocalSave) responds by pruning the save to fit
+    // and owns any user-facing messaging from here.
+    return false;
+  }
 }
 
 async function saveLocal() {
@@ -46966,46 +47901,108 @@ async function flushSaveLocal() {
 }
 window.flushSaveLocal = flushSaveLocal;
 
-async function loadLocal() {
-  try {
-    const stored = localStorage.getItem(LOCAL_SAVE_KEY);
-    if (!stored) return false;
-
-    // === v37.53: sniff format — plain JSON starts with "{", FKZ1
-    // base64 starts with "RktaM" (= base64 of "FKZ1" first chars).
-    // We don't need that level of precision — any non-"{" first char
-    // is presumed compressed.
-    let json;
-    if (stored.charAt(0) === "{") {
-      // Legacy plain-JSON save (pre-v37.53) or fallback path
-      json = stored;
-    } else {
-      // Assumed FKZ1 base64. Decode → check magic → decompress.
-      if (typeof _fkBase64ToBytes !== "function" || typeof _fkLooksGzipped !== "function" || typeof _fkGunzip !== "function") {
-        throw new Error("compressed save detected but gzip helpers unavailable");
-      }
-      const bytes = _fkBase64ToBytes(stored);
-      if (!_fkLooksGzipped(bytes)) {
-        throw new Error("stored value is neither plain JSON nor FKZ1");
-      }
-      json = await _fkGunzip(bytes.slice(4));  // strip 4-byte FKZ1 magic
+/* Decode one stored save string (plain JSON or FKZ1-compressed) and
+   apply it via deserializeLeague. Throws on corrupt data or an
+   incompatible schema. Returns the parsed object's `_pruned` marker
+   (or null) so the caller can decide whether to notify the player.
+   This is the shared core used for both the main and backup slots. */
+async function _decodeAndApplySave(stored) {
+  // === v37.53: sniff format — plain JSON starts with "{", FKZ1
+  // base64 starts with "RktaM" (= base64 of "FKZ1" first chars).
+  // Any non-"{" first char is presumed compressed.
+  let json;
+  if (stored.charAt(0) === "{") {
+    // Legacy plain-JSON save (pre-v37.53) or fallback path
+    json = stored;
+  } else {
+    // Assumed FKZ1 base64. Decode → check magic → decompress.
+    if (typeof _fkBase64ToBytes !== "function" || typeof _fkLooksGzipped !== "function" || typeof _fkGunzip !== "function") {
+      throw new Error("compressed save detected but gzip helpers unavailable");
     }
+    const bytes = _fkBase64ToBytes(stored);
+    if (!_fkLooksGzipped(bytes)) {
+      throw new Error("stored value is neither plain JSON nor FKZ1");
+    }
+    json = await _fkGunzip(bytes.slice(4));  // strip 4-byte FKZ1 magic
+  }
+  deserializeLeague(json);
+  // Surface the prune marker (best-effort parse — never block a good load).
+  try {
+    const parsed = (json.charAt(0) === "{") ? JSON.parse(json) : null;
+    return (parsed && parsed._pruned) ? parsed._pruned : null;
+  } catch (_) {
+    return null;
+  }
+}
 
-    deserializeLeague(json);
+async function loadLocal() {
+  let stored = null;
+  try { stored = localStorage.getItem(LOCAL_SAVE_KEY); } catch (_) {}
+  if (!stored) {
+    // No main save. A backup may still exist from a prior session whose
+    // main slot was cleared — try to recover from it before giving up.
+    return await _loadFromBackup("no main save present");
+  }
+
+  try {
+    const pruned = await _decodeAndApplySave(stored);
+    if (pruned && typeof window !== "undefined" && window.toast) {
+      window.toast(
+        "<b>Heads up:</b> storage filled up, so some older history was " +
+        "trimmed from your save. Your League, Bits, achievements and " +
+        "settings were kept.",
+        "info", { ico: "\uD83D\uDCBE", ttl: 8000 }
+      );
+    }
     return true;
   } catch (e) {
-    // deserializeLeague (or our new decode pipeline) throws on incompatible
-    // schemas / corrupt data. Silently discard the broken save — the user
-    // gets a fresh League on this boot and future saves overwrite the
-    // corrupt entry.
-    console.warn("[v37.53] localStorage save was unreadable, starting fresh:", e.message || e);
-    try { localStorage.removeItem(LOCAL_SAVE_KEY); } catch {}
-    return false;
+    // The main save is corrupt or schema-incompatible. Before discarding
+    // it, try the backup slot — it holds the previous last-known-good
+    // save and may load cleanly.
+    console.warn("[save] main save unreadable:", e && (e.message || e));
+    return await _loadFromBackup("main save unreadable", stored);
   }
+}
+
+/* Attempt recovery from the backup slot. If it loads, it is promoted
+   back into the main slot and the player is told. If it too fails (or
+   is absent), the broken main save is discarded and the player starts
+   fresh — the original last-resort behaviour. `brokenMain`, if given,
+   is the corrupt main value being replaced. */
+async function _loadFromBackup(reason, brokenMain) {
+  let backup = null;
+  try { backup = localStorage.getItem(LOCAL_SAVE_KEY_BACKUP); } catch (_) {}
+  if (backup && backup !== brokenMain) {
+    try {
+      await _decodeAndApplySave(backup);
+      // Backup loaded cleanly — promote it to the main slot so the next
+      // save cycle continues normally from a known-good base.
+      try { localStorage.setItem(LOCAL_SAVE_KEY, backup); } catch (_) {}
+      console.warn("[save] recovered from backup slot (" + reason + ").");
+      if (typeof window !== "undefined" && window.toast) {
+        window.toast(
+          "<b>Save recovered.</b> Your main save couldn't be read, so the " +
+          "last backup was restored. Very recent progress may be missing.",
+          "warn", { ico: "\u267B\uFE0F", ttl: 9000 }
+        );
+      }
+      return true;
+    } catch (e2) {
+      console.warn("[save] backup slot also unreadable:", e2 && (e2.message || e2));
+    }
+  }
+  // Nothing recoverable — discard the broken main save and start fresh.
+  if (brokenMain != null) {
+    try { localStorage.removeItem(LOCAL_SAVE_KEY); } catch (_) {}
+  }
+  return false;
 }
 
 function clearLocal() {
   try { localStorage.removeItem(LOCAL_SAVE_KEY); } catch {}
+  // Also clear the backup — otherwise a reset League would be silently
+  // resurrected from the stale backup slot on the next load.
+  try { localStorage.removeItem(LOCAL_SAVE_KEY_BACKUP); } catch {}
 }
 
 // Expose so the simulation layer can call after every state change
