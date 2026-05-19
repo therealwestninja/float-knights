@@ -48151,6 +48151,39 @@ async function boot() {
       }
     }
   } catch (e) { console.warn("v37.67 boot deep-link handler:", e); }
+
+  /* === Perchance platform housekeeping (post-load, run once) ===
+     Two best-practice calls drawn from the Perchance app guidance. */
+
+  // (1) Request persistent storage. localStorage can be evicted by the
+  // browser under storage pressure — navigator.storage.persist() asks
+  // the browser not to. This is the front-door lock for the whole save
+  // system (quota handling, pruning, backup slot all assume the data
+  // is still THERE to recover). Best-effort: unsupported or denied is
+  // fine, we just carry on.
+  try {
+    if (navigator.storage && typeof navigator.storage.persist === "function") {
+      navigator.storage.persist().catch(() => { /* denied — non-fatal */ });
+    }
+  } catch (_) { /* storage API absent — ignore */ }
+
+  // (2) Warm up the ai-text-plugin inference engine so the first
+  // sportscaster line isn't slowed by cold-start latency. On small
+  // screens the preload is delayed a few seconds so it doesn't compete
+  // with page-load work (per Perchance's mobile guidance). Silently
+  // skipped when the plugin isn't present (non-Perchance hosting).
+  try {
+    let _aiPlugin = null;
+    if (typeof aiTextPlugin !== "undefined") _aiPlugin = aiTextPlugin;
+    else if (typeof window !== "undefined" && window.aiTextPlugin) _aiPlugin = window.aiTextPlugin;
+    else if (typeof root !== "undefined" && root.aiTextPlugin) _aiPlugin = root.aiTextPlugin;
+    if (typeof _aiPlugin === "function") {
+      const _warm = () => { try { _aiPlugin({ preload: true }); } catch (_) {} };
+      if (window.innerWidth < 500) setTimeout(_warm, 5000);
+      else _warm();
+    }
+  } catch (_) { /* preload is an optimisation only — never fatal */ }
+
   requestAnimationFrame(loop);
 }
 
